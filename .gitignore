@@ -1,0 +1,7 @@
+*.pyc
+.DS_Store
+
+node_modules
+lib
+!lib/README.md
+env/
