@@ -1,7 +1,7 @@
+env/
+lib/
+!lib/README.md
+lib_ts/
+node_modules/
 *.pyc
 .DS_Store
-
-node_modules
-lib
-!lib/README.md
-env/

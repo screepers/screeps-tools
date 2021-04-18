@@ -9,11 +9,6 @@ from flask import Flask, render_template, json
 
 app = Flask(__name__)
 
-screeps_api = ScreepsAPI(
-    host='screeps.com',
-    secure=True
-)
-
 @app.errorhandler(404)
 def page_not_found(e):
     """404 Page Not Found"""
@@ -24,14 +19,11 @@ def application_error(e):
     """500 Internal Server Error"""
     return 'Sorry, unexpected error: {}'.format(e), 500
 
-@app.route('/')
-def home():
-    """Return a friendly HTTP greeting."""
-    return render_template("index.html")
-
-@app.route('/api/shards')
-def api_shards():
+@app.route('/api/shards/<server>')
+def api_shards(server):
     """Get list of shards"""
+    server = server if server else None
+    screeps_api = get_screeps_api(server)
     api_res = screeps_api.shard_info()
     return app.response_class(
         response=json.dumps(api_res),
@@ -39,9 +31,11 @@ def api_shards():
         mimetype='application/json'
     )
 
-@app.route('/api/terrain/<shard>/<room>')
-def api_terrain():
+@app.route('/api/terrain/<server>/<shard>/<room>')
+def api_terrain(server, shard, room):
     """Get the terrain details for a room"""
+    server = server if server else None
+    screeps_api = get_screeps_api(server)
     api_res = screeps_api.room_terrain(room=room, shard=shard, encoded=True)
     return app.response_class(
         response=json.dumps(api_res),
@@ -49,9 +43,11 @@ def api_terrain():
         mimetype='application/json'
     )
 
-@app.route('/api/objects/<shard>/<room>')
-def api_objects():
+@app.route('/api/objects/<server>/<shard>/<room>')
+def api_objects(server, shard, room):
     """Get the objects for a room"""
+    server = server if server else None
+    screeps_api = get_screeps_api(server)
     api_res = screeps_api.room_objects(room=room, shard=shard)
     return app.response_class(
         response=json.dumps(api_res),
@@ -59,23 +55,19 @@ def api_objects():
         mimetype='application/json'
     )
 
-def start_runner():
-    """Start the Screeps API connection runner"""
-    def start_loop():
-        not_started = True
-        while not_started:
-            try:
-                if screeps_api is not None:
-                    print('Screeps API connected!')
-                    not_started = False
-            except:
-                print('Screeps API not yet connected')
-            time.sleep(2)
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def home(path):
+    """Homepage for React app"""
+    return render_template("index.html")
 
-    print('Started runner')
-    thread = threading.Thread(target=start_loop)
-    thread.start()
+def get_screeps_api(server):
+    prefix = '/season' if server == 'season' else None
+    return ScreepsAPI(
+        host='screeps.com',
+        prefix=prefix,
+        secure=True
+    )
 
 if __name__ == "__main__":
-    start_runner()
     app.run(debug=True)

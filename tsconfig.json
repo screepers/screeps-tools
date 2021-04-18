@@ -1,0 +1,29 @@
+{
+    "compilerOptions": {
+        "module": "CommonJS",
+        "target": "es6",
+        "removeComments": true,
+        "noEmitOnError": true,
+        "noResolve": false,
+        "experimentalDecorators": true,
+        "strict": true,
+        "noUnusedParameters": false,
+        "noUnusedLocals": true,
+        "sourceMap": true,
+        "baseUrl": "src",
+        "outDir": "lib_ts",
+        "allowUnusedLabels": true,
+        "allowJs": true,
+        "jsx": "react"
+    },
+    "compileOnSave": false,
+    "include": [
+        "src/**/*.tsx",
+        "src/**/*.d.ts",
+    ],
+    "exclude": [
+        "env",
+        "static",
+        "node_modules"
+    ]
+}
