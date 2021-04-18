@@ -31,11 +31,11 @@ def api_shards(server):
         mimetype='application/json'
     )
 
-@app.route('/api/terrain/<server>/<shard>/<room>')
-def api_terrain(server, shard, room):
+@app.route('/api/terrain/<world>/<shard>/<room>')
+def api_terrain(world, shard, room):
     """Get the terrain details for a room"""
-    server = server if server else None
-    screeps_api = get_screeps_api(server)
+    world = world if world else None
+    screeps_api = get_screeps_api(world)
     api_res = screeps_api.room_terrain(room=room, shard=shard, encoded=True)
     return app.response_class(
         response=json.dumps(api_res),
@@ -43,11 +43,11 @@ def api_terrain(server, shard, room):
         mimetype='application/json'
     )
 
-@app.route('/api/objects/<server>/<shard>/<room>')
-def api_objects(server, shard, room):
+@app.route('/api/objects/<world>/<shard>/<room>')
+def api_objects(world, shard, room):
     """Get the objects for a room"""
-    server = server if server else None
-    screeps_api = get_screeps_api(server)
+    world = world if world else None
+    screeps_api = get_screeps_api(world)
     api_res = screeps_api.room_objects(room=room, shard=shard)
     return app.response_class(
         response=json.dumps(api_res),
@@ -61,8 +61,8 @@ def home(path):
     """Homepage for React app"""
     return render_template("index.html")
 
-def get_screeps_api(server):
-    prefix = '/season' if server == 'season' else None
+def get_screeps_api(world):
+    prefix = '/season' if world == 'season' else None
     return ScreepsAPI(
         host='screeps.com',
         prefix=prefix,
@@ -70,4 +70,4 @@ def get_screeps_api(server):
     )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

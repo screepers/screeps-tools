@@ -1,6 +1,16 @@
 body {
     background-image:linear-gradient(to bottom, #222 0%, #111 100%) !important;
     background-attachment: fixed;
+    margin: 0;
+    padding: 0;
+}
+
+*, *::after, *::before {
+    box-sizing: border-box;
+}
+
+.hidden {
+    display: none;
 }
 
 a {
@@ -79,6 +89,10 @@ input[type=number]::-webkit-outer-spin-button {
         display: inline-block;
         line-height: 40px;
         padding: 0 10px;
+
+        &:last-child {
+            padding-right: 15px;
+        }
     }
     
     img {
@@ -276,22 +290,65 @@ input[type=number]::-webkit-outer-spin-button {
         background-color:#314b31 !important;
         border-color: #438643 !important;
     }
+
+    button.burger-menu {
+        position: absolute;
+        right: 15px;
+        top: 48px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        width: 2rem;
+        height: 2rem;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        z-index: 10;
+        
+        &:focus {
+            outline: none;
+        }
+        
+        div {
+            width: 2rem;
+            height: 0.25rem;
+            background: #fff;
+            border-radius: 10px;
+            position: relative;
+            transform-origin: 1px;
+        }
+
+        &.open div {
+            background: #222;
+        }
+
+        &:hover div {
+            background: #5973FF;
+        }
+    }
     
     .controls {
-        color:#ccc;
-        background-color:#222;
-        padding-top: 10px;
-        padding-bottom: 10px;
+        position: absolute;
+        right: 0;
+        background-color: #ccc;
+        color: #222;
+        padding: 10px 15px;
+        box-shadow: -1px 0 3px rgb(0 0 0 / 30%);
+
+        &.hidden {
+            display: none;
+        }
         
         .brushes {
             cursor: pointer;
-            list-style:none;
-            margin:0px;
-            padding:0px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
             
             li {
                 position: relative;
-                background-color: #333;
+                background-color: #fff;
                 padding: 4px 5px;
                 line-height: 24px;
                 
@@ -305,21 +362,17 @@ input[type=number]::-webkit-outer-spin-button {
                 }
                 
                 &.active {
-                    background-color: #404040;
+                    background-color: #a4d0ff;
                 }
                 
                 &:hover,
                 &.active:hover {
-                    background-color:#555;
+                    background-color:#54a6ff;
                 }
                 
                 &.disabled {
-                    color: #666 !important;
-                    background-color: #333;
-                    
-                    &:hover {
-                        background-color: #363636;
-                    }
+                    color: #c5c5c5 !important;
+                    background-color: #fff !important;
                     
                     img {
                         opacity: 0.3;
@@ -341,7 +394,7 @@ input[type=number]::-webkit-outer-spin-button {
                 margin: 0;
             }
             label.show-structures {
-                margin-top: 20px;
+                margin-top: 25px;
             }
             input.form-control,
             select.form-control {

@@ -11,8 +11,8 @@ interface TerrainMap {
 }
 
 const screepsWorlds: {[key: string]: string} = {
-    mmo: 'Persistent (MMO)',
-    season: 'Season',
+    mmo: 'Persistent',
+    season: 'Seasonal',
 };
 
 export class BuildingPlanner extends React.Component {
@@ -29,6 +29,7 @@ export class BuildingPlanner extends React.Component {
         structures: {[structure: string]: {x: number; y: number;}[]};
         sources: {x: number; y: number;}[];
         mineral: {[mineralType: string]: {x: number; y: number;}};
+        menuOpen: boolean;
     }>;
 
     constructor(props: any) {
@@ -59,7 +60,8 @@ export class BuildingPlanner extends React.Component {
             rcl: 8,
             structures: {},
             sources: [],
-            mineral: {}
+            mineral: {},
+            menuOpen: false
         };
     }
 
@@ -331,11 +333,15 @@ export class BuildingPlanner extends React.Component {
         return "/building-planner/?share=" + string;
     }
 
+    openOrCloseMenu() {
+        this.setState({menuOpen: !this.state.menuOpen});
+    }
+
     render() {
         return (
             <Container className="building-planner" fluid={true}>
                 <Row>
-                    <Col md={8} lg={9}>
+                    <Col sm={12}>
                         <div className="map">
                             {[...Array(50)].map((ykey, y: number) => {
                                 return <div className="flex-row">
@@ -357,13 +363,20 @@ export class BuildingPlanner extends React.Component {
                             })}
                         </div>
                     </Col>
-                    <Col className="controls" md={4} lg={3}>
+
+                    <button className={`burger-menu${this.state.menuOpen ? ' open' : ''}`} onClick={() => this.openOrCloseMenu()}>
+                        <div />
+                        <div />
+                        <div />
+                    </button>
+
+                    <div className={`controls${this.state.menuOpen ? '' : ' hidden'}`}>
                         <div className="structures">
                             <Row>
-                                <Col xs={6}>
+                                <Col xs={4}>
                                     <p>X: {this.state.x} Y: {this.state.y}</p>
                                 </Col>
-                                <Col xs={6}>
+                                <Col xs={4}>
                                     <Input type="select" className="rcl float-right" value={this.state.rcl} onChange={(e) => this.setRCL(e)}>
                                         <option value={1}>1</option>
                                         <option value={2}>2</option>
@@ -409,7 +422,7 @@ export class BuildingPlanner extends React.Component {
                                 </Col>
                             </Row>
                         </div>
-                    </Col>
+                    </div>
                 </Row>
             </Container>
         );

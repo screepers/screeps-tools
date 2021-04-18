@@ -1,6 +1,16 @@
 body {
   background-image: linear-gradient(to bottom, #222 0%, #111 100%) !important;
   background-attachment: fixed;
+  margin: 0;
+  padding: 0;
+}
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+}
+.hidden {
+  display: none;
 }
 a {
   color: #5973FF !important;
@@ -63,6 +73,9 @@ input[type=number]::-webkit-outer-spin-button {
   display: inline-block;
   line-height: 40px;
   padding: 0 10px;
+}
+.header a:last-child {
+  padding-right: 15px;
 }
 .header img {
   display: inline-block;
@@ -222,21 +235,58 @@ input[type=number]::-webkit-outer-spin-button {
   background-color: #314b31 !important;
   border-color: #438643 !important;
 }
+.building-planner button.burger-menu {
+  position: absolute;
+  right: 15px;
+  top: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10;
+}
+.building-planner button.burger-menu:focus {
+  outline: none;
+}
+.building-planner button.burger-menu div {
+  width: 2rem;
+  height: 0.25rem;
+  background: #fff;
+  border-radius: 10px;
+  position: relative;
+  transform-origin: 1px;
+}
+.building-planner button.burger-menu.open div {
+  background: #222;
+}
+.building-planner button.burger-menu:hover div {
+  background: #5973FF;
+}
 .building-planner .controls {
-  color: #ccc;
-  background-color: #222;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  position: absolute;
+  right: 0;
+  background-color: #ccc;
+  color: #222;
+  padding: 10px 15px;
+  box-shadow: -1px 0 3px rgb(0 0 0%);
+}
+.building-planner .controls.hidden {
+  display: none;
 }
 .building-planner .controls .brushes {
   cursor: pointer;
   list-style: none;
-  margin: 0px;
-  padding: 0px;
+  margin: 0;
+  padding: 0;
 }
 .building-planner .controls .brushes li {
   position: relative;
-  background-color: #333;
+  background-color: #fff;
   padding: 4px 5px;
   line-height: 24px;
 }
@@ -248,18 +298,15 @@ input[type=number]::-webkit-outer-spin-button {
   vertical-align: top;
 }
 .building-planner .controls .brushes li.active {
-  background-color: #404040;
+  background-color: #a4d0ff;
 }
 .building-planner .controls .brushes li:hover,
 .building-planner .controls .brushes li.active:hover {
-  background-color: #555;
+  background-color: #54a6ff;
 }
 .building-planner .controls .brushes li.disabled {
-  color: #666 !important;
-  background-color: #333;
-}
-.building-planner .controls .brushes li.disabled:hover {
-  background-color: #363636;
+  color: #c5c5c5 !important;
+  background-color: #fff !important;
 }
 .building-planner .controls .brushes li.disabled img {
   opacity: 0.3;
@@ -275,7 +322,7 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0;
 }
 .building-planner .controls form.load-room label.show-structures {
-  margin-top: 20px;
+  margin-top: 25px;
 }
 .building-planner .controls form.load-room input.form-control,
 .building-planner .controls form.load-room select.form-control {
