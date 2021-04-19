@@ -339,12 +339,31 @@ input[type=number]::-webkit-outer-spin-button {
         &.hidden {
             display: none;
         }
+
+        .select-structure {
+            img {
+                width: 32px;
+                height: 32px;
+            }
+            span.right {
+                float: right;
+            }
+            .select__single-value {
+                width: 100%;
+
+                span.right {
+                    padding-top: 2px;
+                    padding-right: 13px;
+                }
+            }
+        }
         
         .brushes {
             cursor: pointer;
             list-style: none;
             margin: 0;
             padding: 0;
+            border: 1px solid #b7b7b7;
             
             li {
                 position: relative;
@@ -362,12 +381,12 @@ input[type=number]::-webkit-outer-spin-button {
                 }
                 
                 &.active {
-                    background-color: #a4d0ff;
+                    background-color: #54a6ff;
                 }
                 
                 &:hover,
                 &.active:hover {
-                    background-color:#54a6ff;
+                    background-color: #a4d0ff;
                 }
                 
                 &.disabled {

@@ -26,14 +26,23 @@ export default {
             include: 'node_modules/**',
             namedExports: {
                 'node_modules/react-dom/index.js': [
+                    'createPortal',
                     'render',
                 ],
                 'node_modules/react/index.js': [
-                    'Component',
-                    'PropTypes',
-                    'createElement',
                     'Children',
-                    'forwardRef'
+                    'createContext',
+                    'createElement',
+                    'Component',
+                    'forwardRef',
+                    'Fragment',
+                    'PropTypes',
+                    'useCallback',
+                    'useContext',
+                    'useEffect',
+                    'useLayoutEffect',
+                    'useMemo',
+                    'useRef',
                 ],
                 'node_modules/react-form/dist/index.js': [
                     'Form',

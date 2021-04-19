@@ -278,11 +278,26 @@ input[type=number]::-webkit-outer-spin-button {
 .building-planner .controls.hidden {
   display: none;
 }
+.building-planner .controls .select-structure img {
+  width: 32px;
+  height: 32px;
+}
+.building-planner .controls .select-structure span.right {
+  float: right;
+}
+.building-planner .controls .select-structure .select__single-value {
+  width: 100%;
+}
+.building-planner .controls .select-structure .select__single-value span.right {
+  padding-top: 2px;
+  padding-right: 13px;
+}
 .building-planner .controls .brushes {
   cursor: pointer;
   list-style: none;
   margin: 0;
   padding: 0;
+  border: 1px solid #b7b7b7;
 }
 .building-planner .controls .brushes li {
   position: relative;
@@ -298,11 +313,11 @@ input[type=number]::-webkit-outer-spin-button {
   vertical-align: top;
 }
 .building-planner .controls .brushes li.active {
-  background-color: #a4d0ff;
+  background-color: #54a6ff;
 }
 .building-planner .controls .brushes li:hover,
 .building-planner .controls .brushes li.active:hover {
-  background-color: #54a6ff;
+  background-color: #a4d0ff;
 }
 .building-planner .controls .brushes li.disabled {
   color: #c5c5c5 !important;

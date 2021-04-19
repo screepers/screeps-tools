@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {Container, Row, Col, Input, Label, FormFeedback} from 'reactstrap';
+import Select, {OptionTypeBase} from 'react-select';
 import * as _ from 'lodash';
 import * as LZString from 'lz-string';
 import * as Constants from './constants';
@@ -25,6 +26,7 @@ export class BuildingPlanner extends React.Component {
         y: number;
         worlds: {[worldName: string]: {shards: string[]}};
         brush: string;
+        brushLabel: React.ReactElement | null;
         rcl: number;
         structures: {[structure: string]: {x: number; y: number;}[]};
         sources: {x: number; y: number;}[];
@@ -57,6 +59,7 @@ export class BuildingPlanner extends React.Component {
                 }
             },
             brush: 'spawn',
+            brushLabel: null,
             rcl: 8,
             structures: {},
             sources: [],
@@ -337,7 +340,32 @@ export class BuildingPlanner extends React.Component {
         this.setState({menuOpen: !this.state.menuOpen});
     }
 
-    render() {
+    getSelectedBrush() {
+        const selected: OptionTypeBase = {
+            value: this.state.brush,
+            label: this.state.brushLabel
+        };
+        return selected;
+    }
+
+    getStructureBrushes() {
+        const options: OptionTypeBase[] = [];
+        Object.keys(Constants.STRUCTURES).map(key => {
+            options.push({
+                value: key,
+                label: <div><img src={'/static/assets/structures/' + key + '.png'} /> {Constants.STRUCTURES[key]} <span className="right">{this.state.structures[key] ? this.state.structures[key].length : 0}/{Constants.CONTROLLER_STRUCTURES[key][this.state.rcl]}</span></div>
+            });
+        });
+        return options;
+    }
+
+    handleBrushChange(selected: OptionTypeBase | null) {
+        const brush = (selected ? selected.value : 'spawn');
+        const brushLabel = selected ? selected.label : null;
+        this.setState({brush, brushLabel});
+    };
+
+    render() {        
         return (
             <Container className="building-planner" fluid={true}>
                 <Row>
@@ -390,20 +418,15 @@ export class BuildingPlanner extends React.Component {
                                     <p className="float-right">RCL</p>
                                 </Col>
                             </Row>
-                            <ul className="brushes">
-                                {Object.keys(Constants.STRUCTURES).map((key) => {
-                                    let classes = '';
-                                    if (this.state.brush === key) {
-                                        classes += 'active ';
-                                    }
-                                    if (Constants.CONTROLLER_STRUCTURES[key][this.state.rcl] === 0) {
-                                        classes += 'disabled';
-                                    }
-                                    return <li onClick={() => this.setState({brush: key})} className={classes} key={key}>
-                                        <img src={'/static/assets/structures/' + key + '.png'} /> {Constants.STRUCTURES[key]} <span>{this.state.structures[key] ? this.state.structures[key].length : 0}/{Constants.CONTROLLER_STRUCTURES[key][this.state.rcl]}</span>
-                                    </li>
-                                })}
-                            </ul>
+                            <Select
+                                name="brush"
+                                defaultValue={this.state.brush}
+                                value={this.getSelectedBrush()}
+                                options={this.getStructureBrushes()}
+                                onChange={(selected) => this.handleBrushChange(selected)}
+                                className="select-structure"
+                                classNamePrefix="select"
+                            />
                         </div>
                         <div className="room">
                             <hr/>
