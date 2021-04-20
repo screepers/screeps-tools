@@ -1,7 +1,25 @@
-env/
+# Dependencies
 lib/
-!lib/README.md
 lib_ts/
 node_modules/
-*.pyc
-.DS_Store
+
+# Builds
+static/bundle.js
+static/style.css
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

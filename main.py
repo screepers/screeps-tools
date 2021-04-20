@@ -1,7 +1,3 @@
-"""`main` is the top level module for your Flask application."""
-# Note: You don't need to call app.run() when running `dev_appserver.py .` or deploying to App Engine,
-# since the application is embedded within the App Engine WSGI application server.
-
 import threading
 import time
 from screepsapi import API as ScreepsAPI
