@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Container, Row, Col, Input, Label, FormFeedback} from 'reactstrap';
+import {Container, Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import * as _ from 'lodash';
 import * as LZString from 'lz-string';
@@ -31,7 +31,6 @@ export class BuildingPlanner extends React.Component {
         structures: {[structure: string]: {x: number; y: number;}[]};
         sources: {x: number; y: number;}[];
         mineral: {[mineralType: string]: {x: number; y: number;}};
-        menuOpen: boolean;
     }>;
 
     constructor(props: any) {
@@ -63,8 +62,7 @@ export class BuildingPlanner extends React.Component {
             rcl: 8,
             structures: {},
             sources: [],
-            mineral: {},
-            menuOpen: false
+            mineral: {}
         };
     }
 
@@ -336,10 +334,6 @@ export class BuildingPlanner extends React.Component {
         return "/building-planner/?share=" + string;
     }
 
-    openOrCloseMenu() {
-        this.setState({menuOpen: !this.state.menuOpen});
-    }
-
     getSelectedBrush() {
         const selected: OptionTypeBase = {
             value: this.state.brush,
@@ -368,85 +362,79 @@ export class BuildingPlanner extends React.Component {
     render() {        
         return (
             <Container className="building-planner" fluid={true}>
-                <Row>
-                    <Col sm={12}>
-                        <div className="map">
-                            {[...Array(50)].map((ykey, y: number) => {
-                                return <div className="flex-row">
-                                    {[...Array(50)].map((xkey, x: number) => {
-                                        return <MapCell
-                                            x={x}
-                                            y={y}
-                                            terrain={this.state.terrain[y][x]}
-                                            parent={this}
-                                            structure={this.getStructure(x, y)}
-                                            road={this.getRoadProps(x, y)}
-                                            rampart={this.isRampart(x, y)}
-                                            source={this.hasSource(x, y)}
-                                            mineral={this.getMineral(x, y)}
-                                            key={'mc-'+ x + '-' + y}
-                                        />
-                                    })}
-                                </div>
-                            })}
-                        </div>
-                    </Col>
-
-                    <button className={`burger-menu${this.state.menuOpen ? ' open' : ''}`} onClick={() => this.openOrCloseMenu()}>
-                        <div />
-                        <div />
-                        <div />
-                    </button>
-
-                    <div className={`controls${this.state.menuOpen ? '' : ' hidden'}`}>
-                        <div className="structures">
-                            <Row>
-                                <Col xs={4}>
-                                    <p>X: {this.state.x} Y: {this.state.y}</p>
-                                </Col>
-                                <Col xs={4}>
-                                    <Input type="select" className="rcl float-right" value={this.state.rcl} onChange={(e) => this.setRCL(e)}>
-                                        <option value={1}>1</option>
-                                        <option value={2}>2</option>
-                                        <option value={3}>3</option>
-                                        <option value={4}>4</option>
-                                        <option value={5}>5</option>
-                                        <option value={6}>6</option>
-                                        <option value={7}>7</option>
-                                        <option value={8}>8</option>
-                                    </Input>
-                                    <p className="float-right">RCL</p>
-                                </Col>
-                            </Row>
-                            <Select
-                                name="brush"
-                                defaultValue={this.state.brush}
-                                value={this.getSelectedBrush()}
-                                options={this.getStructureBrushes()}
-                                onChange={(selected) => this.handleBrushChange(selected)}
-                                className="select-structure"
-                                classNamePrefix="select"
-                            />
-                        </div>
-                        <div className="room">
-                            <hr/>
-                            <ImportRoomForm
-                                planner={this}
-                                room={this.state.room}
-                                shard={this.state.shard}
-                                world={this.state.world}
-                                worlds={this.state.worlds}
-                            />
-                            <hr/>
-                            <Row>
+                <Row className="controls">
+                    <Container>
+                        <Row>
+                            {/* <button className="burger-menu" onClick={() => this.openOrCloseMenu()}>
+                                <div /><div /><div />
+                            </button> */}
+                            
+                            <Col xs={2}>
+                                <ImportRoomForm
+                                    planner={this}
+                                    room={this.state.room}
+                                    shard={this.state.shard}
+                                    world={this.state.world}
+                                    worlds={this.state.worlds}
+                                    modal={false}
+                                />
+                            </Col>
+                            <Col xs={4}>
+                                <Select
+                                    name="brush"
+                                    defaultValue={this.state.brush}
+                                    value={this.getSelectedBrush()}
+                                    options={this.getStructureBrushes()}
+                                    onChange={(selected) => this.handleBrushChange(selected)}
+                                    className="select-structure"
+                                    classNamePrefix="select"
+                                />
+                            </Col>
+                            <Col xs={2}>
+                                <Input type="select" className="rcl float-right" value={this.state.rcl} onChange={(e) => this.setRCL(e)}>
+                                    <option value={1}>1</option>
+                                    <option value={2}>2</option>
+                                    <option value={3}>3</option>
+                                    <option value={4}>4</option>
+                                    <option value={5}>5</option>
+                                    <option value={6}>6</option>
+                                    <option value={7}>7</option>
+                                    <option value={8}>8</option>
+                                </Input>
+                                <p className="float-right">RCL</p>
+                            </Col>
+                            <Col xs={2}>
+                                <p>X: {this.state.x} Y: {this.state.y}</p>
+                            </Col>
+                            {/* <Row>
                                 <Col>
                                     <Input type="textarea" value={this.json()} id="json-data" onChange={(e) => this.import(e)} />
                                     <a href={this.shareableLink()} id="share-link">Shareable Link</a>
                                 </Col>
-                            </Row>
-                        </div>
-                    </div>
+                            </Row> */}
+                        </Row>
+                    </Container>
                 </Row>
+                <div className="map">
+                    {[...Array(50)].map((ykey, y: number) => {
+                        return <div className="flex-row">
+                            {[...Array(50)].map((xkey, x: number) => {
+                                return <MapCell
+                                    x={x}
+                                    y={y}
+                                    terrain={this.state.terrain[y][x]}
+                                    parent={this}
+                                    structure={this.getStructure(x, y)}
+                                    road={this.getRoadProps(x, y)}
+                                    rampart={this.isRampart(x, y)}
+                                    source={this.hasSource(x, y)}
+                                    mineral={this.getMineral(x, y)}
+                                    key={'mc-'+ x + '-' + y}
+                                />
+                            })}
+                        </div>
+                    })}
+                </div>
             </Container>
         );
     }
@@ -729,6 +717,7 @@ interface ImportRoomFormProps {
     world: string;
     shard: string;
     worlds: {[worldName: string]: {shards: string[]}};
+    modal: boolean;
 }
 
 interface FieldValidation {
@@ -744,6 +733,7 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
         shard: FieldValidation;
         showStructures: boolean;
         submitCalled: boolean;
+        modal: boolean;
     }>;
 
     constructor(props: any) {
@@ -765,7 +755,8 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
                 valid: true
             },
             showStructures: true,
-            submitCalled: false
+            submitCalled: false,
+            modal: false
         };
         this.handleSubmit = this.handleSubmit.bind(this);
     }
@@ -842,6 +833,7 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
     
     handleSubmit(e: any) {
         e.preventDefault();
+        this.toggleModal();
 
         const component = this.props.planner;
         const room = this.state.room.value;
@@ -933,61 +925,76 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
             });
         });
     }
+
+    toggleModal() {
+        this.setState({modal: !this.state.modal});
+    }
     
     render() {
         return (
-            <form className="load-room" onSubmit={this.handleSubmit}>
-                <Row>
-                    <Col xs={6}>
-                        <Label for="worldName">World</Label>
-                        {Object.keys(this.props.worlds).length === 0 &&
-                            <div className="loading">Loading</div>
-                        }
-                        {Object.keys(this.props.worlds).length > 0 &&
-                            <Input type="select" id="worldName" name="world" invalid={!this.state.world.valid} onChange={(e) => this.handleTextChange(e, this.validateWorld)}>
-                                {Object.keys(this.props.worlds).map((world: string) => {
-                                    return <option key={world} value={world}>{screepsWorlds[world]}</option>
-                                })}
-                            </Input>
-                        }
-                        <FormFeedback>Invalid world selection</FormFeedback>
-                    </Col>
-                    <Col xs={6}>
-                        <Label for="shardName">Shard</Label>
-                        {!this.state.world.valid &&
-                            <div className="loading">Loading</div>
-                        }
-                        {this.state.world.valid &&
-                            <Input type="select" id="shardName" name="shard" invalid={!this.state.shard.valid} onChange={(e) => this.handleTextChange(e, this.validateShard)}>
-                                {this.props.worlds[this.state.world.value] && this.props.worlds[this.state.world.value].shards.map((shard) => {
-                                    return <option key={shard} value={shard}>{shard}</option>
-                                })}
-                            </Input>
-                        }
-                        <FormFeedback>Invalid shard selection</FormFeedback>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col xs={6}>
-                        <Label for="roomName">Room</Label>
-                        <Input type="text" id="roomName" name="room" value={this.state.room.value} invalid={!this.state.room.valid} onBlur={(e) => this.handleTextBlur(e, this.validateRoom)} onChange={(e) => this.handleTextChange(e, this.validateRoom)} />
-                        <FormFeedback>Invalid room name</FormFeedback>
-                    </Col>
-                    <Col xs={6}>
-                        <Label className="show-structures">
-                            <Input type="checkbox" name="showStructures" checked={this.state.showStructures} onChange={(e) => this.handleCheckboxChange(e)} />
-                            Include Structures
-                        </Label>
-                    </Col>
-                </Row>
-                <Row>
-                    <Col>
-                        <button type="submit" className="btn btn-secondary btn-sm" onMouseDown={() => this.setState({submitCalled: true})}>
+            <div>
+                <button className="btn btn-secondary" onClick={() => this.toggleModal()}>Import Room</button>
+                <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
+                    <ModalHeader toggle={() => this.toggleModal()}>Import Room</ModalHeader>
+                    <ModalBody>
+                        <form id="load-room" className="load-room" onSubmit={this.handleSubmit}>
+                            <Row>
+                                <Col xs={6}>
+                                    <Label for="worldName">World</Label>
+                                    {Object.keys(this.props.worlds).length === 0 &&
+                                        <div className="loading">Loading</div>
+                                    }
+                                    {Object.keys(this.props.worlds).length > 0 &&
+                                        <Input type="select" id="worldName" name="world" invalid={!this.state.world.valid} onChange={(e) => this.handleTextChange(e, this.validateWorld)}>
+                                            {Object.keys(this.props.worlds).map((world: string) => {
+                                                return <option key={world} value={world}>{screepsWorlds[world]}</option>
+                                            })}
+                                        </Input>
+                                    }
+                                    <FormFeedback>Invalid world selection</FormFeedback>
+                                </Col>
+                                <Col xs={6}>
+                                    <Label for="shardName">Shard</Label>
+                                    {!this.state.world.valid &&
+                                        <div className="loading">Loading</div>
+                                    }
+                                    {this.state.world.valid &&
+                                        <Input type="select" id="shardName" name="shard" invalid={!this.state.shard.valid} onChange={(e) => this.handleTextChange(e, this.validateShard)}>
+                                            {this.props.worlds[this.state.world.value] && this.props.worlds[this.state.world.value].shards.map((shard) => {
+                                                return <option key={shard} value={shard}>{shard}</option>
+                                            })}
+                                        </Input>
+                                    }
+                                    <FormFeedback>Invalid shard selection</FormFeedback>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col xs={6}>
+                                    <Label for="roomName">Room</Label>
+                                    <Input type="text" id="roomName" name="room" value={this.state.room.value} invalid={!this.state.room.valid} onBlur={(e) => this.handleTextBlur(e, this.validateRoom)} onChange={(e) => this.handleTextChange(e, this.validateRoom)} />
+                                    <FormFeedback>Invalid room name</FormFeedback>
+                                </Col>
+                                <Col xs={6}>
+                                    <Label className="show-structures">
+                                        <Input type="checkbox" name="showStructures" checked={this.state.showStructures} onChange={(e) => this.handleCheckboxChange(e)} />
+                                        Include Structures
+                                    </Label>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col>
+                                    
+                                </Col>
+                            </Row>
+                        </form>
+                    </ModalBody>
+                    <ModalFooter>
+                        <button type="submit" form="load-room" className="btn btn-primary" onMouseDown={() => this.setState({submitCalled: true})}>
                             Import Room
                         </button>
-                    </Col>
-                </Row>
-            </form>
+                    </ModalFooter>
+                </Modal>
+            </div>
         );
     }
 }

@@ -268,15 +268,9 @@ input[type=number]::-webkit-outer-spin-button {
   background: #5973FF;
 }
 .building-planner .controls {
-  position: absolute;
-  right: 0;
   background-color: #ccc;
   color: #222;
   padding: 10px 15px;
-  box-shadow: -1px 0 3px rgb(0 0 0%);
-}
-.building-planner .controls.hidden {
-  display: none;
 }
 .building-planner .controls .select-structure img {
   width: 32px;
