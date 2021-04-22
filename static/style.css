@@ -307,7 +307,9 @@ input[type=number]::-webkit-outer-spin-button {
   z-index: 99;
 }
 .building-planner .controls .btn.cursor-pos {
-  width: 100px;
+  width: 110px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 .building-planner .map {
   max-width: 84vmin;
