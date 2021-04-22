@@ -4,6 +4,8 @@ import Select, {OptionTypeBase} from 'react-select';
 import * as _ from 'lodash';
 import * as LZString from 'lz-string';
 import * as Constants from './constants';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faCloudUploadAlt, faShareAlt} from '@fortawesome/free-solid-svg-icons';
 
 interface TerrainMap {
     [y: number]: {
@@ -97,9 +99,54 @@ export class BuildingPlanner extends React.Component {
         if (searchParams.get('share')) {
             let json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
             if (json) {
-                this.loadJSON(JSON.parse(json));
+                this.loadJson(JSON.parse(json));
             }
         }
+    }
+
+    loadJson(json: any) {
+        const component = this;
+
+        if (json.shard && json.name) {
+            let world = 'mmo';
+            if (json.world && json.world === 'season') {
+                world = 'season';
+            }
+            fetch(`/api/terrain/${world}/${json.shard}/${json.name}`).then((response) => {
+                response.json().then((data: any) => {
+                    let terrain = data.terrain[0].terrain;
+                    let terrainMap: TerrainMap = {};
+                    for (var y = 0; y < 50; y++) {
+                        terrainMap[y] = {};
+                        for (var x = 0; x < 50; x++) {
+                            let code = terrain.charAt(y * 50 + x);
+                            terrainMap[y][x] = code;
+                        }
+                    }
+
+                    component.setState({terrain: terrainMap});
+                });
+            });
+        }
+
+        let structures: {
+            [structure: string]: Array<{
+                x: number;
+                y: number;
+            }>
+        } = {};
+
+        Object.keys(json.buildings).forEach((structure) => {
+            structures[structure] = json.buildings[structure].pos;
+        });
+
+        component.setState({
+            room: json.name,
+            world: json.world,
+            shard: json.shard,
+            rcl: json.rcl,
+            structures: structures
+        });   
     }
 
     addStructure(x: number, y: number) {
@@ -150,78 +197,6 @@ export class BuildingPlanner extends React.Component {
         }
 
         this.setState({structures: structures});
-    }
-
-    json() {
-        let buildings: {[structure: string]: {pos: Array<{x: number, y: number}>}} = {};
-
-        let json = {
-            name: this.state.room,
-            world: this.state.world,
-            shard: this.state.shard,
-            rcl: this.state.rcl,
-            buildings: buildings
-        };
-        const keepStructures = Object.keys(Constants.CONTROLLER_STRUCTURES);
-
-        Object.keys(this.state.structures).forEach((structure) => {
-            if (keepStructures.indexOf(structure) > -1 && !json.buildings[structure]) {
-                json.buildings[structure] = {
-                    pos: this.state.structures[structure]
-                };
-            }
-        });
-
-        return JSON.stringify(json);
-    }
-
-    setRCL(e: any) {
-        this.setState({rcl: e.target.value});
-    }
-
-    import(e: any) {
-        let json = JSON.parse(e.target.value);
-        
-        this.loadJSON(json);
-    }
-
-    loadJSON(json: any) {
-        const component = this;
-
-        if (json.shard && json.name) {
-            let world = 'mmo';
-            if (json.world && json.world === 'season') {
-                world = 'season';
-            }
-            fetch(`/api/terrain/${world}/${json.shard}/${json.name}`).then((response) => {
-                response.json().then((data: any) => {
-                    let terrain = data.terrain[0].terrain;
-                    let terrainMap: TerrainMap = {};
-                    for (var y = 0; y < 50; y++) {
-                        terrainMap[y] = {};
-                        for (var x = 0; x < 50; x++) {
-                            let code = terrain.charAt(y * 50 + x);
-                            terrainMap[y][x] = code;
-                        }
-                    }
-
-                    component.setState({terrain: terrainMap});
-                });
-            });
-        }
-
-        let structures: {
-            [structure: string]: Array<{
-                x: number;
-                y: number;
-            }>
-        } = {};
-
-        Object.keys(json.buildings).forEach((structure) => {
-            structures[structure] = json.buildings[structure].pos;
-        });
-
-        component.setState({room: json.name, world: json.world, shard: json.shard, rcl: json.rcl, structures: structures});   
     }
 
     getRoadProps(x: number, y: number) {
@@ -329,15 +304,10 @@ export class BuildingPlanner extends React.Component {
         return null;
     }
 
-    shareableLink() {
-        let string = LZString.compressToEncodedURIComponent(this.json());
-        return "/building-planner/?share=" + string;
-    }
-
     getSelectedBrush() {
         const selected: OptionTypeBase = {
             value: this.state.brush,
-            label: this.state.brushLabel
+            label: this.getStructureBrushLabel(this.state.brush)
         };
         return selected;
     }
@@ -345,32 +315,95 @@ export class BuildingPlanner extends React.Component {
     getStructureBrushes() {
         const options: OptionTypeBase[] = [];
         Object.keys(Constants.STRUCTURES).map(key => {
+            let props: OptionTypeBase = {
+                value: key,
+                label: this.getStructureBrushLabel(key)
+            };
+            if (this.getStructureDisabled(key)) {
+                props.isDisabled = true;
+            }
+            options.push(props);
+        });
+        return options;
+    }
+
+    getStructureDisabled(key: string) {
+        const total = Constants.CONTROLLER_STRUCTURES[key][this.state.rcl];
+        if (total === 0) {
+            return true;
+        }
+        const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
+        if (placed === total) {
+            return true;
+        }
+        return false;
+    }
+
+    getStructureBrushLabel(key: string) {
+        const structure = Constants.STRUCTURES[key];
+        const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
+        const total = Constants.CONTROLLER_STRUCTURES[key][this.state.rcl];
+        return (
+            <div>
+                <img src={`/static/assets/structures/${key}.png`} />{' '}
+                {structure}
+                <span className="right">{placed}/{total}</span>
+            </div>
+        );
+    }
+
+    getRCLOptions() {
+        const options: OptionTypeBase[] = [];
+        const roomLevels = Array.from(Array(8), (_, x) => ++x);
+        roomLevels.map(key => {
             options.push({
                 value: key,
-                label: <div><img src={'/static/assets/structures/' + key + '.png'} /> {Constants.STRUCTURES[key]} <span className="right">{this.state.structures[key] ? this.state.structures[key].length : 0}/{Constants.CONTROLLER_STRUCTURES[key][this.state.rcl]}</span></div>
+                label: `RCL ${key}`
             });
         });
         return options;
     }
 
-    handleBrushChange(selected: OptionTypeBase | null) {
-        const brush = (selected ? selected.value : 'spawn');
-        const brushLabel = selected ? selected.label : null;
-        this.setState({brush, brushLabel});
-    };
+    getSelectedRCL(): OptionTypeBase {
+        return {
+            value: this.state.rcl,
+            label: `RCL ${this.state.rcl}`
+        };
+    }
 
     render() {        
         return (
-            <Container className="building-planner" fluid={true}>
-                <Row className="controls">
+            <div className="building-planner">
+                <Container className="controls" fluid={true}>
                     <Container>
-                        <Row>
-                            {/* <button className="burger-menu" onClick={() => this.openOrCloseMenu()}>
-                                <div /><div /><div />
-                            </button> */}
-                            
-                            <Col xs={2}>
-                                <ImportRoomForm
+                        <Row className="justify-content-center">
+                            {/* 
+                                <button className="burger-menu" onClick={() => this.openOrCloseMenu()}>
+                                    <div /><div /><div />
+                                </button>
+                            */}
+                            <Col xs={'auto'}>
+                                <Select
+                                    defaultValue={this.state.brush}
+                                    value={this.getSelectedBrush()}
+                                    options={this.getStructureBrushes()}
+                                    onChange={(selected) => this.setState({brush: selected.value})}
+                                    className="select-structure"
+                                    classNamePrefix="select"
+                                />
+                            </Col>
+                            <Col xs={'auto'}>
+                                <Select
+                                    defaultValue={this.state.brush}
+                                    value={this.getSelectedRCL()}
+                                    options={this.getRCLOptions()}
+                                    onChange={(selected) => this.setState({rcl: selected.value})}
+                                    className="select-rcl"
+                                    classNamePrefix="select"
+                                />
+                            </Col>
+                            <Col xs={'auto'}>
+                                <ModalImportRoomForm
                                     planner={this}
                                     room={this.state.room}
                                     shard={this.state.shard}
@@ -379,42 +412,20 @@ export class BuildingPlanner extends React.Component {
                                     modal={false}
                                 />
                             </Col>
-                            <Col xs={4}>
-                                <Select
-                                    name="brush"
-                                    defaultValue={this.state.brush}
-                                    value={this.getSelectedBrush()}
-                                    options={this.getStructureBrushes()}
-                                    onChange={(selected) => this.handleBrushChange(selected)}
-                                    className="select-structure"
-                                    classNamePrefix="select"
+                            <Col xs={'auto'}>
+                                <ModalJson
+                                    planner={this}
+                                    modal={false}
                                 />
                             </Col>
-                            <Col xs={2}>
-                                <Input type="select" className="rcl float-right" value={this.state.rcl} onChange={(e) => this.setRCL(e)}>
-                                    <option value={1}>1</option>
-                                    <option value={2}>2</option>
-                                    <option value={3}>3</option>
-                                    <option value={4}>4</option>
-                                    <option value={5}>5</option>
-                                    <option value={6}>6</option>
-                                    <option value={7}>7</option>
-                                    <option value={8}>8</option>
-                                </Input>
-                                <p className="float-right">RCL</p>
+                            <Col xs={'auto'} className="sm-hidden">
+                                <button className="btn btn-secondary cursor-pos disabled" title="Cursor Position">
+                                    X: {this.state.x} Y: {this.state.y}
+                                </button>
                             </Col>
-                            <Col xs={2}>
-                                <p>X: {this.state.x} Y: {this.state.y}</p>
-                            </Col>
-                            {/* <Row>
-                                <Col>
-                                    <Input type="textarea" value={this.json()} id="json-data" onChange={(e) => this.import(e)} />
-                                    <a href={this.shareableLink()} id="share-link">Shareable Link</a>
-                                </Col>
-                            </Row> */}
                         </Row>
                     </Container>
-                </Row>
+                </Container>
                 <div className="map">
                     {[...Array(50)].map((ykey, y: number) => {
                         return <div className="flex-row">
@@ -435,7 +446,7 @@ export class BuildingPlanner extends React.Component {
                         </div>
                     })}
                 </div>
-            </Container>
+            </div>
         );
     }
 }
@@ -708,10 +719,87 @@ class MapCell extends React.Component<MapCellProps> {
 }
 
 /**
- * Load Room Form
+ * Json Output Modal
  */
 
-interface ImportRoomFormProps {
+interface ModalJsonProps {
+    planner: BuildingPlanner;
+    modal: boolean;
+}
+
+class ModalJson extends React.Component<ModalJsonProps> {
+    state: Readonly<{
+        modal: boolean;
+    }>;
+
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            modal: false
+        };
+    }
+
+    createJson() {
+        let buildings: {[structure: string]: {pos: Array<{x: number, y: number}>}} = {};
+
+        const parent = this.props.planner;
+        let json = {
+            name: parent.state.room,
+            world: parent.state.world,
+            shard: parent.state.shard,
+            rcl: parent.state.rcl,
+            buildings: buildings
+        };
+        const keepStructures = Object.keys(Constants.CONTROLLER_STRUCTURES);
+
+        Object.keys(parent.state.structures).forEach((structure) => {
+            if (keepStructures.indexOf(structure) > -1 && !json.buildings[structure]) {
+                json.buildings[structure] = {
+                    pos: parent.state.structures[structure]
+                };
+            }
+        });
+
+        return JSON.stringify(json);
+    }
+
+    import(e: any) {
+        let json = JSON.parse(e.target.value);
+        this.props.planner.loadJson(json);
+    }
+
+    shareableLink() {
+        let string = LZString.compressToEncodedURIComponent(this.createJson());
+        return "/building-planner/?share=" + string;
+    }
+
+    toggleModal() {
+        this.setState({modal: !this.state.modal});
+    }
+
+    render() {
+        return (
+            <div>
+                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Share Results">
+                    <FontAwesomeIcon icon={faShareAlt} />
+                </button>
+                <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
+                    <ModalHeader toggle={() => this.toggleModal()}>Share Results</ModalHeader>
+                    <ModalBody>
+                        <Input type="textarea" value={this.createJson()} id="json-data" onChange={(e) => this.import(e)} />
+                        <a href={this.shareableLink()} id="share-link">Share Link</a>
+                    </ModalBody>
+                </Modal>
+            </div>
+        );
+    }
+}
+
+/**
+ * Import Room Form
+ */
+
+interface ModalImportRoomFormProps {
     planner: BuildingPlanner;
     room: string;
     world: string;
@@ -726,7 +814,7 @@ interface FieldValidation {
     valid: boolean;
 }
 
-class ImportRoomForm extends React.Component<ImportRoomFormProps> {
+class ModalImportRoomForm extends React.Component<ModalImportRoomFormProps> {
     state: Readonly<{
         room: FieldValidation;
         world: FieldValidation;
@@ -835,7 +923,7 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
         e.preventDefault();
         this.toggleModal();
 
-        const component = this.props.planner;
+        const parent = this.props.planner;
         const room = this.state.room.value;
         const world = this.state.world.value;
         const shard = this.state.shard.value;
@@ -844,17 +932,17 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
         const validation = [
             {
                 field: 'room',
-                value: this.state.room.value,
+                value: room,
                 validationFunc: this.validateRoom
             },
             {
                 field: 'world',
-                value: this.state.world.value,
+                value: world,
                 validationFunc: this.validateWorld
             },
             {
                 field: 'shard',
-                value: this.state.shard.value,
+                value: shard,
                 validationFunc: this.validateShard
             }
         ];
@@ -884,7 +972,12 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
                         terrainMap[y][x] = code;
                     }
                 }
-                component.setState({terrain: terrainMap, room: room, world: world, shard: shard});
+                parent.setState({
+                    terrain: terrainMap,
+                    room: room, 
+                    world: world, 
+                    shard: shard
+                });
             });
         });
 
@@ -921,7 +1014,11 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
                         }
                     }
                 }
-                component.setState({structures: structures, sources: sources, mineral: mineral});
+                parent.setState({
+                    structures: structures,
+                    sources: sources,
+                    mineral: mineral
+                });
             });
         });
     }
@@ -933,7 +1030,9 @@ class ImportRoomForm extends React.Component<ImportRoomFormProps> {
     render() {
         return (
             <div>
-                <button className="btn btn-secondary" onClick={() => this.toggleModal()}>Import Room</button>
+                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Import Room">
+                    <FontAwesomeIcon icon={faCloudUploadAlt} />
+                </button>
                 <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
                     <ModalHeader toggle={() => this.toggleModal()}>Import Room</ModalHeader>
                     <ModalBody>

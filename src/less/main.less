@@ -57,6 +57,11 @@ textarea.form-control {
     min-height: 80px;
     max-height: 400px;
     padding: 2px 5px;
+
+    &#json-data {
+        min-height: 200px;
+        max-height: 600px;
+    }
 }
 
 input[type=number]::-webkit-inner-spin-button, 
@@ -333,7 +338,18 @@ input[type=number]::-webkit-outer-spin-button {
         color: #222;
         padding: 10px 15px;
 
+        .col-auto {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        .select-rcl {
+            width: 100px;
+        }
+
         .select-structure {
+            width: 230px;
+
             img {
                 width: 32px;
                 height: 32px;
@@ -349,91 +365,26 @@ input[type=number]::-webkit-outer-spin-button {
                     padding-right: 13px;
                 }
             }
-        }
-        
-        .brushes {
-            cursor: pointer;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            border: 1px solid #b7b7b7;
-            
-            li {
-                position: relative;
-                background-color: #fff;
-                padding: 4px 5px;
-                line-height: 24px;
-                
-                span {
-                    float: right;
-                }
-                
+
+            .select__option--is-disabled {
                 img {
-                    width:24px;
-                    vertical-align: top;
-                }
-                
-                &.active {
-                    background-color: #54a6ff;
-                }
-                
-                &:hover,
-                &.active:hover {
-                    background-color: #a4d0ff;
-                }
-                
-                &.disabled {
-                    color: #c5c5c5 !important;
-                    background-color: #fff !important;
-                    
-                    img {
-                        opacity: 0.3;
-                    }
+                    opacity: 0.3;
                 }
             }
         }
 
-        select.rcl {
-            width: 40px;
-            height: 24px;
-            margin-left: 5px;
-            padding: 0 0 0 5px;
-            border-radius: 2px;
+        .select__menu {
+            z-index: 99;
         }
 
-        form.load-room {
-            label {
-                margin: 0;
-            }
-            label.show-structures {
-                margin-top: 25px;
-            }
-            input.form-control,
-            select.form-control {
-                height: 30px;
-            }
-            input.form-control {
-                padding-left: 5px;
-            }
-            input[type=checkbox] {
-                position: relative;
-                display: block;
-                float: left;
-                height: 20px;
-                width: 20px;
-                margin: 3px 5px 8px 0;
-            }
-            button {
-                width: 100%;
-                margin-top: 10px;
-            }
+        .btn.cursor-pos {
+            width: 100px;
         }
     }
     
     .map {
-        max-width: 92vmin;
-        margin: 10px auto;
-        border: 1px solid rgba(15, 15, 15, 0.65);
+        max-width: 84vmin;
+        margin: 0 auto;
         background-color: rgba(15, 15, 15, 0.65);
 
         .flex-row {
@@ -481,11 +432,11 @@ input[type=number]::-webkit-outer-spin-button {
                 }
 
                 img {
-                    z-index: 50;
+                    z-index: 3;
                 }
 
                 svg {
-                    z-index: 40;
+                    z-index: 2;
                 }
                 
                 &.wall {
@@ -514,6 +465,43 @@ input[type=number]::-webkit-outer-spin-button {
                 }
             }
         }
+    }
+}
+
+@media (max-width: 768px) {
+    .building-planner .map {
+        min-width: 100%;
+    }
+    .sm-hidden {
+        display: none;
+    }
+}
+
+form.load-room {
+    label {
+        margin: 0;
+    }
+    label.show-structures {
+        margin-top: 25px;
+    }
+    input.form-control,
+    select.form-control {
+        height: 30px;
+    }
+    input.form-control {
+        padding-left: 5px;
+    }
+    input[type=checkbox] {
+        position: relative;
+        display: block;
+        float: left;
+        height: 20px;
+        width: 20px;
+        margin: 3px 5px 8px 0;
+    }
+    button {
+        width: 100%;
+        margin-top: 10px;
     }
 }
 

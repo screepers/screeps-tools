@@ -9,14 +9,14 @@ export const Index = () => (
             <Col sm={6}>
                 <Card body inverse style={{ backgroundColor: '#222', borderColor: '#1e1e1e' }}>
                     <CardTitle>Building Planner</CardTitle>
-                    <CardText>The Building planner is a port of Dissi's Building planner into React.</CardText>
+                    <CardText>Plan your next room layout with the Building Planner for Screeps.</CardText>
                     <Link to='/building-planner'><Button>Plan Room</Button></Link>
                 </Card>
             </Col>
             <Col sm={6}>
                 <Card body inverse style={{ backgroundColor: '#222', borderColor: '#1e1e1e' }}>
                     <CardTitle>Creep Designer</CardTitle>
-                    <CardText>The Creep Designer gives a UI to build creeps and see all their stats.</CardText>
+                    <CardText>Evaluate the potential of your creeps with the Creep Designer.</CardText>
                     <Link to='/creep-designer'><Button>Design Creep</Button></Link>
                 </Card>
             </Col>

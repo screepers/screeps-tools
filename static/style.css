@@ -48,6 +48,10 @@ textarea.form-control {
   max-height: 400px;
   padding: 2px 5px;
 }
+textarea.form-control#json-data {
+  min-height: 200px;
+  max-height: 600px;
+}
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -272,6 +276,16 @@ input[type=number]::-webkit-outer-spin-button {
   color: #222;
   padding: 10px 15px;
 }
+.building-planner .controls .col-auto {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.building-planner .controls .select-rcl {
+  width: 100px;
+}
+.building-planner .controls .select-structure {
+  width: 230px;
+}
 .building-planner .controls .select-structure img {
   width: 32px;
   height: 32px;
@@ -286,76 +300,18 @@ input[type=number]::-webkit-outer-spin-button {
   padding-top: 2px;
   padding-right: 13px;
 }
-.building-planner .controls .brushes {
-  cursor: pointer;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border: 1px solid #b7b7b7;
-}
-.building-planner .controls .brushes li {
-  position: relative;
-  background-color: #fff;
-  padding: 4px 5px;
-  line-height: 24px;
-}
-.building-planner .controls .brushes li span {
-  float: right;
-}
-.building-planner .controls .brushes li img {
-  width: 24px;
-  vertical-align: top;
-}
-.building-planner .controls .brushes li.active {
-  background-color: #54a6ff;
-}
-.building-planner .controls .brushes li:hover,
-.building-planner .controls .brushes li.active:hover {
-  background-color: #a4d0ff;
-}
-.building-planner .controls .brushes li.disabled {
-  color: #c5c5c5 !important;
-  background-color: #fff !important;
-}
-.building-planner .controls .brushes li.disabled img {
+.building-planner .controls .select-structure .select__option--is-disabled img {
   opacity: 0.3;
 }
-.building-planner .controls select.rcl {
-  width: 40px;
-  height: 24px;
-  margin-left: 5px;
-  padding: 0 0 0 5px;
-  border-radius: 2px;
+.building-planner .controls .select__menu {
+  z-index: 99;
 }
-.building-planner .controls form.load-room label {
-  margin: 0;
-}
-.building-planner .controls form.load-room label.show-structures {
-  margin-top: 25px;
-}
-.building-planner .controls form.load-room input.form-control,
-.building-planner .controls form.load-room select.form-control {
-  height: 30px;
-}
-.building-planner .controls form.load-room input.form-control {
-  padding-left: 5px;
-}
-.building-planner .controls form.load-room input[type=checkbox] {
-  position: relative;
-  display: block;
-  float: left;
-  height: 20px;
-  width: 20px;
-  margin: 3px 5px 8px 0;
-}
-.building-planner .controls form.load-room button {
-  width: 100%;
-  margin-top: 10px;
+.building-planner .controls .btn.cursor-pos {
+  width: 100px;
 }
 .building-planner .map {
-  max-width: 92vmin;
-  margin: 10px auto;
-  border: 1px solid rgba(15, 15, 15, 0.65);
+  max-width: 84vmin;
+  margin: 0 auto;
   background-color: rgba(15, 15, 15, 0.65);
 }
 .building-planner .map .flex-row {
@@ -401,10 +357,10 @@ input[type=number]::-webkit-outer-spin-button {
   width: 100%;
 }
 .building-planner .map .flex-row .cell img {
-  z-index: 50;
+  z-index: 3;
 }
 .building-planner .map .flex-row .cell svg {
-  z-index: 40;
+  z-index: 2;
 }
 .building-planner .map .flex-row .cell.wall {
   background-color: #000;
@@ -424,6 +380,39 @@ input[type=number]::-webkit-outer-spin-button {
 .building-planner .map .flex-row .cell.hover.swamp {
   background-color: #444638;
   border-color: #444638;
+}
+@media (max-width: 768px) {
+  .building-planner .map {
+    min-width: 100%;
+  }
+  .sm-hidden {
+    display: none;
+  }
+}
+form.load-room label {
+  margin: 0;
+}
+form.load-room label.show-structures {
+  margin-top: 25px;
+}
+form.load-room input.form-control,
+form.load-room select.form-control {
+  height: 30px;
+}
+form.load-room input.form-control {
+  padding-left: 5px;
+}
+form.load-room input[type=checkbox] {
+  position: relative;
+  display: block;
+  float: left;
+  height: 20px;
+  width: 20px;
+  margin: 3px 5px 8px 0;
+}
+form.load-room button {
+  width: 100%;
+  margin-top: 10px;
 }
 .loading {
   position: relative;
