@@ -1,30 +1,4 @@
 import * as React from 'react';
-import {BuildingPlanner} from './building-planner';
-
-/**
- * Map Cell
- */
-interface MapCellProps {
-    x: number;
-    y: number;
-    terrain: number;
-    parent: BuildingPlanner;
-    structure: string | null;
-    road: {
-        middle: boolean;
-        top: boolean;
-        top_right: boolean;
-        right: boolean;
-        bottom_right: boolean;
-        bottom: boolean;
-        bottom_left: boolean;
-        left: boolean;
-        top_left: boolean;
-    };
-    rampart: boolean;
-    source: boolean;
-    mineral: string | null;
-}
 
 export class MapCell extends React.Component<MapCellProps> {
     state: Readonly<{
