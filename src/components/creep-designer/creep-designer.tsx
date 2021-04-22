@@ -12,9 +12,12 @@ export class CreepDesigner extends React.Component{
         controller: number;
         structures: {[structureType: string]: number};
     }>;
+    energyStructures: string[];
     
     constructor(props: any) {
         super(props);
+
+        this.energyStructures = ['spawn', 'extension'];
         
         this.state = {
             unitCount: 1,
@@ -363,7 +366,7 @@ export class CreepDesigner extends React.Component{
         const rcl = e.target.value;
         let structures = this.state.structures;
         
-        for (let type of Object.keys(Constants.CONTROLLER_STRUCTURES)) {
+        for (let type of this.energyStructures) {
             structures[type] = Constants.CONTROLLER_STRUCTURES[type][rcl];
         }
 
@@ -435,7 +438,7 @@ export class CreepDesigner extends React.Component{
 
     totalEnergyCapacity() {
         let energySum = 0;
-        for (let type of Object.keys(Constants.CONTROLLER_STRUCTURES)) {
+        for (let type of this.energyStructures) {
             energySum += this.structureSum(type);
         }
         return energySum;
@@ -608,7 +611,7 @@ export class CreepDesigner extends React.Component{
                                     <tr>
                                         <td colSpan={5}><hr /></td>
                                     </tr>
-                                    {Object.keys(Constants.CONTROLLER_STRUCTURES).map(type => {
+                                    {this.energyStructures.map(type => {
                                         return (
                                             <tr key={type} className={this.state.structures[type] > 0 ? 'active' : ''}>
                                                 <td className="part">{this.capitalize(type)}</td>
