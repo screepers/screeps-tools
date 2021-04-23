@@ -229,14 +229,16 @@ export class MapCell extends React.Component<MapCellProps> {
 
     render() {
         return (
-            <div className={this.className()}
-                onMouseEnter={this.mouseEnter.bind(this)}
-                onMouseLeave={this.mouseLeave.bind(this)}
-                onClick={this.onClick.bind(this)}
-                onContextMenu={this.onContextMenu.bind(this)}
-                data-x={this.props.x}
-                data-y={this.props.y}>
-                {this.getCellContent()}
+            <div className="tile">
+                <div className={this.className()}
+                    onMouseEnter={this.mouseEnter.bind(this)}
+                    onMouseLeave={this.mouseLeave.bind(this)}
+                    onClick={this.onClick.bind(this)}
+                    onContextMenu={this.onContextMenu.bind(this)}
+                    data-x={this.props.x}
+                    data-y={this.props.y}>
+                    {this.getCellContent()}
+                </div>
             </div>
         );
     }

@@ -290,11 +290,6 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .building-planner {
-    
-    .rampart {
-        background-color:#314b31 !important;
-        border-color: #438643 !important;
-    }
 
     button.burger-menu {
         position: absolute;
@@ -355,20 +350,19 @@ input[type=number]::-webkit-outer-spin-button {
                 height: 32px;
             }
             span.right {
+                padding: 4px 10px 4px 0;
                 float: right;
             }
             .select__single-value {
                 width: 100%;
-
-                span.right {
-                    padding-top: 2px;
-                    padding-right: 13px;
-                }
             }
 
             .select__option--is-disabled {
                 img {
                     opacity: 0.3;
+                }
+                &.select__option--is-selected {
+                    background: transparent;
                 }
             }
         }
@@ -385,56 +379,39 @@ input[type=number]::-webkit-outer-spin-button {
     }
     
     .map {
-        max-width: 84vmin;
-        margin: 0 auto;
-        background-color: rgba(15, 15, 15, 0.65);
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 20px auto;
+        width: 800px;
+        height: 800px;
+        box-shadow: rgba(0, 0, 0, 0.137) 0 12px 50px 0;
+        background: rgb(48, 48, 48);
 
-        .flex-row {
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            display: -webkit-box;
-            display: -moz-box;
-            display: -ms-flexbox;
-            display: -webkit-flex;
+        .tile {
             display: flex;
-            justify-content: space-around;
+            height: 16px;
+            width: 16px;
             
             .cell {
-                flex: 1 0 auto;
-                width: auto;
-                height: auto;
                 position: relative;
-                float: left;
-                border:1px solid rgba(15, 15, 15, 0.65);
-                cursor: pointer;
-                user-select: none;
-                -moz-user-select: none;
-                -webkit-user-select: none;
-                -ms-user-select: none;
-                background-size:contain;
-                background-color: #222;
-                box-sizing: border-box;
-                padding: 0;
-                margin: 0;
-
-                &:before {
-                    content:'';
-                    float:left;
-                    padding-top:100%;
-                }
+                width: 16px;
+                height: 16px;
+                background: transparent;
 
                 img,
                 svg {
                     position: absolute;
                     top: 0px;
                     left: 0px;
-                    height: 100%;
-                    width: 100%;
+                    height: 16px;
+                    width: 16px;
                 }
 
                 img {
                     z-index: 3;
+                    user-select: none;
                 }
 
                 svg {
@@ -442,19 +419,24 @@ input[type=number]::-webkit-outer-spin-button {
                 }
                 
                 &.wall {
-                    background-color: #000;
-                    border:1px solid #000;
+                    background: #171717;
                 }
                 
                 &.swamp {
                     background-color: #292b18;
                 }
-                
-                &.hover {
-                    background-color: #555;
-                    border-color: #555;
-                    // border-color:#ff9800; // orange outline
 
+                &.rampart {
+                    background-color:#314b31;
+                    box-shadow: inset rgba(67, 134, 67, 0.6) 0 0 0 1px;
+                }
+            }
+
+            &:hover {
+                background-color: #555;
+                border-color: #555;
+
+                .cell {
                     &.wall {
                         background-color: #383838;
                         border-color: #383838;
@@ -463,6 +445,10 @@ input[type=number]::-webkit-outer-spin-button {
                     &.swamp {
                         background-color: #444638;
                         border-color: #444638;
+                    }
+
+                    &.rampart {
+                        background-color: #375d37;
                     }
                 }
             }

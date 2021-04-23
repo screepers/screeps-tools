@@ -296,6 +296,9 @@ export class BuildingPlanner extends React.Component {
     }
 
     getSelectedBrush() {
+        if (!this.state.brush) {
+            return null;
+        }
         const selected: OptionTypeBase = {
             value: this.state.brush,
             label: this.getStructureBrushLabel(this.state.brush)
@@ -355,6 +358,14 @@ export class BuildingPlanner extends React.Component {
         return options;
     }
 
+    setRCL(rcl: number) {
+        this.setState({rcl: rcl});
+
+        if (Constants.CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
+            this.setState({brush: null, brushLabel: null});
+        }
+    }
+
     getSelectedRCL(): OptionTypeBase {
         return {
             value: this.state.rcl,
@@ -388,7 +399,7 @@ export class BuildingPlanner extends React.Component {
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedRCL()}
                                     options={this.getRCLOptions()}
-                                    onChange={(selected) => this.setState({rcl: selected.value})}
+                                    onChange={(selected) => this.setRCL(selected.value)}
                                     className="select-rcl"
                                     classNamePrefix="select"
                                 />
@@ -418,23 +429,21 @@ export class BuildingPlanner extends React.Component {
                     </Container>
                 </Container>
                 <div className="map">
-                    {[...Array(50)].map((ykey, y: number) => {
-                        return <div className="flex-row">
-                            {[...Array(50)].map((xkey, x: number) => {
-                                return <MapCell
-                                    x={x}
-                                    y={y}
-                                    terrain={this.state.terrain[y][x]}
-                                    parent={this}
-                                    structure={this.getStructure(x, y)}
-                                    road={this.getRoadProps(x, y)}
-                                    rampart={this.isRampart(x, y)}
-                                    source={this.hasSource(x, y)}
-                                    mineral={this.getMineral(x, y)}
-                                    key={'mc-'+ x + '-' + y}
-                                />
-                            })}
-                        </div>
+                    {[...Array(50)].map((yval, y: number) => {
+                        return [...Array(50)].map((xval, x: number) =>
+                            <MapCell
+                                x={x}
+                                y={y}
+                                terrain={this.state.terrain[y][x]}
+                                parent={this}
+                                structure={this.getStructure(x, y)}
+                                road={this.getRoadProps(x, y)}
+                                rampart={this.isRampart(x, y)}
+                                source={this.hasSource(x, y)}
+                                mineral={this.getMineral(x, y)}
+                                key={'mc-'+ x + '-' + y}
+                            />
+                        )
                     })}
                 </div>
             </div>
