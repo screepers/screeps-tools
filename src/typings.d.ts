@@ -19,13 +19,17 @@ interface BuildingPlannerProps extends React.Component {
         structures: {[structure: string]: {x: number; y: number;}[]};
         sources: {x: number; y: number;}[];
         mineral: {[mineralType: string]: {x: number; y: number;}};
+        settings: {
+            showStats: boolean;
+        };
     };
+    resetState(): void;
     loadJson(json: any): any;
     addStructure(x: number, y: number): boolean;
     removeStructure(x: number, y: number, structure: string | null): void;
 }
 
-interface ModalJsonProps {
+interface ModalProps {
     planner: BuildingPlannerProps;
     modal: boolean;
 }

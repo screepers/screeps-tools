@@ -5,7 +5,7 @@ import * as Constants from '../common/constants';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faShareAlt} from '@fortawesome/free-solid-svg-icons';
 
-export class ModalJson extends React.Component<ModalJsonProps> {
+export class ModalJson extends React.Component<ModalProps> {
     state: Readonly<{
         modal: boolean;
     }>;
@@ -58,11 +58,11 @@ export class ModalJson extends React.Component<ModalJsonProps> {
     render() {
         return (
             <div>
-                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Share Results">
+                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Results">
                     <FontAwesomeIcon icon={faShareAlt} />
                 </button>
                 <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
-                    <ModalHeader toggle={() => this.toggleModal()}>Share Results</ModalHeader>
+                    <ModalHeader toggle={() => this.toggleModal()}>Results</ModalHeader>
                     <ModalBody>
                         <Input type="textarea" value={this.createJson()} id="json-data" onChange={(e) => this.import(e)} />
                         <a href={this.shareableLink()} id="share-link">Share Link</a>

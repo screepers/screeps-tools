@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {MapCell} from './map-cell';
 import {ModalJson} from './modal-json';
+import {ModalReset} from './modal-reset';
+import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Container, Row, Col} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
@@ -24,11 +26,17 @@ export class BuildingPlanner extends React.Component {
         structures: {[structure: string]: {x: number; y: number;}[]};
         sources: {x: number; y: number;}[];
         mineral: {[mineralType: string]: {x: number; y: number;}};
+        settings: {
+            showStats: boolean;
+        };
     }>;
 
     constructor(props: any) {
         super(props);
+        this.state = this.getInitialState();
+    }
 
+    getInitialState() {
         let terrain: TerrainMap = {};
 
         const cachedTerrain = cacheUtil.get(CacheKey.Terrain);
@@ -44,7 +52,7 @@ export class BuildingPlanner extends React.Component {
             }
         }
 
-        this.state = {
+        return {
             room: cacheUtil.get(CacheKey.Room) ?? '',
             world: cacheUtil.get(CacheKey.World) ?? 'mmo',
             shard: cacheUtil.get(CacheKey.Shard) ?? 'shard0',
@@ -61,13 +69,35 @@ export class BuildingPlanner extends React.Component {
             rcl: cacheUtil.get(CacheKey.RCL) ?? 8,
             structures: cacheUtil.get(CacheKey.Structures) ?? {},
             sources: cacheUtil.get(CacheKey.Sources) ?? [],
-            mineral: cacheUtil.get(CacheKey.Mineral) ?? {}
-        };
+            mineral: cacheUtil.get(CacheKey.Mineral) ?? {},
+            settings: {
+                showStats: cacheUtil.get(CacheKey.ShowStats) ?? true,
+            }
+        }
+    }
+
+    resetState() {
+        cacheUtil.removeAll();
+        this.setState(this.getInitialState());
+        this.loadShards();
     }
 
     componentDidMount() {
-        const component = this;
+        this.loadShards();
 
+        let params = location.href.split('?')[1];
+        let searchParams = new URLSearchParams(params);
+
+        if (searchParams.get('share')) {
+            let json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
+            if (json) {
+                this.loadJson(JSON.parse(json));
+            }
+        }
+    }
+
+    loadShards() {
+        const component = this;
         for (const world in screepsWorlds) {
             fetch(`/api/shards/${world}`).then((response) => {
                 response.json().then((data: any) => {
@@ -88,16 +118,6 @@ export class BuildingPlanner extends React.Component {
                     });
                 });
             });
-        }
-
-        let params = location.href.split('?')[1];
-        let searchParams = new URLSearchParams(params);
-
-        if (searchParams.get('share')) {
-            let json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
-            if (json) {
-                this.loadJson(JSON.parse(json));
-            }
         }
     }
 
@@ -441,19 +461,45 @@ export class BuildingPlanner extends React.Component {
                                     modal={false}
                                 />
                             </Col>
-                            {this.state.room && <Col xs={'auto'} className="sm-hidden">
-                                <button className="btn btn-secondary cursor-pos disabled" title="Cursor Position">
-                                    {this.state.room}
-                                </button>
-                            </Col>}
-                            <Col xs={'auto'} className="sm-hidden">
-                                <button className="btn btn-secondary cursor-pos disabled" title="Cursor Position">
-                                    X: {this.state.x} Y: {this.state.y}
-                                </button>
+                            <Col xs={'auto'}>
+                                <ModalReset
+                                    planner={this}
+                                    modal={false}
+                                />
+                            </Col>
+                            <Col xs={'auto'}>
+                                <ModalSettings
+                                    planner={this}
+                                    modal={false}
+                                />
                             </Col>
                         </Row>
                     </Container>
                 </Container>
+                {this.state.settings.showStats && <div className="stats-overlay">
+                    <table>
+                        {this.state.world && <tr>
+                            <td>World:</td>
+                            <td>{screepsWorlds[this.state.world]}</td>
+                        </tr>}
+                        {this.state.shard && <tr>
+                            <td>Shard:</td>
+                            <td>{this.state.shard}</td>
+                        </tr>}
+                        {this.state.room && <tr>
+                            <td>Room:</td>
+                            <td>{this.state.room}</td>
+                        </tr>}
+                        <tr>
+                            <td>X:</td>
+                            <td>{this.state.x}</td>
+                        </tr>
+                        <tr>
+                            <td>Y:</td>
+                            <td>{this.state.y}</td>
+                        </tr>
+                    </table>
+                </div>}
                 <div className="map">
                     {[...Array(50)].map((yval, y: number) => {
                         return [...Array(50)].map((xval, x: number) =>

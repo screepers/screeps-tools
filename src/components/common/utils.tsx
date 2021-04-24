@@ -1,6 +1,6 @@
 export const screepsWorlds: {[key: string]: string} = {
-    mmo: 'Persistent MMO',
-    season: 'Seasonal',
+    mmo: 'MMO',
+    season: 'Season',
 };
 
 export enum CacheKey {
@@ -14,7 +14,8 @@ export enum CacheKey {
     RCL = 'rcl',
     Structures = 'structures',
     Sources = 'sources',
-    Mineral = 'minearl'
+    Mineral = 'minearl',
+    ShowStats = 'showStats',
 }
 
 interface CacheValues {
@@ -29,6 +30,7 @@ interface CacheValues {
     [CacheKey.Structures]: {[structure: string]: {x: number; y: number;}[]};
     [CacheKey.Sources]: {x: number; y: number;}[];
     [CacheKey.Mineral]: {[mineralType: string]: {x: number; y: number;}};
+    [CacheKey.ShowStats]: boolean;
 }
 
 interface CacheUtil {

@@ -383,7 +383,7 @@ input[type=number]::-webkit-outer-spin-button {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        margin: 20px auto;
+        margin: 15px auto 0;
         width: 800px;
         height: 800px;
         box-shadow: rgba(0, 0, 0, 0.137) 0 12px 50px 0;
@@ -452,6 +452,27 @@ input[type=number]::-webkit-outer-spin-button {
                     }
                 }
             }
+        }
+    }
+
+    .stats-overlay {
+        position: absolute;
+        display: inline-block;
+        background: rgba(16, 16, 16, 0.3);
+        color: #ccc;
+        padding: 3px 9px;
+        margin-top: 15px;
+        z-index: 1;
+
+        td {
+            line-height: 21px;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        td:first-child {
+            text-align: right;
+            padding-right: 7px;
         }
     }
 }
