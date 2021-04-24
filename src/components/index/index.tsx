@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Container, Row, Col, Card, Button, CardTitle, CardText, Alert} from 'reactstrap';
+import {Container, Row, Col, Card, Button, CardTitle, CardText} from 'reactstrap';
 import {Link} from 'react-router-dom';
 
 export const Index = () => (
