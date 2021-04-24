@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {Container, Row, Col, Input} from 'reactstrap';
 import * as Constants from '../common/constants';
+import {cacheUtil, CacheKey} from '../common/utils';
 import {Creep} from './creep';
 
 export class CreepDesigner extends React.Component{
@@ -18,29 +19,51 @@ export class CreepDesigner extends React.Component{
         super(props);
 
         this.energyStructures = ['spawn', 'extension'];
+
+        const cachedBody = cacheUtil.get(CacheKey.Body) ?? {
+            move: 0,
+            work: 0,
+            attack: 0,
+            ranged_attack: 0,
+            tough: 0,
+            heal: 0,
+            claim: 0,
+            carry: 0
+        };
+
+        const cachedBoost = cacheUtil.get(CacheKey.Boost) ?? {
+            move: null,
+            work: null,
+            attack: null,
+            ranged_attack: null,
+            tough: null,
+            heal: null,
+            claim: null,
+            carry: null
+        };
         
         this.state = {
             unitCount: 1,
             tickTime: 3,
             body: {
-                move: 0,
-                work: 0,
-                attack: 0,
-                ranged_attack: 0,
-                tough: 0,
-                heal: 0,
-                claim: 0,
-                carry: 0
+                move: cachedBody.move,
+                work: cachedBody.work,
+                attack: cachedBody.attack,
+                ranged_attack: cachedBody.ranged_attack,
+                tough: cachedBody.tough,
+                heal: cachedBody.heal,
+                claim: cachedBody.claim,
+                carry: cachedBody.carry
             },
             boost: {
-                move: null,
-                work: null,
-                attack: null,
-                ranged_attack: null,
-                tough: null,
-                heal: null,
-                claim: null,
-                carry: null
+                move: cachedBoost.move,
+                work: cachedBoost.work,
+                attack: cachedBoost.attack,
+                ranged_attack: cachedBoost.ranged_attack,
+                tough: cachedBoost.tough,
+                heal: cachedBoost.heal,
+                claim: cachedBoost.claim,
+                carry: cachedBoost.carry
             },
             controller: 8,
             structures: {
@@ -63,6 +86,7 @@ export class CreepDesigner extends React.Component{
                 });
                 
                 this.setState({body: creepBody});
+                cacheUtil.set(CacheKey.Body, creepBody);
             }
         }
     }
@@ -94,6 +118,7 @@ export class CreepDesigner extends React.Component{
         }
         
         this.setState({body: body});
+        cacheUtil.set(CacheKey.Body, body);
     }
     
     addBodyPart(part: string, count: number) {
@@ -113,6 +138,7 @@ export class CreepDesigner extends React.Component{
         }
         
         this.setState({body: body});
+        cacheUtil.set(CacheKey.Body, body);
     }
     
     partCost(part: string) {
@@ -132,7 +158,7 @@ export class CreepDesigner extends React.Component{
         
         Object.keys(Constants.BODYPARTS).forEach(part => {
             cost += (component.state.body[part] * Constants.BODYPART_COST[part]);
-        })
+        });
         
         return cost;
     }
@@ -167,21 +193,21 @@ export class CreepDesigner extends React.Component{
         
         Object.keys(Constants.BODYPARTS).forEach(part => {
             count += component.state.body[part];
-        })
+        });
         
         return count;
     }
     
     body() {
-        let body = '[';
+        let body = '';
         
         Object.keys(Constants.BODYPARTS).forEach(part => {
             for (let i = 0; i < this.state.body[part]; i++) {
                 body += Constants.BODYPARTS[part] + ',';
             }
-        })
+        });
         
-        return body.slice(0, -1) + ']';
+        return '[' + body.slice(0, -1) + ']';
     }
     
     shareLink() {
@@ -234,6 +260,7 @@ export class CreepDesigner extends React.Component{
         
         if (!e.noState) {
             this.setState({body: body});
+            cacheUtil.set(CacheKey.Body, body);
         }
     }
 
@@ -254,6 +281,7 @@ export class CreepDesigner extends React.Component{
         boost[part] = resource;
 
         this.setState({boost: boost});
+        cacheUtil.set(CacheKey.Boost, boost);
     }
 
     getCreepActions() {
@@ -646,11 +674,27 @@ export class CreepDesigner extends React.Component{
                                     </tr>
                                     <tr>
                                         <td><label htmlFor="input-ticks">Tick Duration:</label></td>
-                                        <td colSpan={4}><Input type="number" id="input-ticks" className="tickTime" step="0.1" value={this.state.tickTime} onChange={(e) => this.changeTickTime(e)} /> (sec)</td>
+                                        <td colSpan={4}>
+                                            <Input type="number" id="input-ticks" className="tickTime" step="0.1" value={this.state.tickTime} onChange={(e) => this.changeTickTime(e)} /> (sec)
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan={5}><hr /></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label htmlFor="creep-body">Body Profile</label></td>
+                                        <td colSpan={4}>
+                                            <Input type="textarea" id="creep-body" className="creep-body" value={this.body()} onChange={(e) => this.import(e)} />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td colSpan={4}>
+                                            <a href={this.shareLink()}>Share Link</a>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <Creep body={this.state.body} />
                         </div>
                     </Col>
                     <Col lg={6}>
@@ -832,8 +876,7 @@ export class CreepDesigner extends React.Component{
                                     );
                                 })}
                             </div>
-                            <Input type="textarea" className="creep-body" value={this.body()} onChange={(e) => this.import(e)} />
-                            <a href={this.shareLink()}>Shareable Link</a>
+                            <Creep body={this.state.body} />
                         </div>}
                     </Col>
                 </Row>

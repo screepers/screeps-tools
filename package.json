@@ -4,7 +4,8 @@
     "private": true,
     "scripts": {
         "build": "rollup -c && tsc",
-        "build-prod": "rollup -c --environment BUILD:production && tsc"
+        "build-prod": "rollup -c --environment BUILD:production && tsc",        
+        "watch": "rollup -c -w && tsc"
     },
     "devDependencies": {
         "@types/body-parser": "^1.19.0",

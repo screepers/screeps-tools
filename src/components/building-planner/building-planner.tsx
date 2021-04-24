@@ -7,7 +7,7 @@ import Select, {OptionTypeBase} from 'react-select';
 import * as _ from 'lodash';
 import * as LZString from 'lz-string';
 import * as Constants from '../common/constants';
-import {screepsWorlds} from '../common/utils';
+import {screepsWorlds, cacheUtil, CacheKey} from '../common/utils';
 
 export class BuildingPlanner extends React.Component {
     state: Readonly<{
@@ -31,17 +31,23 @@ export class BuildingPlanner extends React.Component {
 
         let terrain: TerrainMap = {};
 
-        for (let y = 0; y < 50; y++) {
-            terrain[y] = {};
-            for (let x = 0; x < 50; x++) {
-                terrain[y][x] = 0;
+        const cachedTerrain = cacheUtil.get(CacheKey.Terrain);
+
+        if (cachedTerrain) {
+            terrain = cachedTerrain;
+        } else {
+            for (let y = 0; y < 50; y++) {
+                terrain[y] = {};
+                for (let x = 0; x < 50; x++) {
+                    terrain[y][x] = 0;
+                }
             }
         }
 
         this.state = {
-            room: '',
-            world: 'mmo',
-            shard: 'shard0',
+            room: cacheUtil.get(CacheKey.Room) ?? '',
+            world: cacheUtil.get(CacheKey.World) ?? 'mmo',
+            shard: cacheUtil.get(CacheKey.Shard) ?? 'shard0',
             terrain: terrain,
             x: 0,
             y: 0,
@@ -50,12 +56,12 @@ export class BuildingPlanner extends React.Component {
                     shards: []
                 }
             },
-            brush: 'spawn',
+            brush: cacheUtil.get(CacheKey.Brush) ?? 'spawn',
             brushLabel: null,
-            rcl: 8,
-            structures: {},
-            sources: [],
-            mineral: {}
+            rcl: cacheUtil.get(CacheKey.RCL) ?? 8,
+            structures: cacheUtil.get(CacheKey.Structures) ?? {},
+            sources: cacheUtil.get(CacheKey.Sources) ?? [],
+            mineral: cacheUtil.get(CacheKey.Mineral) ?? {}
         };
     }
 
@@ -116,6 +122,7 @@ export class BuildingPlanner extends React.Component {
                     }
 
                     component.setState({terrain: terrainMap});
+                    cacheUtil.set(CacheKey.Terrain, terrainMap);
                 });
             });
         }
@@ -137,7 +144,12 @@ export class BuildingPlanner extends React.Component {
             shard: json.shard,
             rcl: json.rcl,
             structures: structures
-        });   
+        });
+        cacheUtil.set(CacheKey.Room, json.name);
+        cacheUtil.set(CacheKey.World, json.world);
+        cacheUtil.set(CacheKey.Shard, json.shard);
+        cacheUtil.set(CacheKey.RCL, json.rcl);
+        cacheUtil.set(CacheKey.Structures, structures);
     }
 
     addStructure(x: number, y: number) {
@@ -170,6 +182,7 @@ export class BuildingPlanner extends React.Component {
         }
 
         this.setState({structures: structures});
+        cacheUtil.set(CacheKey.Structures, structures);
         return added;
     }
 
@@ -188,6 +201,7 @@ export class BuildingPlanner extends React.Component {
         }
 
         this.setState({structures: structures});
+        cacheUtil.set(CacheKey.Structures, structures);
     }
 
     getRoadProps(x: number, y: number) {
@@ -358,11 +372,18 @@ export class BuildingPlanner extends React.Component {
         return options;
     }
 
+    setBrush(brush: string) {
+        this.setState({brush: brush});
+        cacheUtil.set(CacheKey.Brush, brush);
+    }
+
     setRCL(rcl: number) {
         this.setState({rcl: rcl});
+        cacheUtil.set(CacheKey.RCL, rcl);
 
         if (Constants.CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
             this.setState({brush: null, brushLabel: null});
+            cacheUtil.remove(CacheKey.Brush);
         }
     }
 
@@ -389,7 +410,7 @@ export class BuildingPlanner extends React.Component {
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedBrush()}
                                     options={this.getStructureBrushes()}
-                                    onChange={(selected) => this.setState({brush: selected.value})}
+                                    onChange={(selected) => this.setBrush(selected.value)}
                                     className="select-structure"
                                     classNamePrefix="select"
                                 />
@@ -420,6 +441,11 @@ export class BuildingPlanner extends React.Component {
                                     modal={false}
                                 />
                             </Col>
+                            {this.state.room && <Col xs={'auto'} className="sm-hidden">
+                                <button className="btn btn-secondary cursor-pos disabled" title="Cursor Position">
+                                    {this.state.room}
+                                </button>
+                            </Col>}
                             <Col xs={'auto'} className="sm-hidden">
                                 <button className="btn btn-secondary cursor-pos disabled" title="Cursor Position">
                                     X: {this.state.x} Y: {this.state.y}

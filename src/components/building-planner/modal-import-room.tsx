@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {screepsWorlds} from '../common/utils';
+import {screepsWorlds, cacheUtil, CacheKey} from '../common/utils';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import * as Constants from '../common/constants';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -48,6 +48,11 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
 
     handleTextBlur(e: any, validationFunc: Function) {
         const field: 'room' | 'world' | 'shard' = e.target.name;
+        const types = {
+            room: CacheKey.Room,
+            world: CacheKey.World,
+            shard: CacheKey.Shard
+        };
         const value = e.target.value;
 
         if (this.state[field].validateOnChange === false &&
@@ -60,11 +65,17 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                 }
             });
             this.props.planner.setState({[field]: value});
+            cacheUtil.set(types[field], value);
         }
     }
 
     handleTextChange(e: any, validationFunc: Function) {
         const field: 'room' | 'world' | 'shard' = e.target.name;
+        const types = {
+            room: CacheKey.Room,
+            world: CacheKey.World,
+            shard: CacheKey.Shard
+        };
         const value = e.target.value;
 
         this.setState({
@@ -74,6 +85,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
             }
         });
         this.props.planner.setState({[field]: value});
+        cacheUtil.set(types[field], value);
 
         if (field === 'world') {
             // Changing world select option will select the first shard drop-down option
@@ -85,6 +97,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                 }
             });
             this.props.planner.setState({shard: firstOption});
+            cacheUtil.set(CacheKey.Shard, firstOption);
         }
     }
 
@@ -169,6 +182,10 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                     world: world, 
                     shard: shard
                 });
+                cacheUtil.set(CacheKey.Terrain, terrainMap);
+                cacheUtil.set(CacheKey.Room, room);
+                cacheUtil.set(CacheKey.World, world);
+                cacheUtil.set(CacheKey.Shard, shard);
             });
         });
 
@@ -210,6 +227,9 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                     sources: sources,
                     mineral: mineral
                 });
+                cacheUtil.set(CacheKey.Structures, structures);
+                cacheUtil.set(CacheKey.Sources, sources);
+                cacheUtil.set(CacheKey.Mineral, mineral);
             });
         });
     }
