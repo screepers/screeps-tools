@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {MapCell} from './map-cell';
+import {ModalHelp} from './modal-help';
 import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
 import {ModalSettings} from './modal-settings';
@@ -499,6 +500,10 @@ export class BuildingPlanner extends React.Component {
                                     modal={false}
                                 />
                                 <ModalSettings
+                                    planner={this}
+                                    modal={false}
+                                />
+                                <ModalHelp
                                     planner={this}
                                     modal={false}
                                 />
