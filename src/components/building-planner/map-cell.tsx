@@ -181,7 +181,7 @@ export class MapCell extends React.Component<MapCellProps> {
     mouseEnter(e: any) {
         // update this.state.x and this.state.y
         this.setState({hover: true});
-        this.props.parent.setState({
+        this.props.planner.setState({
             x: parseInt(e.currentTarget.dataset.x),
             y: parseInt(e.currentTarget.dataset.y)
         });
@@ -200,8 +200,8 @@ export class MapCell extends React.Component<MapCellProps> {
     }
 
     onClick() {
-        if (this.props.parent.addStructure(this.props.x, this.props.y)) {
-            switch (this.props.parent.state.brush) {
+        if (this.props.planner.addStructure(this.props.x, this.props.y)) {
+            switch (this.props.planner.state.brush) {
                 case('road'):
                     this.setState({road: true});
                     break;
@@ -209,7 +209,7 @@ export class MapCell extends React.Component<MapCellProps> {
                     this.setState({rampart: true});
                     break;
                 default:
-                    this.setState({structure: this.props.parent.state.brush});
+                    this.setState({structure: this.props.planner.state.brush});
                     break;
             }
         }
@@ -219,11 +219,24 @@ export class MapCell extends React.Component<MapCellProps> {
         e.preventDefault();
 
         if (this.state.structure !== '' || this.state.road || this.state.rampart) {
-            this.props.parent.removeStructure(this.props.x, this.props.y, this.state.structure);
-            this.props.parent.removeStructure(this.props.x, this.props.y, 'rampart');
-            this.props.parent.removeStructure(this.props.x, this.props.y, 'road');
+            this.props.planner.removeStructure(this.props.x, this.props.y, this.state.structure);
+            this.props.planner.removeStructure(this.props.x, this.props.y, 'rampart');
+            this.props.planner.removeStructure(this.props.x, this.props.y, 'road');
             
             this.setState({structure: '', road: false, rampart: false})
+        }
+    }
+
+    onWheel(e: any) {
+        if (e.shiftKey) {
+            const step = 0.1;
+            const change = e.deltaY > 0 ? -step : step;
+
+            let current = this.props.planner.state.scale;
+            let updated = current + change;
+            if (updated >= 0.5 || updated <= 5) {
+                this.props.planner.setState({scale: updated});
+            }
         }
     }
 
@@ -235,6 +248,7 @@ export class MapCell extends React.Component<MapCellProps> {
                     onMouseLeave={this.mouseLeave.bind(this)}
                     onClick={this.onClick.bind(this)}
                     onContextMenu={this.onContextMenu.bind(this)}
+                    onWheel={this.onWheel.bind(this)}
                     data-x={this.props.x}
                     data-y={this.props.y}>
                     {this.getCellContent()}

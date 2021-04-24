@@ -298,7 +298,6 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .building-planner {
-
     button.burger-menu {
         position: absolute;
         right: 15px;
@@ -339,15 +338,22 @@ input[type=number]::-webkit-outer-spin-button {
     .controls {
         background-color: #ccc;
         color: #222;
-        padding: 10px 15px;
+        padding: 10px 15px 0;
 
         .col-auto {
             padding-left: 5px;
             padding-right: 5px;
+            padding-bottom: 10px;
+
+            > div {
+                float: left;
+                padding-left: 5px;
+                padding-right: 5px;
+            }
         }
 
         .select-rcl {
-            width: 100px;
+            width: 110px;
         }
 
         .select-structure {
@@ -396,6 +402,7 @@ input[type=number]::-webkit-outer-spin-button {
         height: 800px;
         box-shadow: rgba(0, 0, 0, 0.137) 0 12px 50px 0;
         background: rgb(48, 48, 48);
+        transform-origin: top center;
 
         .tile {
             display: flex;
@@ -467,22 +474,22 @@ input[type=number]::-webkit-outer-spin-button {
 
     .stats-overlay {
         position: absolute;
+        right: -90px;
+        padding: 5px;
         display: inline-block;
         background: rgba(16, 16, 16, 0.3);
         color: #ccc;
-        padding: 3px 9px;
-        margin-top: 15px;
         z-index: 1;
 
+        table {
+            width: 80px;
+        }
+
         td {
+            text-align: center;
             line-height: 21px;
             padding-top: 0;
             padding-bottom: 0;
-        }
-
-        td:first-child {
-            text-align: right;
-            padding-right: 7px;
         }
     }
 }

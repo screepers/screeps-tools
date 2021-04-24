@@ -23,6 +23,7 @@ interface BuildingPlannerProps extends React.Component {
             showStatsOverlay: boolean;
             allowBorderStructure: boolean;
         };
+        scale: number;
     };
     resetState(): void;
     loadJson(json: any): any;
@@ -54,7 +55,7 @@ interface MapCellProps {
     x: number;
     y: number;
     terrain: number;
-    parent: BuildingPlannerProps;
+    planner: BuildingPlannerProps;
     structure: string | null;
     road: {
         middle: boolean;

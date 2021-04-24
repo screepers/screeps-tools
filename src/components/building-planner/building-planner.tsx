@@ -30,11 +30,26 @@ export class BuildingPlanner extends React.Component {
             showStatsOverlay: boolean;
             allowBorderStructure: boolean;
         };
+        scale: number;
     }>;
 
     constructor(props: any) {
         super(props);
         this.state = this.getInitialState();
+    }
+
+    componentDidMount() {
+        this.loadShards();
+
+        let params = location.href.split('?')[1];
+        let searchParams = new URLSearchParams(params);
+
+        if (searchParams.get('share')) {
+            let json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
+            if (json) {
+                this.loadJson(JSON.parse(json));
+            }
+        }
     }
 
     getInitialState() {
@@ -74,7 +89,8 @@ export class BuildingPlanner extends React.Component {
             settings: {
                 showStatsOverlay: cacheUtil.get(CacheKey.ShowStats) ?? true,
                 allowBorderStructure: cacheUtil.get(CacheKey.AllowBorder) ?? false,
-            }
+            },
+            scale: 1.0
         }
     }
 
@@ -90,20 +106,6 @@ export class BuildingPlanner extends React.Component {
         cacheUtil.remove(CacheKey.Mineral);
         this.setState(this.getInitialState());
         this.loadShards();
-    }
-
-    componentDidMount() {
-        this.loadShards();
-
-        let params = location.href.split('?')[1];
-        let searchParams = new URLSearchParams(params);
-
-        if (searchParams.get('share')) {
-            let json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
-            if (json) {
-                this.loadJson(JSON.parse(json));
-            }
-        }
     }
 
     loadShards() {
@@ -461,7 +463,7 @@ export class BuildingPlanner extends React.Component {
                                     <div /><div /><div />
                                 </button>
                             */}
-                            <Col xs={'auto'}>
+                            <Col xs={{ size: 'auto', order: 2 }} sm={{ order: 2 }} md={{ order: 1 }}>
                                 <Select
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedBrush()}
@@ -470,8 +472,6 @@ export class BuildingPlanner extends React.Component {
                                     className="select-structure"
                                     classNamePrefix="select"
                                 />
-                            </Col>
-                            <Col xs={'auto'}>
                                 <Select
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedRCL()}
@@ -481,7 +481,7 @@ export class BuildingPlanner extends React.Component {
                                     classNamePrefix="select"
                                 />
                             </Col>
-                            <Col xs={'auto'}>
+                            <Col xs={{ size: 'auto', order: 1 }} sm={{ order: 1 }} md={{ order: 2 }}>
                                 <ModalImportRoomForm
                                     planner={this}
                                     room={this.state.room}
@@ -490,20 +490,14 @@ export class BuildingPlanner extends React.Component {
                                     worlds={this.state.worlds}
                                     modal={false}
                                 />
-                            </Col>
-                            <Col xs={'auto'}>
                                 <ModalJson
                                     planner={this}
                                     modal={false}
                                 />
-                            </Col>
-                            <Col xs={'auto'}>
                                 <ModalReset
                                     planner={this}
                                     modal={false}
                                 />
-                            </Col>
-                            <Col xs={'auto'}>
                                 <ModalSettings
                                     planner={this}
                                     modal={false}
@@ -512,38 +506,29 @@ export class BuildingPlanner extends React.Component {
                         </Row>
                     </Container>
                 </Container>
-                {this.state.settings.showStatsOverlay && <div className="stats-overlay">
-                    <table>
-                        {this.state.world && <tr>
-                            <td>World:</td>
-                            <td>{screepsWorlds[this.state.world]}</td>
-                        </tr>}
-                        {this.state.shard && <tr>
-                            <td>Shard:</td>
-                            <td>{this.state.shard}</td>
-                        </tr>}
-                        {this.state.room && <tr>
-                            <td>Room:</td>
-                            <td>{this.state.room}</td>
-                        </tr>}
-                        <tr>
-                            <td>X:</td>
-                            <td>{this.state.x}</td>
-                        </tr>
-                        <tr>
-                            <td>Y:</td>
-                            <td>{this.state.y}</td>
-                        </tr>
-                    </table>
-                </div>}
-                <div className="map">
+                <div className="map" style={{ transform: 'scale(' + this.state.scale + ')' }}>
+                    {this.state.settings.showStatsOverlay && <div className="stats-overlay">
+                        <table>
+                            {this.state.room && <tr>
+                                <td title={this.state.shard ?? ''}>
+                                    {this.state.room}
+                                </td>
+                            </tr>}
+                            <tr>
+                                <td>X: {this.state.x}</td>
+                            </tr>
+                            <tr>
+                                <td>Y: {this.state.y}</td>
+                            </tr>
+                        </table>
+                    </div>}
                     {[...Array(50)].map((yval, y: number) => {
                         return [...Array(50)].map((xval, x: number) =>
                             <MapCell
                                 x={x}
                                 y={y}
+                                planner={this}
                                 terrain={this.state.terrain[y][x]}
-                                parent={this}
                                 structure={this.getStructure(x, y)}
                                 road={this.getRoadProps(x, y)}
                                 rampart={this.isRampart(x, y)}
