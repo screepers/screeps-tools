@@ -16,6 +16,7 @@ export enum CacheKey {
     Sources = 'sources',
     Mineral = 'minearl',
     ShowStats = 'showStats',
+    AllowBorder = 'allowBorder',
 }
 
 interface CacheValues {
@@ -31,6 +32,7 @@ interface CacheValues {
     [CacheKey.Sources]: {x: number; y: number;}[];
     [CacheKey.Mineral]: {[mineralType: string]: {x: number; y: number;}};
     [CacheKey.ShowStats]: boolean;
+    [CacheKey.AllowBorder]: boolean;
 }
 
 interface CacheUtil {

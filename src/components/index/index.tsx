@@ -5,15 +5,6 @@ import {Link} from 'react-router-dom';
 export const Index = () => (
     <Container className="index">
         <Row>
-            <Col sm={12}>
-                <br />
-                <Alert color="success">
-                    <h4 className="alert-heading">Beta Notice</h4>
-                    <p>The <Link to='/building-planner'>Building Planner</Link> is undergoing design changes and the back end has been rewritten in python using <a href="https://github.com/admon84/new-screeps-tools/blob/main/main.py" target="_blank">Flask</a> and <a href="https://github.com/screepers/python-screeps/pull/29/files" target="_blank">ScreepsAPI</a>.</p>
-                </Alert>
-            </Col>
-        </Row>
-        <Row>
             <Col sm={6}>
                 <Card body inverse style={{ backgroundColor: '#222', borderColor: '#1e1e1e' }}>
                     <CardTitle>Building Planner</CardTitle>

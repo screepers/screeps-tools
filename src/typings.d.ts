@@ -20,7 +20,8 @@ interface BuildingPlannerProps extends React.Component {
         sources: {x: number; y: number;}[];
         mineral: {[mineralType: string]: {x: number; y: number;}};
         settings: {
-            showStats: boolean;
+            showStatsOverlay: boolean;
+            allowBorderStructure: boolean;
         };
     };
     resetState(): void;

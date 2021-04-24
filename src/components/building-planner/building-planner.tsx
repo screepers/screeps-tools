@@ -27,7 +27,8 @@ export class BuildingPlanner extends React.Component {
         sources: {x: number; y: number;}[];
         mineral: {[mineralType: string]: {x: number; y: number;}};
         settings: {
-            showStats: boolean;
+            showStatsOverlay: boolean;
+            allowBorderStructure: boolean;
         };
     }>;
 
@@ -71,13 +72,22 @@ export class BuildingPlanner extends React.Component {
             sources: cacheUtil.get(CacheKey.Sources) ?? [],
             mineral: cacheUtil.get(CacheKey.Mineral) ?? {},
             settings: {
-                showStats: cacheUtil.get(CacheKey.ShowStats) ?? true,
+                showStatsOverlay: cacheUtil.get(CacheKey.ShowStats) ?? true,
+                allowBorderStructure: cacheUtil.get(CacheKey.AllowBorder) ?? false,
             }
         }
     }
 
     resetState() {
-        cacheUtil.removeAll();
+        cacheUtil.remove(CacheKey.Terrain);
+        cacheUtil.remove(CacheKey.Room);
+        cacheUtil.remove(CacheKey.World);
+        cacheUtil.remove(CacheKey.Shard);
+        cacheUtil.remove(CacheKey.Brush);
+        cacheUtil.remove(CacheKey.RCL);
+        cacheUtil.remove(CacheKey.Structures);
+        cacheUtil.remove(CacheKey.Sources);
+        cacheUtil.remove(CacheKey.Mineral);
         this.setState(this.getInitialState());
         this.loadShards();
     }
@@ -176,7 +186,12 @@ export class BuildingPlanner extends React.Component {
         let structures = this.state.structures;
         let added = false;
 
-        if (Constants.CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl] && x > 0 && x < 49 && y > 0 && y < 49) {
+        let allowed = false;
+        if (this.state.settings.allowBorderStructure || (x > 0 && x < 49 && y > 0 && y < 49)) {
+            allowed = true;
+        }
+
+        if (allowed && Constants.CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
             if (!structures[this.state.brush]) {
                 structures[this.state.brush] = [];
             }
@@ -184,6 +199,27 @@ export class BuildingPlanner extends React.Component {
             if (structures[this.state.brush].length < Constants.CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
                 
                 let foundAtPos = false;
+
+                // remove existing structures at this position except ramparts
+                if (this.state.brush != 'rampart') {
+                    for (let type in structures) {
+                        if (type == 'rampart') {
+                            continue;
+                        }
+                        if ((this.state.brush == 'container' && type == 'road') ||
+                            (this.state.brush == 'road' && type == 'container')) {
+                            continue;
+                        }
+
+                        foundAtPos = _.filter(structures[type], (pos) => {
+                            return pos.x === x && pos.y === y;
+                        }).length > 0;
+
+                        if (foundAtPos) {
+                            this.removeStructure(x, y, type);
+                        }
+                    }
+                }
 
                 if (structures[this.state.brush].length > 0) {
                     foundAtPos = _.filter(structures[this.state.brush], (pos) => {
@@ -476,7 +512,7 @@ export class BuildingPlanner extends React.Component {
                         </Row>
                     </Container>
                 </Container>
-                {this.state.settings.showStats && <div className="stats-overlay">
+                {this.state.settings.showStatsOverlay && <div className="stats-overlay">
                     <table>
                         {this.state.world && <tr>
                             <td>World:</td>
