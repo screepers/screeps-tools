@@ -37,6 +37,7 @@ export class BuildingPlanner extends React.Component {
     constructor(props: any) {
         super(props);
         this.state = this.getInitialState();
+        console.log('initial state:', this.state);
     }
 
     componentDidMount() {
@@ -78,6 +79,9 @@ export class BuildingPlanner extends React.Component {
             y: 0,
             worlds: {
                 mmo: {
+                    shards: []
+                },
+                season: {
                     shards: []
                 }
             },
