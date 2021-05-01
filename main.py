@@ -1,5 +1,6 @@
 import threading
 import time
+import os
 from screepsapi import API as ScreepsAPI
 from flask import Flask, render_template, json
 
@@ -55,7 +56,9 @@ def api_objects(world, shard, room):
 @app.route('/<path:path>')
 def home(path):
     """Homepage for React app"""
-    return render_template("index.html")
+    cwd = os.path.dirname(os.path.realpath(__file__))
+    build_time = int(os.path.getmtime(cwd + '/static/bundle.js'))
+    return render_template("index.html", cache_buster=build_time)
 
 def get_screeps_api(world):
     prefix = '/season' if world == 'season' else None
