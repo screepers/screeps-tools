@@ -4,7 +4,7 @@ Tools to help players of the Programming MMO Screeps.
 
 ### Hosted Option
 
-The hosted option is available for convenience at [beta.admon.dev](https://beta.admon.dev)
+The hosted option is available for convenience at [screeps.admon.dev](https://screeps.admon.dev)
 
 ### Building Planner
 
@@ -33,3 +33,38 @@ Features:
 * Tick duration option affects stats calculated "per hour" and "per day"
 
 ![View the creep designer](https://user-images.githubusercontent.com/10291543/95763598-78f11980-0c6c-11eb-9303-362c962876e4.png)
+
+## Development
+
+The screeps-tools application can be installed and ran from your local machine.
+
+### Requirements
+
+* [Node.js](https://nodejs.org/en/) v10+
+* [Python](https://www.python.org/downloads/) v3.6+
+
+### Install
+
+Download or clone this repository and then run `npm install` in the root directory to install node modules.
+
+Install python packages with the following steps:
+
+```
+python3 -m venv env
+source env/bin/activate
+pip install --upgrade pip
+pip install wheel
+pip install flask uwsgi # note: skip uwsgi for local development
+pip install git+https://github.com/admon84/python-screeps.git@v0.5.2#egg=screepsapi
+deactivate
+```
+
+Build the react app using `npm run build`
+
+Run the python development server with the following steps:
+
+```
+source env/bin/activate
+python3 main.py
+deactivate # to stop the app and exit virtual environment
+```
