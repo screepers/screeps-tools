@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as _ from 'lodash';
 import * as LZString from 'lz-string';
 import * as Constants from '../common/constants';
 import {MapCell} from './map-cell';
@@ -217,7 +216,7 @@ export class BuildingPlanner extends React.Component {
                             continue;
                         }
 
-                        foundAtPos = _.filter(structures[type], (pos) => {
+                        foundAtPos = structures[type].filter(pos => {
                             return pos.x === x && pos.y === y;
                         }).length > 0;
 
@@ -228,7 +227,7 @@ export class BuildingPlanner extends React.Component {
                 }
 
                 if (structures[this.state.brush].length > 0) {
-                    foundAtPos = _.filter(structures[this.state.brush], (pos) => {
+                    foundAtPos = structures[this.state.brush].filter(pos => {
                         return pos.x === x && pos.y === y;
                     }).length > 0;
                 }
@@ -257,7 +256,7 @@ export class BuildingPlanner extends React.Component {
         }
 
         if (structure && structures[structure]) {
-            structures[structure] = _.filter(structures[structure], (pos) => {
+            structures[structure] = structures[structure].filter(pos => {
                 return !(pos.x === x && pos.y === y);
             });
         }
