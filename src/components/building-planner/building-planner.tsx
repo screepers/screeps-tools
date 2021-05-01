@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {MapCell} from './map-cell';
-import {ModalHelp} from './modal-help';
 import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
 import {ModalSettings} from './modal-settings';
@@ -37,6 +36,7 @@ export class BuildingPlanner extends React.Component {
     constructor(props: any) {
         super(props);
         this.state = this.getInitialState();
+        console.log('initial state:', this.state);
     }
 
     componentDidMount() {
@@ -78,6 +78,9 @@ export class BuildingPlanner extends React.Component {
             y: 0,
             worlds: {
                 mmo: {
+                    shards: []
+                },
+                season: {
                     shards: []
                 }
             },
@@ -400,7 +403,7 @@ export class BuildingPlanner extends React.Component {
             return true;
         }
         const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
-        if (placed === total) {
+        if (placed >= total) {
             return true;
         }
         return false;
@@ -453,6 +456,20 @@ export class BuildingPlanner extends React.Component {
         };
     }
 
+    getSelectTheme(theme: any) {
+        return {
+            ...theme,
+            colors: {
+                ...theme.colors,
+                primary: '#2684ff',
+                primary25: '#555',
+                primary50: '#555',
+                neutral0: '#333',
+                neutral80: '#efefef',
+            }
+        };
+    }
+
     render() {        
         return (
             <div className="building-planner">
@@ -469,6 +486,7 @@ export class BuildingPlanner extends React.Component {
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedBrush()}
                                     options={this.getStructureBrushes()}
+                                    theme={theme => this.getSelectTheme(theme)}
                                     onChange={(selected) => this.setBrush(selected.value)}
                                     className="select-structure"
                                     classNamePrefix="select"
@@ -477,6 +495,7 @@ export class BuildingPlanner extends React.Component {
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedRCL()}
                                     options={this.getRCLOptions()}
+                                    theme={theme => this.getSelectTheme(theme)}
                                     onChange={(selected) => this.setRCL(selected.value)}
                                     className="select-rcl"
                                     classNamePrefix="select"
@@ -500,10 +519,6 @@ export class BuildingPlanner extends React.Component {
                                     modal={false}
                                 />
                                 <ModalSettings
-                                    planner={this}
-                                    modal={false}
-                                />
-                                <ModalHelp
                                     planner={this}
                                     modal={false}
                                 />
