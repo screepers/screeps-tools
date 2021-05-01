@@ -1,7 +1,21 @@
 {
-    "name": "new-screeps-tools",
-    "version": "1.0.0",
-    "private": true,
+    "name": "screeps-tools",
+    "version": "2.0.0",
+    "description": "Tools to help players of the Programming MMO Screeps",
+    "keywords": [
+        "screeps",
+        "react",
+        "typescript",
+        "python"
+    ],
+    "homepage": "https://screeps.admon.dev",
+    "bugs": "https://github.com/admon84/screeps-tools/issues",
+    "license": "MIT",
+    "author": "admon84",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/admon84/screeps-tools.git"
+    },
     "scripts": {
         "build": "rollup -c && tsc",
         "build-prod": "rollup -c --environment BUILD:production && tsc",
@@ -9,8 +23,8 @@
     },
     "devDependencies": {
         "@types/lz-string": "^1.3.34",
-        "@types/react": "^16.9.52",
-        "@types/react-dom": "^16.9.8",
+        "@types/react": "^17.0.4",
+        "@types/react-dom": "^17.0.3",
         "@types/react-router-dom": "^5.1.6",
         "@types/react-select": "^4.0.15",
         "@types/reactstrap": "^8.5.1"
@@ -21,20 +35,20 @@
         "@fortawesome/react-fontawesome": "^0.1.14",
         "bootstrap": "^4.5.2",
         "lz-string": "^1.4.4",
-        "react": "^16.13.1",
-        "react-dom": "^16.13.1",
+        "postcss": "^8.2.13",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
         "react-router-dom": "^5.2.0",
         "react-select": "^4.3.0",
         "reactstrap": "^8.6.0",
-        "rollup": "^2.29.0",
+        "rollup": "^2.46.0",
         "rollup-plugin-commonjs": "^10.1.0",
         "rollup-plugin-less": "^1.1.2",
         "rollup-plugin-node-resolve": "^5.2.0",
-        "rollup-plugin-postcss": "^3.1.8",
+        "rollup-plugin-postcss": "^4.0.0",
         "rollup-plugin-replace": "^2.2.0",
         "rollup-plugin-terser": "^7.0.2",
         "rollup-plugin-typescript3": "^1.1.2",
-        "ts-node": "^9.0.0",
         "typescript": "^4.0.3"
     }
 }
