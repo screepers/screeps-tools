@@ -1,7 +1,6 @@
 import * as React  from 'react';
 import {BrowserRouter, Route, withRouter, Switch, NavLink} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router';
-
 import {BuildingPlanner} from './building-planner/building-planner';
 import {CreepDesigner} from './creep-designer/creep-designer';
 import {Index} from './index/index';

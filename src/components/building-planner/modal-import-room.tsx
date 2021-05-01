@@ -1,8 +1,8 @@
 import * as React from 'react';
+import * as Constants from '../common/constants';
 import {screepsWorlds, cacheUtil, CacheKey} from '../common/utils';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import * as Constants from '../common/constants';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faArrowCircleDown} from '@fortawesome/free-solid-svg-icons';
 

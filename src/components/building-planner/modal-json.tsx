@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {Input, Modal, ModalHeader, ModalBody} from 'reactstrap';
 import * as LZString from 'lz-string';
 import * as Constants from '../common/constants';
+import {Input, Modal, ModalHeader, ModalBody} from 'reactstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faShareAlt} from '@fortawesome/free-solid-svg-icons';
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {Container, Row, Col, Input} from 'reactstrap';
 import * as Constants from '../common/constants';
+import {Container, Row, Col, Input} from 'reactstrap';
 import {cacheUtil, CacheKey} from '../common/utils';
 import {Creep} from './creep';
 

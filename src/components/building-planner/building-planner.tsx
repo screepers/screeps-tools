@@ -1,14 +1,14 @@
 import * as React from 'react';
+import * as _ from 'lodash';
+import * as LZString from 'lz-string';
+import * as Constants from '../common/constants';
 import {MapCell} from './map-cell';
 import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
 import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
-import {Container, Row, Col} from 'reactstrap';
+import {Container, Row, Col, Navbar} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import * as _ from 'lodash';
-import * as LZString from 'lz-string';
-import * as Constants from '../common/constants';
 import {screepsWorlds, cacheUtil, CacheKey} from '../common/utils';
 
 export class BuildingPlanner extends React.Component {
@@ -259,7 +259,7 @@ export class BuildingPlanner extends React.Component {
         if (structure && structures[structure]) {
             structures[structure] = _.filter(structures[structure], (pos) => {
                 return !(pos.x === x && pos.y === y);
-            })
+            });
         }
 
         this.setState({structures: structures});
@@ -473,14 +473,9 @@ export class BuildingPlanner extends React.Component {
     render() {        
         return (
             <div className="building-planner">
-                <Container className="controls" fluid={true}>
+                <Navbar fluid className="controls" sticky="top">
                     <Container>
                         <Row className="justify-content-center">
-                            {/* 
-                                <button className="burger-menu" onClick={() => this.openOrCloseMenu()}>
-                                    <div /><div /><div />
-                                </button>
-                            */}
                             <Col xs={{ size: 'auto', order: 2 }} sm={{ order: 2 }} md={{ order: 1 }}>
                                 <Select
                                     defaultValue={this.state.brush}
@@ -525,7 +520,7 @@ export class BuildingPlanner extends React.Component {
                             </Col>
                         </Row>
                     </Container>
-                </Container>
+                </Navbar>
                 <div className="map" style={{ transform: 'scale(' + this.state.scale + ')' }}>
                     {this.state.settings.showStatsOverlay && <div className="stats-overlay">
                         <table>
