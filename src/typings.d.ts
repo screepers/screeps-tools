@@ -29,6 +29,7 @@ interface BuildingPlannerProps extends React.Component {
     loadJson(json: any): any;
     addStructure(x: number, y: number): boolean;
     removeStructure(x: number, y: number, structure: string | null): void;
+    changeScale(e: any, decrease: boolean): void;
 }
 
 interface ModalProps {

@@ -229,14 +229,8 @@ export class MapCell extends React.Component<MapCellProps> {
 
     onWheel(e: any) {
         if (e.shiftKey) {
-            const step = 0.1;
-            const change = e.deltaY > 0 ? -step : step;
-
-            let current = this.props.planner.state.scale;
-            let updated = current + change;
-            if (updated >= 0.5 || updated <= 5) {
-                this.props.planner.setState({scale: updated});
-            }
+            const decrease = (e.deltaY > 0);
+            this.props.planner.changeScale(false, decrease);
         }
     }
 

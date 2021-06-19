@@ -30,12 +30,15 @@ export class BuildingPlanner extends React.Component {
             allowBorderStructure: boolean;
         };
         scale: number;
+        scaleMin: number;
+        scaleMax: number;
+        scaleStep: number;
     }>;
 
     constructor(props: any) {
         super(props);
         this.state = this.getInitialState();
-        console.log('initial state:', this.state);
+        // console.log('initial state:', this.state);
     }
 
     componentDidMount() {
@@ -93,7 +96,10 @@ export class BuildingPlanner extends React.Component {
                 showStatsOverlay: cacheUtil.get(CacheKey.ShowStats) ?? true,
                 allowBorderStructure: cacheUtil.get(CacheKey.AllowBorder) ?? false,
             },
-            scale: 1.0
+            scale: 1.0,
+            scaleMin: 1.0,
+            scaleMax: 3.0,
+            scaleStep: 0.1,
         }
     }
 
@@ -469,7 +475,31 @@ export class BuildingPlanner extends React.Component {
         };
     }
 
-    render() {        
+    convertToFixed(numberOrString: number | string) {
+        return parseFloat(numberOrString.toString()).toFixed(1);
+    }
+
+    changeScale(e: any, decrease: boolean = false) {
+        let current, change, update;
+        if (e) {
+            // element onChange
+            current = e.target.valueAsNumber;
+            change = 0;
+            update = current;
+        } else {
+            // map-cell onWheel
+            current = this.state.scale;
+            change = decrease ? -this.state.scaleStep : this.state.scaleStep;
+            update = current + change;
+        }
+
+        if (update >= this.state.scaleMin || update < this.state.scaleMax) {
+            this.setState({scale: this.convertToFixed(update)});
+        }
+    }
+
+    render() {
+        const scaleAsFloat = this.convertToFixed(this.state.scale);
         return (
             <div className="building-planner">
                 <Navbar fluid className="controls" sticky="top">
@@ -516,6 +546,27 @@ export class BuildingPlanner extends React.Component {
                                     planner={this}
                                     modal={false}
                                 />
+                                <div>
+                                    <div className="zoom-control">
+                                        <input
+                                            type="range"
+                                            name="scale"
+                                            id="scale"
+                                            min={this.state.scaleMin}
+                                            max={this.state.scaleMax}
+                                            step={this.state.scaleStep}
+                                            value={this.state.scale}
+                                            title={'Zoom: ' + scaleAsFloat}
+                                            onChange={(e) => this.changeScale(e)}
+                                        />
+                                        <label 
+                                            htmlFor="zoom"
+                                            title={'Zoom: ' + scaleAsFloat}
+                                            >
+                                            {scaleAsFloat}
+                                        </label>
+                                    </div>
+                                </div>
                             </Col>
                         </Row>
                     </Container>
