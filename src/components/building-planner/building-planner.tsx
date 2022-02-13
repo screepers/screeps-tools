@@ -8,7 +8,7 @@ import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Container, Row, Col, Navbar} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import {screepsWorlds, cacheUtil, CacheKey} from '../common/utils';
+import {screepsWorlds} from '../common/utils';
 
 export class BuildingPlanner extends React.Component {
     state: Readonly<{
@@ -38,7 +38,6 @@ export class BuildingPlanner extends React.Component {
     constructor(props: any) {
         super(props);
         this.state = this.getInitialState();
-        // console.log('initial state:', this.state);
     }
 
     componentDidMount() {
@@ -58,23 +57,17 @@ export class BuildingPlanner extends React.Component {
     getInitialState() {
         let terrain: TerrainMap = {};
 
-        const cachedTerrain = cacheUtil.get(CacheKey.Terrain);
-
-        if (cachedTerrain) {
-            terrain = cachedTerrain;
-        } else {
-            for (let y = 0; y < 50; y++) {
-                terrain[y] = {};
-                for (let x = 0; x < 50; x++) {
-                    terrain[y][x] = 0;
-                }
+        for (let y = 0; y < 50; y++) {
+            terrain[y] = {};
+            for (let x = 0; x < 50; x++) {
+                terrain[y][x] = 0;
             }
         }
 
         return {
-            room: cacheUtil.get(CacheKey.Room) ?? '',
-            world: cacheUtil.get(CacheKey.World) ?? 'mmo',
-            shard: cacheUtil.get(CacheKey.Shard) ?? 'shard0',
+            room: '',
+            world: 'mmo',
+            shard: 'shard0',
             terrain: terrain,
             x: 0,
             y: 0,
@@ -86,15 +79,15 @@ export class BuildingPlanner extends React.Component {
                     shards: []
                 }
             },
-            brush: cacheUtil.get(CacheKey.Brush) ?? 'spawn',
+            brush: 'spawn',
             brushLabel: null,
-            rcl: cacheUtil.get(CacheKey.RCL) ?? 8,
-            structures: cacheUtil.get(CacheKey.Structures) ?? {},
-            sources: cacheUtil.get(CacheKey.Sources) ?? [],
-            mineral: cacheUtil.get(CacheKey.Mineral) ?? {},
+            rcl: 8,
+            structures: {},
+            sources: [],
+            mineral: {},
             settings: {
-                showStatsOverlay: cacheUtil.get(CacheKey.ShowStats) ?? true,
-                allowBorderStructure: cacheUtil.get(CacheKey.AllowBorder) ?? false,
+                showStatsOverlay: true,
+                allowBorderStructure: false,
             },
             scale: 1.0,
             scaleMin: 1.0,
@@ -104,15 +97,6 @@ export class BuildingPlanner extends React.Component {
     }
 
     resetState() {
-        cacheUtil.remove(CacheKey.Terrain);
-        cacheUtil.remove(CacheKey.Room);
-        cacheUtil.remove(CacheKey.World);
-        cacheUtil.remove(CacheKey.Shard);
-        cacheUtil.remove(CacheKey.Brush);
-        cacheUtil.remove(CacheKey.RCL);
-        cacheUtil.remove(CacheKey.Structures);
-        cacheUtil.remove(CacheKey.Sources);
-        cacheUtil.remove(CacheKey.Mineral);
         this.setState(this.getInitialState());
         this.loadShards();
     }
@@ -163,7 +147,6 @@ export class BuildingPlanner extends React.Component {
                     }
 
                     component.setState({terrain: terrainMap});
-                    cacheUtil.set(CacheKey.Terrain, terrainMap);
                 });
             });
         }
@@ -186,11 +169,6 @@ export class BuildingPlanner extends React.Component {
             rcl: json.rcl,
             structures: structures
         });
-        cacheUtil.set(CacheKey.Room, json.name);
-        cacheUtil.set(CacheKey.World, json.world);
-        cacheUtil.set(CacheKey.Shard, json.shard);
-        cacheUtil.set(CacheKey.RCL, json.rcl);
-        cacheUtil.set(CacheKey.Structures, structures);
     }
 
     addStructure(x: number, y: number) {
@@ -249,7 +227,6 @@ export class BuildingPlanner extends React.Component {
         }
 
         this.setState({structures: structures});
-        cacheUtil.set(CacheKey.Structures, structures);
         return added;
     }
 
@@ -268,7 +245,6 @@ export class BuildingPlanner extends React.Component {
         }
 
         this.setState({structures: structures});
-        cacheUtil.set(CacheKey.Structures, structures);
     }
 
     getRoadProps(x: number, y: number) {
@@ -441,16 +417,13 @@ export class BuildingPlanner extends React.Component {
 
     setBrush(brush: string) {
         this.setState({brush: brush});
-        cacheUtil.set(CacheKey.Brush, brush);
     }
 
     setRCL(rcl: number) {
         this.setState({rcl: rcl});
-        cacheUtil.set(CacheKey.RCL, rcl);
 
         if (Constants.CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
             this.setState({brush: null, brushLabel: null});
-            cacheUtil.remove(CacheKey.Brush);
         }
     }
 

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as Constants from '../common/constants';
 import {Container, Row, Col, Input} from 'reactstrap';
-import {cacheUtil, CacheKey} from '../common/utils';
 import {Creep} from './creep';
 
 export class CreepDesigner extends React.Component{
@@ -20,7 +19,7 @@ export class CreepDesigner extends React.Component{
 
         this.energyStructures = ['spawn', 'extension'];
 
-        const cachedBody = cacheUtil.get(CacheKey.Body) ?? {
+        const cachedBody = {
             move: 0,
             work: 0,
             attack: 0,
@@ -31,7 +30,7 @@ export class CreepDesigner extends React.Component{
             carry: 0
         };
 
-        const cachedBoost = cacheUtil.get(CacheKey.Boost) ?? {
+        const cachedBoost = {
             move: null,
             work: null,
             attack: null,
@@ -86,7 +85,6 @@ export class CreepDesigner extends React.Component{
                 });
                 
                 this.setState({body: creepBody});
-                cacheUtil.set(CacheKey.Body, creepBody);
             }
         }
     }
@@ -118,7 +116,6 @@ export class CreepDesigner extends React.Component{
         }
         
         this.setState({body: body});
-        cacheUtil.set(CacheKey.Body, body);
     }
     
     addBodyPart(part: string, count: number) {
@@ -138,7 +135,6 @@ export class CreepDesigner extends React.Component{
         }
         
         this.setState({body: body});
-        cacheUtil.set(CacheKey.Body, body);
     }
     
     partCost(part: string) {
@@ -260,7 +256,6 @@ export class CreepDesigner extends React.Component{
         
         if (!e.noState) {
             this.setState({body: body});
-            cacheUtil.set(CacheKey.Body, body);
         }
     }
 
@@ -281,7 +276,6 @@ export class CreepDesigner extends React.Component{
         boost[part] = resource;
 
         this.setState({boost: boost});
-        cacheUtil.set(CacheKey.Boost, boost);
     }
 
     getCreepActions() {

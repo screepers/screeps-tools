@@ -2,7 +2,6 @@ import * as React from 'react';
 import {Row, Col, Label, Input, Modal, ModalHeader, ModalBody} from 'reactstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCog} from '@fortawesome/free-solid-svg-icons';
-import {cacheUtil, CacheKey} from '../common/utils';
 
 export class ModalSettings extends React.Component<ModalProps> {
     state: Readonly<{
@@ -22,10 +21,6 @@ export class ModalSettings extends React.Component<ModalProps> {
 
     handleCheckboxChange(e: any) {
         const field: 'showStatsOverlay' | 'allowBorderStructure' = e.target.name;
-        const types = {
-            showStatsOverlay: CacheKey.ShowStats,
-            allowBorderStructure: CacheKey.AllowBorder,
-        };
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
         this.setState({[field]: value});
         this.props.planner.setState({[field]: value});
@@ -36,7 +31,6 @@ export class ModalSettings extends React.Component<ModalProps> {
                 [field]: value
             }
         });
-        cacheUtil.set(types[field], value);
     }
 
     render() {
