@@ -33,7 +33,7 @@ export class ModalReset extends React.Component<ModalProps> {
                 <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="reset-map">
                     <ModalHeader toggle={() => this.toggleModal()}>Reset Confirmation</ModalHeader>
                     <ModalBody>
-                        <p>Are you sure you want to reset the map and start over?</p>
+                        <p>Are you sure you want to wipe the map and start over?</p>
                     </ModalBody>
                     <ModalFooter>
                         <button type="submit" form="load-room" className="btn btn-primary" onMouseDown={() => this.resetMap()}>

@@ -4,7 +4,7 @@ import {screepsWorlds} from '../common/utils';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faArrowCircleDown} from '@fortawesome/free-solid-svg-icons';
+import {faCloudUpload} from '@fortawesome/free-solid-svg-icons';
 
 export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProps> {
     state: Readonly<{
@@ -274,7 +274,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         return (
             <div>
                 <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Import Room">
-                    <FontAwesomeIcon icon={faArrowCircleDown} />
+                    <FontAwesomeIcon icon={faCloudUpload} />
                 </button>
                 <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
                     <ModalHeader toggle={() => this.toggleModal()}>Import Room</ModalHeader>

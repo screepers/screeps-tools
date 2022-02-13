@@ -514,7 +514,7 @@ export class CreepDesigner extends React.Component{
         if (incLifespan) {
             append += ` lifespan (${this.creepLifespan()} ticks)`;
         }
-        return <span title={val + append}>{val}<small> /1</small></span>;
+        return <span title={val + append}>{val}</span>;
     }
 
     labelUnitsLife(val: string, incLifespan: boolean = true) {
@@ -525,7 +525,11 @@ export class CreepDesigner extends React.Component{
         if (incLifespan) {
             append += ` lifespan (${this.creepLifespan()} ticks)`;
         }
-        return <span title={val + append}>{val}<small> /{this.state.unitCount}</small></span>;
+        let subUnits = <></>;
+        if (this.state.unitCount > 1) {
+            subUnits = <small> /{this.state.unitCount}</small>;
+        }
+        return <span title={val + append}>{val}{subUnits}</span>;
     }
 
     labelPerHour(val: string) {

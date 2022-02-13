@@ -3,7 +3,7 @@ import * as LZString from 'lz-string';
 import * as Constants from '../common/constants';
 import {Input, Modal, ModalHeader, ModalBody} from 'reactstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faShareAlt} from '@fortawesome/free-solid-svg-icons';
+import {faFileCode} from '@fortawesome/free-solid-svg-icons';
 
 export class ModalJson extends React.Component<ModalProps> {
     state: Readonly<{
@@ -58,11 +58,11 @@ export class ModalJson extends React.Component<ModalProps> {
     render() {
         return (
             <div>
-                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Results">
-                    <FontAwesomeIcon icon={faShareAlt} />
+                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Json Output">
+                    <FontAwesomeIcon icon={faFileCode} />
                 </button>
                 <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
-                    <ModalHeader toggle={() => this.toggleModal()}>Results</ModalHeader>
+                    <ModalHeader toggle={() => this.toggleModal()}>Json Output</ModalHeader>
                     <ModalBody>
                         <Input type="textarea" value={this.createJson()} id="json-data" onChange={(e) => this.import(e)} />
                         <a href={this.shareableLink()} id="share-link">Share Link</a>
