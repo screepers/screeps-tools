@@ -582,7 +582,12 @@ export class CreepDesigner extends React.Component{
             }
         }
         
-        return <span title={this.formatNumber(creepHP, 2) + append}>{label}<small> /{units}</small></span>;
+        let subUnits = <></>;
+        if (units > 1) {
+            subUnits = <small> /{units}</small>;
+        }
+
+        return <span title={this.formatNumber(creepHP, 2) + append}>{label}{subUnits}</span>;
     }
     
     render() {
@@ -745,6 +750,13 @@ export class CreepDesigner extends React.Component{
                                     <td className="text-center">{this.labelUnitsLife(this.getActionValueFormatted('work', 'build', true, 5, this.creepLifespan()))}</td>
                                     <td className="text-center">{this.labelPerHour(this.getActionValueFormatted('work', 'build', true, 5, this.ticksPerHour()))}</td>
                                     <td className="text-center">{this.labelPerDay(this.getActionValueFormatted('work', 'build', true, 5, this.ticksPerDay()))}</td>
+                                </tr>}
+                                {this.state.body.work > 0 && <tr className="work">
+                                    <td>Repair</td>
+                                    <td className="text-center">{this.labelPerTick(this.getActionValueFormatted('work', 'repair', true, 100))}</td>
+                                    <td className="text-center">{this.labelUnitsLife(this.getActionValueFormatted('work', 'repair', true, 100, this.creepLifespan()))}</td>
+                                    <td className="text-center">{this.labelPerHour(this.getActionValueFormatted('work', 'repair', true, 100, this.ticksPerHour()))}</td>
+                                    <td className="text-center">{this.labelPerDay(this.getActionValueFormatted('work', 'repair', true, 100, this.ticksPerDay()))}</td>
                                 </tr>}
                                 {this.state.body.attack > 0 && <tr className="attack">
                                     <td>Attack</td>
