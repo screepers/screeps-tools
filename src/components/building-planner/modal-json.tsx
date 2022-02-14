@@ -46,7 +46,7 @@ export class ModalJson extends React.Component<ModalProps> {
 
     displayJson = () => this.state.format
         ? JSON.stringify(this.createJson(), null, 2)
-            .replace(/{\n\s+"x": ([0-9]){1,4},\n\s+"y": ([0-9]){1,4}\n\s+}/g, '{"x":$1,"y":$2}')
+            .replace(/{\n\s+"x": ([0-9]{1,4}),\n\s+"y": ([0-9]{1,4})\n\s+}/g, '{"x":$1,"y":$2}')
         : JSON.stringify(this.createJson());
 
     import(e: any) {
