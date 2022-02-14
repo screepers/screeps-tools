@@ -65,9 +65,9 @@ export class BuildingPlanner extends React.Component {
         }
 
         return {
-            room: '',
-            world: 'mmo',
-            shard: 'shard0',
+            room: Constants.PLANNER.ROOM,
+            world: Constants.PLANNER.WORLD,
+            shard: Constants.PLANNER.SHARD,
             terrain: terrain,
             x: 0,
             y: 0,
@@ -81,7 +81,7 @@ export class BuildingPlanner extends React.Component {
             },
             brush: 'spawn',
             brushLabel: null,
-            rcl: 8,
+            rcl: Constants.PLANNER.RCL,
             structures: {},
             sources: [],
             mineral: {},
@@ -89,7 +89,7 @@ export class BuildingPlanner extends React.Component {
                 showStatsOverlay: true,
                 allowBorderStructure: false,
             },
-            scale: 1.0,
+            scale: 1.3,
             scaleMin: 1.0,
             scaleMax: 3.0,
             scaleStep: 0.1,
@@ -162,11 +162,22 @@ export class BuildingPlanner extends React.Component {
             structures[structure] = json.buildings[structure].pos;
         });
 
+        if (json.room) {
+            component.setState({room: json.room});
+        }
+
+        if (json.world) {
+            component.setState({world: json.world});
+        }
+
+        if (json.shard) {
+            component.setState({shard: json.shard});
+        }
+
         component.setState({
-            room: json.name,
-            world: json.world,
-            shard: json.shard,
-            rcl: json.rcl,
+            rcl: typeof(json.rcl) === 'number'
+                ? Math.max(1, Math.min(8, json.rcl))
+                : Constants.PLANNER.RCL,
             structures: structures
         });
     }

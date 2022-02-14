@@ -1,4 +1,14 @@
 /**
+ * Building Planner
+ */
+export const PLANNER = {
+    RCL: 8,
+    ROOM: '',
+    SHARD: 'shard0',
+    WORLD: 'mmo',
+};
+
+/**
  * Screeps Game Constants
  */
 export const CREEP_LIFE_TIME: number = 1500;
