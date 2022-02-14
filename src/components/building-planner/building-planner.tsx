@@ -162,23 +162,14 @@ export class BuildingPlanner extends React.Component {
             structures[structure] = json.buildings[structure].pos;
         });
 
-        if (json.room) {
-            component.setState({room: json.room});
-        }
-
-        if (json.world) {
-            component.setState({world: json.world});
-        }
-
-        if (json.shard) {
-            component.setState({shard: json.shard});
-        }
-
         component.setState({
+            room: json.name ?? Constants.PLANNER.ROOM,
+            world: json.world ?? Constants.PLANNER.WORLD,
+            shard: json.shard ?? Constants.PLANNER.SHARD,
             rcl: typeof(json.rcl) === 'number'
                 ? Math.max(1, Math.min(8, json.rcl))
                 : Constants.PLANNER.RCL,
-            structures: structures
+            structures
         });
     }
 
