@@ -89,9 +89,9 @@ export class BuildingPlanner extends React.Component {
                 showStatsOverlay: true,
                 allowBorderStructure: false,
             },
-            scale: 1.3,
+            scale: 1.5,
             scaleMin: 1.0,
-            scaleMax: 3.0,
+            scaleMax: 4.0,
             scaleStep: 0.1,
         }
     }
@@ -475,6 +475,7 @@ export class BuildingPlanner extends React.Component {
 
     render() {
         const scaleAsFloat = this.convertToFixed(this.state.scale);
+        const marginLeft = this.convertToFixed(Math.max(0, (window.innerWidth - 800 * this.state.scale) / 2));
         return (
             <div className="building-planner">
                 <Navbar fluid className="controls" sticky="top">
@@ -542,42 +543,37 @@ export class BuildingPlanner extends React.Component {
                                         </label>
                                     </div>
                                 </div>
+                                {this.state.settings.showStatsOverlay && <div className="stats-overlay">
+                                   {this.state.room &&
+                                       <span title={this.state.shard ?? ''}>
+                                           {this.state.room}
+                                       </span>}
+                                   <span className="coordinate">X: {this.state.x}</span>
+                                   <span className="coordinate">Y: {this.state.y}</span>
+                                </div>}
                             </Col>
                         </Row>
                     </Container>
                 </Navbar>
-                <div className="map" style={{ transform: 'scale(' + this.state.scale + ')' }}>
-                    {this.state.settings.showStatsOverlay && <div className="stats-overlay">
-                        <table>
-                            {this.state.room && <tr>
-                                <td title={this.state.shard ?? ''}>
-                                    {this.state.room}
-                                </td>
-                            </tr>}
-                            <tr>
-                                <td>X: {this.state.x}</td>
-                            </tr>
-                            <tr>
-                                <td>Y: {this.state.y}</td>
-                            </tr>
-                        </table>
-                    </div>}
-                    {[...Array(50)].map((yval, y: number) => {
-                        return [...Array(50)].map((xval, x: number) =>
-                            <MapCell
-                                x={x}
-                                y={y}
-                                planner={this}
-                                terrain={this.state.terrain[y][x]}
-                                structure={this.getStructure(x, y)}
-                                road={this.getRoadProps(x, y)}
-                                rampart={this.isRampart(x, y)}
-                                source={this.hasSource(x, y)}
-                                mineral={this.getMineral(x, y)}
-                                key={'mc-'+ x + '-' + y}
-                            />
-                        )
-                    })}
+                <div className="mapContainer">
+                    <div className="map" style={{ transform: 'scale(' + this.state.scale + ')', marginLeft: marginLeft + 'px' }}>
+                        {[...Array(50)].map((yval, y: number) => {
+                            return [...Array(50)].map((xval, x: number) =>
+                                <MapCell
+                                    x={x}
+                                    y={y}
+                                    planner={this}
+                                    terrain={this.state.terrain[y][x]}
+                                    structure={this.getStructure(x, y)}
+                                    road={this.getRoadProps(x, y)}
+                                    rampart={this.isRampart(x, y)}
+                                    source={this.hasSource(x, y)}
+                                    mineral={this.getMineral(x, y)}
+                                    key={'mc-'+ x + '-' + y}
+                                />
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
         );

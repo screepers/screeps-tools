@@ -187,7 +187,7 @@ export class MapCell extends React.Component<MapCellProps> {
         });
         // handle click and drag
         if (e.buttons == 1) {
-            this.onClick();
+            this.onClick(e);
             this.setState({hover: false});
         } else if (e.buttons == 2) {
             this.onContextMenu(e);
@@ -199,18 +199,29 @@ export class MapCell extends React.Component<MapCellProps> {
         this.setState({hover: false});
     }
 
-    onClick() {
-        if (this.props.planner.addStructure(this.props.x, this.props.y)) {
-            switch (this.props.planner.state.brush) {
-                case('road'):
-                    this.setState({road: true});
-                    break;
-                case('rampart'):
-                    this.setState({rampart: true});
-                    break;
-                default:
-                    this.setState({structure: this.props.planner.state.brush});
-                    break;
+    onClick(e: any) {
+        if (e.shiftKey) {
+            if (this.state.structure !== '' || this.state.road || this.state.rampart) {
+                this.props.planner.removeStructure(this.props.x, this.props.y, this.state.structure);
+                this.props.planner.removeStructure(this.props.x, this.props.y, 'rampart');
+                this.props.planner.removeStructure(this.props.x, this.props.y, 'road');
+                
+                this.setState({structure: '', road: false, rampart: false})
+            }
+        } else {
+            if (this.props.planner.addStructure(this.props.x, this.props.y)) {
+                switch (this.props.planner.state.brush) {
+                    case('road'):
+                        this.setState({road: true});
+                        break;
+                    case('rampart'):
+                        this.setState({rampart: true});
+                        break;
+                    default:
+                        this.setState({structure: this.props.planner.state.brush});
+                        break;
+                }
+    
             }
         }
     }
