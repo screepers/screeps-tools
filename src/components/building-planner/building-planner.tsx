@@ -20,7 +20,6 @@ export class BuildingPlanner extends React.Component {
         y: number;
         worlds: {[worldName: string]: {shards: string[]}};
         brush: string;
-        brushLabel: React.ReactElement | null;
         rcl: number;
         structures: {[structure: string]: {x: number; y: number;}[]};
         sources: {x: number; y: number;}[];
@@ -80,7 +79,6 @@ export class BuildingPlanner extends React.Component {
                 }
             },
             brush: 'spawn',
-            brushLabel: null,
             rcl: Constants.PLANNER.RCL,
             structures: {},
             sources: [],
@@ -172,7 +170,18 @@ export class BuildingPlanner extends React.Component {
         });
     }
 
-    addStructure(x: number, y: number) {
+    paintCell(x: number, y: number) {
+        const terrain = Constants.TERRAIN_CODES[this.state.brush];
+        if (terrain !== undefined) {
+            const prevTerrain = this.state.terrain[y][x];
+            if (prevTerrain === terrain) {
+                return false;
+            }
+
+            this.state.terrain[y][x] = terrain;
+            return true;
+        }
+
         let structures = this.state.structures;
         let added = false;
 
@@ -359,12 +368,12 @@ export class BuildingPlanner extends React.Component {
         }
         const selected: OptionTypeBase = {
             value: this.state.brush,
-            label: this.getStructureBrushLabel(this.state.brush)
+            label: Constants.TERRAIN_NAMES[this.state.brush] === undefined ? this.getStructureBrushLabel(this.state.brush) : this.getTerrainBrushLabel(this.state.brush)
         };
         return selected;
     }
 
-    getStructureBrushes() {
+    getBrushes() {
         const options: OptionTypeBase[] = [];
         Object.keys(Constants.STRUCTURES).map(key => {
             let props: OptionTypeBase = {
@@ -374,6 +383,13 @@ export class BuildingPlanner extends React.Component {
             if (this.getStructureDisabled(key)) {
                 props.isDisabled = true;
             }
+            options.push(props);
+        });
+        Object.keys(Constants.TERRAIN_NAMES).map(key => {
+            let props: OptionTypeBase = {
+                value: key,
+                label: this.getTerrainBrushLabel(key)
+            };
             options.push(props);
         });
         return options;
@@ -386,7 +402,19 @@ export class BuildingPlanner extends React.Component {
         }
         const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
         return placed >= total;
+    }
 
+    getTerrainBrushLabel(key: string) {
+        const terrainName = Constants.TERRAIN_NAMES[key];
+        const placed = Object.values(this.state.terrain).reduce((acc, terrainRow) =>
+            acc + Object.values(terrainRow).filter((terrain) => terrain === key).length, 0);
+        return (
+            <div>
+                <img src={`/static/assets/terrains/${key}.png`} alt={terrainName} />{' '}
+                {terrainName}
+                <span className="right">{placed}</span>
+            </div>
+        );
     }
 
     getStructureBrushLabel(key: string) {
@@ -395,7 +423,7 @@ export class BuildingPlanner extends React.Component {
         const total = Constants.CONTROLLER_STRUCTURES[key][this.state.rcl];
         return (
             <div>
-                <img src={`/static/assets/structures/${key}.png`} />{' '}
+                <img src={`/static/assets/structures/${key}.png`} alt={structure} />{' '}
                 {structure}
                 <span className="right">{placed}/{total}</span>
             </div>
@@ -422,7 +450,7 @@ export class BuildingPlanner extends React.Component {
         this.setState({rcl: rcl});
 
         if (Constants.CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
-            this.setState({brush: null, brushLabel: null});
+            this.setState({brush: null});
         }
     }
 
@@ -481,7 +509,7 @@ export class BuildingPlanner extends React.Component {
                                 <Select
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedBrush()}
-                                    options={this.getStructureBrushes()}
+                                    options={this.getBrushes()}
                                     theme={theme => this.getSelectTheme(theme)}
                                     onChange={(selected) => this.setBrush(selected.value)}
                                     className="select-structure"

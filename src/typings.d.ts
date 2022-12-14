@@ -14,7 +14,6 @@ interface BuildingPlannerProps extends React.Component {
         y: number;
         worlds: {[worldName: string]: {shards: string[]}};
         brush: string;
-        brushLabel: React.ReactElement | null;
         rcl: number;
         structures: {[structure: string]: {x: number; y: number;}[]};
         sources: {x: number; y: number;}[];
@@ -27,7 +26,7 @@ interface BuildingPlannerProps extends React.Component {
     };
     resetState(): void;
     loadJson(json: any): any;
-    addStructure(x: number, y: number): boolean;
+    paintCell(x: number, y: number): boolean;
     removeStructure(x: number, y: number, structure: string | null): void;
     changeScale(e: any, decrease: boolean): void;
 }

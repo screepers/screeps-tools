@@ -208,6 +208,18 @@ export const CONTROLLER_STRUCTURES: {[structure: string]: {[level: number]: numb
     factory: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 1, 8: 1 }
 };
 
+export const TERRAIN_NAMES: {[terrain: string]: string} = {
+    plain: "Plain",
+    wall: "Wall",
+    swamp: "Swamp"
+};
+
+export const TERRAIN_CODES: {[terrain: string]: number} = {
+    plain: 0,
+    wall: 1,
+    swamp: 2
+};
+
 export const STRUCTURES: {[structure: string]: string} = {
     spawn: "Spawn",
     container: "Container",

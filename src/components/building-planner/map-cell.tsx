@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as Constants from '../common/constants';
 
 export class MapCell extends React.Component<MapCellProps> {
     state: Readonly<{
@@ -81,7 +82,7 @@ export class MapCell extends React.Component<MapCellProps> {
             content.push(<img src="/static/assets/resources/source.png" />);
         }
 
-        switch(this.state.mineral) {
+        switch (this.state.mineral) {
             case 'X':
             case 'Z':
             case 'L':
@@ -205,11 +206,11 @@ export class MapCell extends React.Component<MapCellProps> {
                 this.props.planner.removeStructure(this.props.x, this.props.y, this.state.structure);
                 this.props.planner.removeStructure(this.props.x, this.props.y, 'rampart');
                 this.props.planner.removeStructure(this.props.x, this.props.y, 'road');
-                
+
                 this.setState({structure: '', road: false, rampart: false})
             }
         } else {
-            if (this.props.planner.addStructure(this.props.x, this.props.y)) {
+            if (this.props.planner.paintCell(this.props.x, this.props.y)) {
                 switch (this.props.planner.state.brush) {
                     case('road'):
                         this.setState({road: true});
@@ -217,11 +218,15 @@ export class MapCell extends React.Component<MapCellProps> {
                     case('rampart'):
                         this.setState({rampart: true});
                         break;
+                    case ('plain'):
+                    case ('wall'):
+                    case ('swamp'):
+                        this.setState({terrain: Constants.TERRAIN_CODES[this.props.planner.state.brush]});
+                        break;
                     default:
                         this.setState({structure: this.props.planner.state.brush});
                         break;
                 }
-    
             }
         }
     }
@@ -233,7 +238,7 @@ export class MapCell extends React.Component<MapCellProps> {
             this.props.planner.removeStructure(this.props.x, this.props.y, this.state.structure);
             this.props.planner.removeStructure(this.props.x, this.props.y, 'rampart');
             this.props.planner.removeStructure(this.props.x, this.props.y, 'road');
-            
+
             this.setState({structure: '', road: false, rampart: false})
         }
     }

@@ -56,7 +56,7 @@ export class ModalJson extends React.Component<ModalProps> {
             for (let x = 0; x < 50; x++) {
                 const terrain = parent.state.terrain[y][x];
                 if (terrain & 3) {
-                    const terrainName = terrain & 1 ? 'wall' : 'swamp';
+                    const terrainName = terrain & 1 ? "wall" : "swamp";
                     if (!roomFeatures[terrainName]) {
                         roomFeatures[terrainName] = {pos: []};
                     }
