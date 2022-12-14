@@ -6,7 +6,7 @@ import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
 import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
-import {Container, Row, Col, Navbar} from 'reactstrap';
+import {Col, Container, Navbar, Row} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {screepsWorlds} from '../common/utils';
 
@@ -138,11 +138,10 @@ export class BuildingPlanner extends React.Component {
                 response.json().then((data: any) => {
                     let terrain = data.terrain[0].terrain;
                     let terrainMap: TerrainMap = {};
-                    for (var y = 0; y < 50; y++) {
+                    for (let y = 0; y < 50; y++) {
                         terrainMap[y] = {};
-                        for (var x = 0; x < 50; x++) {
-                            let code = terrain.charAt(y * 50 + x);
-                            terrainMap[y][x] = code;
+                        for (let x = 0; x < 50; x++) {
+                            terrainMap[y][x] = terrain.charAt(y * 50 + x);
                         }
                     }
 
@@ -386,10 +385,8 @@ export class BuildingPlanner extends React.Component {
             return true;
         }
         const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
-        if (placed >= total) {
-            return true;
-        }
-        return false;
+        return placed >= total;
+
     }
 
     getStructureBrushLabel(key: string) {
@@ -459,7 +456,6 @@ export class BuildingPlanner extends React.Component {
         if (e) {
             // element onChange
             current = e.target.valueAsNumber;
-            change = 0;
             update = current;
         } else {
             // map-cell onWheel
@@ -490,6 +486,7 @@ export class BuildingPlanner extends React.Component {
                                     onChange={(selected) => this.setBrush(selected.value)}
                                     className="select-structure"
                                     classNamePrefix="select"
+                                    maxMenuHeight={window.innerHeight - 115}
                                 />
                                 <Select
                                     defaultValue={this.state.brush}
@@ -499,6 +496,7 @@ export class BuildingPlanner extends React.Component {
                                     onChange={(selected) => this.setRCL(selected.value)}
                                     className="select-rcl"
                                     classNamePrefix="select"
+                                    maxMenuHeight={window.innerHeight - 115}
                                 />
                             </Col>
                             <Col xs={{ size: 'auto', order: 1 }} sm={{ order: 1 }} md={{ order: 2 }}>

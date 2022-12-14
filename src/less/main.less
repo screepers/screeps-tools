@@ -133,11 +133,10 @@ input[type=number]::-webkit-outer-spin-button {
 
     .panel {
         margin: 0;
-        padding:10px;
         background-color:#222;
         color:#ccc;
         box-sizing: border-box;
-        padding:10px;
+        padding: 10px;
 
         hr {
             border: none;
@@ -478,8 +477,8 @@ input[type=number]::-webkit-outer-spin-button {
                 img,
                 svg {
                     position: absolute;
-                    top: 0px;
-                    left: 0px;
+                    top: 0;
+                    left: 0;
                     height: 16px;
                     width: 16px;
                 }
@@ -537,9 +536,10 @@ input[type=number]::-webkit-outer-spin-button {
             margin-left: 10px;
         }
 
-	.coordinate {
-	    width: 4em;
-	}
+        .coordinate {
+            display: inline-block;
+            width: 2.4em;
+        }
     }
 }
 
@@ -615,7 +615,6 @@ form.load-room {
 }
 
 kbd, .key {
-    display: inline;
     display: inline-block;
     min-width: 1em;
     padding: .2em .3em;
