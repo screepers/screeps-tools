@@ -12,22 +12,29 @@ interface BuildingPlannerProps extends React.Component {
         terrain: TerrainMap;
         x: number;
         y: number;
-        worlds: {[worldName: string]: {shards: string[]}};
+        worlds: { [worldName: string]: { shards: string[] } };
         brush: string;
         rcl: number;
-        structures: {[structure: string]: {x: number; y: number;}[]};
-        sources: {x: number; y: number;}[];
-        mineral: {[mineralType: string]: {x: number; y: number;}};
+        structures: { [structure: string]: { x: number; y: number; }[] };
+        sources: { x: number; y: number; }[];
+        minerals: { mineralType: string, x: number; y: number }[];
         settings: {
             showStatsOverlay: boolean;
             allowBorderStructure: boolean;
         };
         scale: number;
     };
+
     resetState(): void;
+
     loadJson(json: any): any;
+
     paintCell(x: number, y: number): boolean;
+
     removeStructure(x: number, y: number, structure: string | null): void;
+
+    removeResource(x: number, y: number): void;
+
     changeScale(e: any, decrease: boolean): void;
 }
 
@@ -41,7 +48,7 @@ interface ModalImportRoomFormProps {
     room: string;
     world: string;
     shard: string;
-    worlds: {[worldName: string]: {shards: string[]}};
+    worlds: { [worldName: string]: { shards: string[] } };
     modal: boolean;
 }
 

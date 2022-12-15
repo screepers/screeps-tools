@@ -205,7 +205,8 @@ export const CONTROLLER_STRUCTURES: {[structure: string]: {[level: number]: numb
     lab: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 3, 7: 6, 8: 10 },
     container: { 0: 5, 1: 5, 2: 5, 3: 5, 4: 5, 5: 5, 6: 5, 7: 5, 8: 5 },
     nuker: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 1 },
-    factory: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 1, 8: 1 }
+    factory: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 1, 8: 1 },
+    controller: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
 };
 
 export const TERRAIN_NAMES: {[terrain: string]: string} = {
@@ -219,6 +220,17 @@ export const TERRAIN_CODES: {[terrain: string]: number} = {
     wall: 1,
     swamp: 2
 };
+
+export const RESOURCES: {[name: string]: string} = {
+    source: "Source",
+    H: "Mineral H",
+    O: "Mineral O",
+    U: "Mineral L",
+    K: "Mineral K",
+    L: "Mineral L",
+    Z: "Mineral Z",
+    X: "Mineral X"
+}
 
 export const STRUCTURES: {[structure: string]: string} = {
     spawn: "Spawn",
@@ -237,4 +249,5 @@ export const STRUCTURES: {[structure: string]: string} = {
     rampart: "Rampart",
     constructedWall: "Wall",
     road: "Road",
+    controller: "Controller",
 };

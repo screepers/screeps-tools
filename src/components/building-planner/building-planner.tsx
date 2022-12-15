@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as LZString from 'lz-string';
 import * as Constants from '../common/constants';
+import {RESOURCES, TERRAIN_CODES} from '../common/constants';
 import {MapCell} from './map-cell';
 import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
@@ -18,12 +19,12 @@ export class BuildingPlanner extends React.Component {
         terrain: TerrainMap;
         x: number;
         y: number;
-        worlds: {[worldName: string]: {shards: string[]}};
+        worlds: { [worldName: string]: { shards: string[] } };
         brush: string;
         rcl: number;
-        structures: {[structure: string]: {x: number; y: number;}[]};
-        sources: {x: number; y: number;}[];
-        mineral: {[mineralType: string]: {x: number; y: number;}};
+        structures: { [structure: string]: { x: number; y: number; }[] };
+        sources: { x: number; y: number; }[];
+        minerals: { mineralType: string, x: number; y: number }[];
         settings: {
             showStatsOverlay: boolean;
             allowBorderStructure: boolean;
@@ -82,7 +83,7 @@ export class BuildingPlanner extends React.Component {
             rcl: Constants.PLANNER.RCL,
             structures: {},
             sources: [],
-            mineral: {},
+            minerals: [],
             settings: {
                 showStatsOverlay: true,
                 allowBorderStructure: false,
@@ -91,7 +92,7 @@ export class BuildingPlanner extends React.Component {
             scaleMin: 1.0,
             scaleMax: 4.0,
             scaleStep: 0.1,
-        }
+        };
     }
 
     resetState() {
@@ -108,7 +109,7 @@ export class BuildingPlanner extends React.Component {
                         return;
                     }
                     const shards: string[] = [];
-                    data.shards.forEach((shard: {name: string}) => {
+                    data.shards.forEach((shard: { name: string }) => {
                         shards.push(shard.name);
                     });
                     component.setState({
@@ -146,6 +147,45 @@ export class BuildingPlanner extends React.Component {
                     component.setState({terrain: terrainMap});
                 });
             });
+        } else if (json.roomFeatures) {
+            const terrain: TerrainMap = {};
+
+            for (let y = 0; y < 50; y++) {
+                terrain[y] = {};
+                for (let x = 0; x < 50; x++) {
+                    terrain[y][x] = 0;
+                }
+            }
+
+            Object.entries(TERRAIN_CODES).forEach(([name, code]) => {
+                if (json.roomFeatures[name] !== undefined) {
+                    json.roomFeatures[name].pos.forEach(({x, y}: { x: number; y: number }) => {
+                        terrain[y][x] = code;
+                    });
+                }
+            });
+
+            let sources: { x: number, y: number }[] = [];
+            if (json.roomFeatures.source !== undefined) {
+                sources = json.roomFeatures.source.pos;
+            }
+
+            const minerals: { mineralType: string, x: number, y: number }[] = [];
+            Object.keys(RESOURCES).forEach((name) => {
+                if (name !== "source") {
+                    if (json.roomFeatures[name] !== undefined) {
+                        json.roomFeatures[name].pos.forEach(({x, y}: { x: number, y: number }) => {
+                            minerals.push({
+                                mineralType: name,
+                                x,
+                                y
+                            });
+                        });
+                    }
+                }
+            });
+
+            this.setState({terrain, sources, minerals});
         }
 
         let structures: {
@@ -163,7 +203,7 @@ export class BuildingPlanner extends React.Component {
             room: json.name ?? Constants.PLANNER.ROOM,
             world: json.world ?? Constants.PLANNER.WORLD,
             shard: json.shard ?? Constants.PLANNER.SHARD,
-            rcl: typeof(json.rcl) === 'number'
+            rcl: typeof (json.rcl) === 'number'
                 ? Math.max(1, Math.min(8, json.rcl))
                 : Constants.PLANNER.RCL,
             structures
@@ -182,6 +222,26 @@ export class BuildingPlanner extends React.Component {
             return true;
         }
 
+        if (Constants.RESOURCES[this.state.brush] !== undefined) {
+            if (this.state.brush === "source") {
+                if (!this.hasSource(x, y)) {
+                    this.removeResource(x, y);
+                    this.setState({sources: [...this.state.sources, {x, y}]});
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                if (this.getMineral(x, y) !== this.state.brush) {
+                    this.removeResource(x, y);
+                    this.setState({minerals: [...this.state.minerals, {mineralType: this.state.brush, x, y}]});
+                    return true;
+                } else {
+                    return true;
+                }
+            }
+        }
+
         let structures = this.state.structures;
         let added = false;
 
@@ -196,7 +256,6 @@ export class BuildingPlanner extends React.Component {
             }
 
             if (structures[this.state.brush].length < Constants.CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
-                
                 let foundAtPos = false;
 
                 // remove existing structures at this position except ramparts
@@ -243,11 +302,6 @@ export class BuildingPlanner extends React.Component {
     removeStructure(x: number, y: number, structure: string | null) {
         let structures = this.state.structures;
 
-        if (structure == 'controller') {
-            // keep these structures, only reimport or reload page can remove them
-            return;
-        }
-
         if (structure && structures[structure]) {
             structures[structure] = structures[structure].filter(pos => {
                 return !(pos.x === x && pos.y === y);
@@ -255,6 +309,20 @@ export class BuildingPlanner extends React.Component {
         }
 
         this.setState({structures: structures});
+    }
+
+    removeResource(x: number, y: number) {
+        const withoutXYSource = this.state.sources.filter(({x: sourceX, y: sourceY}) =>
+            x !== sourceX || y !== sourceY);
+        if (withoutXYSource.length !== this.state.sources.length) {
+            this.setState({sources: withoutXYSource});
+        }
+
+        const withoutXYMineral = this.state.minerals.filter(({x: mineralX, y: mineralY}) =>
+            x !== mineralX || y !== mineralY);
+        if (withoutXYMineral.length !== this.state.minerals.length) {
+            this.setState({minerals: withoutXYMineral});
+        }
     }
 
     getRoadProps(x: number, y: number) {
@@ -269,7 +337,7 @@ export class BuildingPlanner extends React.Component {
             left: false,
             top_left: false
         };
-        if (this.isRoad(x,y)) {
+        if (this.isRoad(x, y)) {
             roadProps.middle = true;
             for (let rx of [-1, 0, 1]) {
                 for (let ry of [-1, 0, 1]) {
@@ -337,26 +405,14 @@ export class BuildingPlanner extends React.Component {
         return rampart;
     }
 
-    hasSource(x: number, y: number) {
-        let source = false;
-        if (this.state.sources) {
-            this.state.sources.forEach((pos) => {
-                if (pos.x === x && pos.y === y) {
-                    source = true;
-                }
-            });
-        }
-        return source;
+    hasSource(x: number, y: number): boolean {
+        return this.state.sources.some(({x: sourceX, y: sourceY}) => sourceX === x && sourceY === y);
     }
 
     getMineral(x: number, y: number): string | null {
-        const minerals = ['X', 'Z', 'L', 'K', 'U', 'O', 'H'];
-        for (let key of minerals) {
-            if (this.state.mineral[key]) {
-                let mineral = this.state.mineral[key];
-                if (mineral.x === x && mineral.y === y) {
-                    return key;
-                }
+        for (const {x: mineralX, y: mineralY, mineralType} of this.state.minerals) {
+            if (mineralX === x && mineralY === y) {
+                return mineralType;
             }
         }
         return null;
@@ -366,9 +422,17 @@ export class BuildingPlanner extends React.Component {
         if (!this.state.brush) {
             return null;
         }
+        let label;
+        if (Constants.STRUCTURES[this.state.brush] !== undefined) {
+            label = this.getStructureBrushLabel(this.state.brush);
+        } else if (Constants.TERRAIN_NAMES[this.state.brush] !== undefined) {
+            label = this.getTerrainBrushLabel(this.state.brush)
+        } else {
+            label = this.getResourceBrushLabel(this.state.brush);
+        }
         const selected: OptionTypeBase = {
             value: this.state.brush,
-            label: Constants.TERRAIN_NAMES[this.state.brush] === undefined ? this.getStructureBrushLabel(this.state.brush) : this.getTerrainBrushLabel(this.state.brush)
+            label
         };
         return selected;
     }
@@ -392,6 +456,13 @@ export class BuildingPlanner extends React.Component {
             };
             options.push(props);
         });
+        Object.keys(Constants.RESOURCES).map(key => {
+            let props: OptionTypeBase = {
+                value: key,
+                label: this.getResourceBrushLabel(key)
+            };
+            options.push(props);
+        });
         return options;
     }
 
@@ -410,8 +481,25 @@ export class BuildingPlanner extends React.Component {
             acc + Object.values(terrainRow).filter((terrain) => terrain === key).length, 0);
         return (
             <div>
-                <img src={`/static/assets/terrains/${key}.png`} alt={terrainName} />{' '}
+                <img src={`/static/assets/terrains/${key}.png`} alt={terrainName}/>{' '}
                 {terrainName}
+                <span className="right">{placed}</span>
+            </div>
+        );
+    }
+
+    getResourceBrushLabel(key: string) {
+        const resource = Constants.RESOURCES[key];
+        let placed;
+        if (resource === "source") {
+            placed = this.state.sources.length;
+        } else {
+            placed = this.state.minerals.filter(({mineralType}) => mineralType === key).length;
+        }
+        return (
+            <div>
+                <img src={`/static/assets/resources/${key}.png`} alt={resource}/>{' '}
+                {resource}
                 <span className="right">{placed}</span>
             </div>
         );
@@ -423,7 +511,7 @@ export class BuildingPlanner extends React.Component {
         const total = Constants.CONTROLLER_STRUCTURES[key][this.state.rcl];
         return (
             <div>
-                <img src={`/static/assets/structures/${key}.png`} alt={structure} />{' '}
+                <img src={`/static/assets/structures/${key}.png`} alt={structure}/>{' '}
                 {structure}
                 <span className="right">{placed}/{total}</span>
             </div>
@@ -505,7 +593,7 @@ export class BuildingPlanner extends React.Component {
                 <Navbar fluid className="controls" sticky="top">
                     <Container>
                         <Row className="justify-content-center">
-                            <Col xs={{ size: 'auto', order: 2 }} sm={{ order: 2 }} md={{ order: 1 }}>
+                            <Col xs={{size: 'auto', order: 2}} sm={{order: 2}} md={{order: 1}}>
                                 <Select
                                     defaultValue={this.state.brush}
                                     value={this.getSelectedBrush()}
@@ -527,7 +615,7 @@ export class BuildingPlanner extends React.Component {
                                     maxMenuHeight={window.innerHeight - 115}
                                 />
                             </Col>
-                            <Col xs={{ size: 'auto', order: 1 }} sm={{ order: 1 }} md={{ order: 2 }}>
+                            <Col xs={{size: 'auto', order: 1}} sm={{order: 1}} md={{order: 2}}>
                                 <ModalImportRoomForm
                                     planner={this}
                                     room={this.state.room}
@@ -561,28 +649,29 @@ export class BuildingPlanner extends React.Component {
                                             title={'Zoom: ' + scaleAsFloat}
                                             onChange={(e) => this.changeScale(e)}
                                         />
-                                        <label 
+                                        <label
                                             htmlFor="zoom"
                                             title={'Zoom: ' + scaleAsFloat}
-                                            >
+                                        >
                                             {scaleAsFloat}
                                         </label>
                                     </div>
                                 </div>
                                 {this.state.settings.showStatsOverlay && <div className="stats-overlay">
-                                   {this.state.room &&
-                                       <span title={this.state.shard ?? ''}>
+                                    {this.state.room &&
+                                        <span title={this.state.shard ?? ''}>
                                            {this.state.room}
                                        </span>}
-                                   <span className="coordinate">X: {this.state.x}</span>
-                                   <span className="coordinate">Y: {this.state.y}</span>
+                                    <span className="coordinate">X: {this.state.x}</span>
+                                    <span className="coordinate">Y: {this.state.y}</span>
                                 </div>}
                             </Col>
                         </Row>
                     </Container>
                 </Navbar>
                 <div className="mapContainer">
-                    <div className="map" style={{ transform: 'scale(' + this.state.scale + ')', marginLeft: marginLeft + 'px' }}>
+                    <div className="map"
+                         style={{transform: 'scale(' + this.state.scale + ')', marginLeft: marginLeft + 'px'}}>
                         {[...Array(50)].map((yval, y: number) => {
                             return [...Array(50)].map((xval, x: number) =>
                                 <MapCell
@@ -595,7 +684,7 @@ export class BuildingPlanner extends React.Component {
                                     rampart={this.isRampart(x, y)}
                                     source={this.hasSource(x, y)}
                                     mineral={this.getMineral(x, y)}
-                                    key={'mc-'+ x + '-' + y}
+                                    key={'mc-' + x + '-' + y}
                                 />
                             )
                         })}

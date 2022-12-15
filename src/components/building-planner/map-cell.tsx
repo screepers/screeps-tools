@@ -202,30 +202,32 @@ export class MapCell extends React.Component<MapCellProps> {
 
     onClick(e: any) {
         if (e.shiftKey) {
-            if (this.state.structure !== '' || this.state.road || this.state.rampart) {
-                this.props.planner.removeStructure(this.props.x, this.props.y, this.state.structure);
-                this.props.planner.removeStructure(this.props.x, this.props.y, 'rampart');
-                this.props.planner.removeStructure(this.props.x, this.props.y, 'road');
-
-                this.setState({structure: '', road: false, rampart: false})
-            }
+            // shift+left-click should do the same as right-click - removing structures
+            this.onContextMenu(e);
         } else {
+            e.preventDefault();
+
             if (this.props.planner.paintCell(this.props.x, this.props.y)) {
-                switch (this.props.planner.state.brush) {
-                    case('road'):
-                        this.setState({road: true});
-                        break;
-                    case('rampart'):
-                        this.setState({rampart: true});
-                        break;
-                    case ('plain'):
-                    case ('wall'):
-                    case ('swamp'):
-                        this.setState({terrain: Constants.TERRAIN_CODES[this.props.planner.state.brush]});
-                        break;
-                    default:
-                        this.setState({structure: this.props.planner.state.brush});
-                        break;
+                if (Constants.TERRAIN_NAMES[this.props.planner.state.brush] !== undefined) {
+                    this.setState({terrain: Constants.TERRAIN_CODES[this.props.planner.state.brush]})
+                } else if (Constants.RESOURCES[this.props.planner.state.brush] !== undefined) {
+                    if (this.props.planner.state.brush === "source") {
+                        this.setState({source: true});
+                    } else {
+                        this.setState({mineral: this.props.planner.state.brush});
+                    }
+                } else {
+                    switch (this.props.planner.state.brush) {
+                        case("road"):
+                            this.setState({road: true});
+                            break;
+                        case("rampart"):
+                            this.setState({rampart: true});
+                            break;
+                        default:
+                            this.setState({structure: this.props.planner.state.brush});
+                            break;
+                    }
                 }
             }
         }
@@ -234,12 +236,13 @@ export class MapCell extends React.Component<MapCellProps> {
     onContextMenu(e: any) {
         e.preventDefault();
 
-        if (this.state.structure !== '' || this.state.road || this.state.rampart) {
+        if (this.state.structure !== '' || this.state.road || this.state.rampart || this.state.mineral || this.state.source) {
             this.props.planner.removeStructure(this.props.x, this.props.y, this.state.structure);
             this.props.planner.removeStructure(this.props.x, this.props.y, 'rampart');
             this.props.planner.removeStructure(this.props.x, this.props.y, 'road');
+            this.props.planner.removeResource(this.props.x, this.props.y);
 
-            this.setState({structure: '', road: false, rampart: false})
+            this.setState({structure: '', road: false, rampart: false});
         }
     }
 

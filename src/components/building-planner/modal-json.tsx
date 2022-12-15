@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as LZString from 'lz-string';
 import * as Constants from '../common/constants';
-import {Col, Label, Input, Modal, ModalHeader, ModalBody, Row} from 'reactstrap';
+import {Col, Input, Label, Modal, ModalBody, ModalHeader, Row} from 'reactstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faFileCode} from '@fortawesome/free-solid-svg-icons';
 
@@ -22,8 +22,8 @@ export class ModalJson extends React.Component<ModalProps> {
     }
 
     createJson() {
-        let buildings: {[structure: string]: {pos: Array<{x: number, y: number}>}} = {};
-        let roomFeatures: {[name: string]: {pos: Array<{x: number, y: number}>}} = {};
+        let buildings: { [structure: string]: { pos: Array<{ x: number, y: number }> } } = {};
+        let roomFeatures: { [name: string]: { pos: Array<{ x: number, y: number }> } } = {};
 
         const parent = this.props.planner;
         let json = {
@@ -32,7 +32,7 @@ export class ModalJson extends React.Component<ModalProps> {
             rcl: parent.state.rcl,
             buildings: buildings
         };
-        const keepStructures = Object.keys(Constants.CONTROLLER_STRUCTURES);
+        const keepStructures = Object.keys(Constants.CONTROLLER_STRUCTURES).filter((name) => name !== "controller");
 
         Object.keys(parent.state.structures).forEach((structure) => {
             if (parent.state.structures[structure].length > 0) {
@@ -71,12 +71,13 @@ export class ModalJson extends React.Component<ModalProps> {
             }
         }
 
-        if (parent.state.mineral) {
-            for (const [mineralType, xy] of Object.entries(parent.state.mineral)) {
+        for (const {mineralType, x, y} of parent.state.minerals) {
+            if (roomFeatures[mineralType] === undefined) {
                 roomFeatures[mineralType] = {
-                    pos: [xy]
+                    pos: []
                 };
             }
+            roomFeatures[mineralType].pos.push({x, y});
         }
 
         return this.state.roomFeatures ? {...json, roomFeatures} : json;
@@ -88,8 +89,10 @@ export class ModalJson extends React.Component<ModalProps> {
         : JSON.stringify(this.createJson());
 
     import(e: any) {
-        let json = JSON.parse(e.target.value);
-        this.props.planner.loadJson(json);
+        const rx = /^(module\.exports *= *)?(\{.*}) *;?$/gm;
+        const json = rx.exec(e.target.value.replaceAll('\n', ' ').trim());
+        const parsed = JSON.parse(json![2]);
+        this.props.planner.loadJson(parsed);
     }
 
     shareableLink() {
@@ -112,15 +115,16 @@ export class ModalJson extends React.Component<ModalProps> {
     render() {
         return (
             <div>
-                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Json Output">
-                    <FontAwesomeIcon icon={faFileCode} />
+                <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Json Input/Output">
+                    <FontAwesomeIcon icon={faFileCode}/>
                 </button>
                 <Modal size="lg" isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
-                    <ModalHeader toggle={() => this.toggleModal()}>Json Output</ModalHeader>
+                    <ModalHeader toggle={() => this.toggleModal()}>Json Input/Output</ModalHeader>
                     <ModalBody>
                         <Row>
                             <Col xs={12}>
-                                <Input type="textarea" wrap="soft" value={this.displayJson()} id="json-data" onChange={(e) => this.import(e)} />
+                                <Input type="textarea" wrap="soft" value={this.displayJson()} id="json-data"
+                                       onChange={(e) => this.import(e)}/>
                             </Col>
                         </Row>
                         <Row>
@@ -129,11 +133,13 @@ export class ModalJson extends React.Component<ModalProps> {
                             </Col>
                             <Col xs={8}>
                                 <Label className="room-features">
-                                    <Input type="checkbox" name="room-features" checked={this.state.roomFeatures} onChange={(e) => this.toggleRoomFeatures(e)} />
+                                    <Input type="checkbox" name="room-features" checked={this.state.roomFeatures}
+                                           onChange={(e) => this.toggleRoomFeatures(e)}/>
                                     Include room features (terrain, controller, ...)
                                 </Label>
                                 <Label className="format-json">
-                                    <Input type="checkbox" name="format-json" checked={this.state.format} onChange={(e) => this.toggleFormatting(e)} />
+                                    <Input type="checkbox" name="format-json" checked={this.state.format}
+                                           onChange={(e) => this.toggleFormatting(e)}/>
                                     Format JSON
                                 </Label>
                             </Col>
