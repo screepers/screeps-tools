@@ -225,7 +225,7 @@ export const RESOURCES: {[name: string]: string} = {
     source: "Source",
     H: "Mineral H",
     O: "Mineral O",
-    U: "Mineral L",
+    U: "Mineral U",
     K: "Mineral K",
     L: "Mineral L",
     Z: "Mineral Z",
