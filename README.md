@@ -2,10 +2,6 @@
 
 Tools to help players of the Programming MMO Screeps.
 
-### Hosted Option
-
-The hosted option is available for convenience at [screeps.admon.dev](https://screeps.admon.dev)
-
 ### Building Planner
 
 Plan your next room layout with the Building Planner for Screeps.
