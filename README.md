@@ -4,7 +4,7 @@ Tools to help players of the Programming MMO Screeps.
 
 ### Hosted Option
 
-A hosted option is available at [screeps.xilexio.eu.org](https://screeps.xilexio.eu.org).
+A hosted option will be available at GitHub Pages soon.
 
 ### Building Planner
 
