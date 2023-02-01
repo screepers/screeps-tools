@@ -1,5 +1,5 @@
 import * as React  from 'react';
-import {BrowserRouter, Route, withRouter, Switch, NavLink} from 'react-router-dom';
+import {HashRouter, Route, withRouter, Switch, NavLink} from 'react-router-dom';
 import {RouteComponentProps} from 'react-router';
 import {BuildingPlanner} from './building-planner/building-planner';
 import {CreepDesigner} from './creep-designer/creep-designer';
@@ -10,10 +10,10 @@ class AppRouter extends React.Component<RouteComponentProps<{}>> {
         return (
             <div className="screeps-tools">
                 <div className="header">
-                    <NavLink to='/' exact><img src="/static/assets/logo.png" className="logo" /></NavLink>
+                    <NavLink to='/' exact><img src="assets/logo.png" className="logo" /></NavLink>
                     <NavLink to='/building-planner'>Building Planner</NavLink>
                     <NavLink to='/creep-designer'>Creep Designer</NavLink>
-                    <a href="https://github.com/admon84/screeps-tools" target="_blank" className="float-right">GitHub</a>
+                    <a href="https://github.com/screepers/screeps-tools" target="_blank" className="float-right">GitHub</a>
                 </div>
                 <Switch>
                     <Route path='/' exact component={Index} />
@@ -28,7 +28,7 @@ class AppRouter extends React.Component<RouteComponentProps<{}>> {
 const WrappedApp = withRouter(AppRouter);
 
 export const App = () => (
-    <BrowserRouter forceRefresh={true}>
+    <HashRouter>
         <WrappedApp />
-    </BrowserRouter>
+    </HashRouter>
 );
