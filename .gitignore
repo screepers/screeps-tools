@@ -3,10 +3,6 @@ lib/
 lib_ts/
 node_modules/
 
-# Builds
-static/bundle.js
-static/style.css
-
 # Environments
 .env
 .venv

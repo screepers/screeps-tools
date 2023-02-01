@@ -1,24 +1,24 @@
 {
     "name": "screeps-tools",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "description": "Tools to help players of the Programming MMO Screeps",
     "keywords": [
         "screeps",
         "react",
-        "typescript",
-        "python"
+        "typescript"
     ],
-    "homepage": "https://screeps.admon.dev",
-    "bugs": "https://github.com/admon84/screeps-tools/issues",
+    "homepage": "https://github.com/screepers/screeps-tools",
+    "bugs": "https://github.com/screepers/screeps-tools/issues",
     "license": "MIT",
-    "author": "admon84",
+    "author": "Xilexio",
     "contributors": [
+        "Xilexio",
         "admon84",
-        "Xilexio"
+        "Arcath"
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/admon84/screeps-tools.git"
+        "url": "https://github.com/screepers/screeps-tools.git"
     },
     "scripts": {
         "build": "rollup -c && tsc",

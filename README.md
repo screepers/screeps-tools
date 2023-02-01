@@ -117,3 +117,15 @@ This will cover how to deploy screeps-tools with an Apache2 server.
 </VirtualHost>
 ```
 * Restart Apache2.
+
+### Note from the maintainer
+
+If this project has not seen updated for a while and you want to become its
+new maintainer, please try to contact me on the Screeps Discord
+(https://discord.gg/screeps) or my email. If for whatever reason I will be
+unreachable, please contact one of Screepers admins, e.g.,
+AlinaNova21 (https://github.com/AlinaNova21), to give you permissions to
+this repository. This is preferable to forking and publishing elsewhere
+since this way players will not have to update the URL.
+
+-- Xilexio, current maintainer
