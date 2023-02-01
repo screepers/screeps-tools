@@ -1,4 +1,4 @@
-# New Screeps Tools
+# Screeps Tools
 
 Tools to help players of the Programming MMO Screeps.
 
@@ -39,9 +39,15 @@ Features:
 ![View the creep designer](https://user-images.githubusercontent.com/10291543/95763598-78f11980-0c6c-11eb-9303-362c962876e4.png)
 (This image is from an old version)
 
+### Support and community
+
+Feel free to drop by on #screepers on the official
+[Screeps Discord](https://discord.gg/screeps). 
+
 ## Development
 
-The screeps-tools application can be installed and ran from your local machine.
+The screeps-tools is a React-based static website that can be built and
+opened from your local machine.
 
 ### Requirements
 
@@ -57,17 +63,23 @@ The complete static page is now available in the `static` directory.
 
 ### Deployment
 
-To deploy screeps-tools to GitHub Pages using `gh-pages`, build the project
-and run `npm run deploy`.
+To deploy screeps-tools to GitHub Pages using `gh-pages`, run `npm run deploy`.
 
 ### Note from the maintainer
 
 If this project has not seen updated for a while and you want to become its
-new maintainer, please try to contact me on the Screeps Discord
-(https://discord.gg/screeps) or my email. If for whatever reason I will be
-unreachable, please contact one of Screepers admins, e.g.,
-[AlinaNova21](https://github.com/AlinaNova21), to give you permissions to
-this repository. This is preferable to forking and publishing elsewhere
+new maintainer, please try to contact me on the
+[Screeps Discord](https://discord.gg/screeps) or my email.
+If for whatever reason I will be unreachable, please contact one of
+Screepers admins, e.g., [AlinaNova21](https://github.com/AlinaNova21),
+to give you permissions to this repository.
+This is preferable to forking and publishing elsewhere
 since this way players will not have to update the URL.
 
 -- [Xilexio](https://github.com/xilexio), current maintainer
+
+### Old versions
+
+Archival versions from previous maintainers can be found on GitHub:
+* [admon84](https://github.com/admon84/screeps-tools)
+* [Arcath](https://github.com/Arcath/screeps-tools)

@@ -21,7 +21,7 @@
         "url": "https://github.com/screepers/screeps-tools.git"
     },
     "scripts": {
-        "deploy": "gh-pages -d static",
+        "deploy": "npm run build-prod && gh-pages -d static",
         "build-prod": "rollup -c --environment BUILD:production && tsc",
         "build": "rollup -c && tsc",
         "watch": "rollup -c -w && tsc"

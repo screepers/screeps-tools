@@ -481,7 +481,7 @@ export class BuildingPlanner extends React.Component {
             acc + Object.values(terrainRow).filter((terrain) => terrain === key).length, 0);
         return (
             <div>
-                <img src={`/static/assets/terrains/${key}.png`} alt={terrainName}/>{' '}
+                <img src={`assets/terrains/${key}.png`} alt={terrainName}/>{' '}
                 {terrainName}
                 <span className="right">{placed}</span>
             </div>
@@ -498,7 +498,7 @@ export class BuildingPlanner extends React.Component {
         }
         return (
             <div>
-                <img src={`/static/assets/resources/${key}.png`} alt={resource}/>{' '}
+                <img src={`assets/resources/${key}.png`} alt={resource}/>{' '}
                 {resource}
                 <span className="right">{placed}</span>
             </div>
@@ -511,7 +511,7 @@ export class BuildingPlanner extends React.Component {
         const total = Constants.CONTROLLER_STRUCTURES[key][this.state.rcl];
         return (
             <div>
-                <img src={`/static/assets/structures/${key}.png`} alt={structure}/>{' '}
+                <img src={`assets/structures/${key}.png`} alt={structure}/>{' '}
                 {structure}
                 <span className="right">{placed}/{total}</span>
             </div>
