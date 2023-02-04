@@ -46,12 +46,19 @@ Feel free to drop by on #screepers on the official
 
 ## Development
 
-The screeps-tools is a React-based static website that can be built and
-opened from your local machine.
+The screeps-tools is a React-based mostly static website that can be built
+and opened from your local machine.
+
+The one part that is not static is screeps.com API.
+Due to CORS security measures implemented in browsers, it is not possible to
+make a request to screeps.com from another domain without screeps.com
+setting a response header to allow that. Currently screeps.com does not do
+that, so a proxy server is required.
 
 ### Requirements
 
 * [Node.js](https://nodejs.org/en/) v18+
+* A CORS proxy server
 
 ### Build
 
@@ -64,6 +71,21 @@ The complete static page is now available in the `static` directory.
 ### Deployment
 
 To deploy screeps-tools to GitHub Pages using `gh-pages`, run `npm run deploy`.
+
+The URL of the proxy server is currently hardcoded in
+`src/components/common/constants.tsx` in constant `PROXY_SERVER_URL`.
+
+To deploy your own screeps.com API proxy server in Apache2, you can use
+this configuration:
+```
+ProxyRequests off
+ProxyPreserveHost off
+SSLProxyEngine on
+ProxyPass /api/ https://screeps.com/api/
+ProxyPassReverse /api/ https://screeps.com/api/
+ProxyPass /season/api/ https://screeps.com/season/api/
+ProxyPassReverse /season/api/ https://screeps.com/season/api/
+```
 
 ### Note from the maintainer
 

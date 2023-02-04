@@ -9,7 +9,7 @@ import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Col, Container, Navbar, Row} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import {screepsWorlds} from '../common/utils';
+import {apiURL, screepsWorlds} from '../common/utils';
 
 export class BuildingPlanner extends React.Component {
     state: Readonly<{
@@ -103,7 +103,7 @@ export class BuildingPlanner extends React.Component {
     loadShards() {
         const component = this;
         for (const world in screepsWorlds) {
-            fetch(`/api/shards/${world}`).then((response) => {
+            fetch(`${apiURL(world)}/api/game/shards/info`).then((response) => {
                 response.json().then((data: any) => {
                     if (!data || Object.keys(data).length === 0) {
                         return;
@@ -133,7 +133,7 @@ export class BuildingPlanner extends React.Component {
             if (json.world && json.world === 'season') {
                 world = 'season';
             }
-            fetch(`/api/terrain/${world}/${json.shard}/${json.name}`).then((response) => {
+            fetch(`${apiURL(world)}/api/game/room-terrain?shard=${json.shard}&room=${json.name}&encoded=1`).then((response) => {
                 response.json().then((data: any) => {
                     let terrain = data.terrain[0].terrain;
                     let terrainMap: TerrainMap = {};

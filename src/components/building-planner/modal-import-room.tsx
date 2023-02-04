@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as Constants from '../common/constants';
-import {screepsWorlds} from '../common/utils';
+import {apiURL, screepsWorlds} from '../common/utils';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -150,7 +150,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
             }
         }
 
-        fetch(`/api/terrain/${world}/${shard}/${room}`).then((response) => {
+        fetch(`${apiURL(world)}/api/game/room-terrain?shard=${shard}&room=${room}&encoded=1`).then((response) => {
             response.json().then((data: any) => {
                 let terrain = data.terrain[0].terrain;
                 let terrainMap: TerrainMap = {};
@@ -170,7 +170,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
             });
         });
 
-        fetch(`/api/objects/${world}/${shard}/${room}`).then((response) => {
+        fetch(`${apiURL(world)}/api/game/room-objects?shard=${shard}&room=${room}`).then((response) => {
             response.json().then((data: any) => {
                 let sources: {x: number, y: number}[] = [];
                 let mineral: {[mineralType: string]: {x: number, y: number}} = {};

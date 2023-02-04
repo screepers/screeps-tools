@@ -1,4 +1,9 @@
 /**
+ * Proxy server URL
+ */
+export const PROXY_SERVER_URL = 'https://screeps.xilexio.eu.org'
+
+/**
  * Building Planner
  */
 export const PLANNER = {
