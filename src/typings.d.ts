@@ -1,4 +1,4 @@
-interface TerrainMap {
+interface CellMap {
     [y: number]: {
         [x: number]: number
     }
@@ -9,7 +9,7 @@ interface BuildingPlannerProps extends React.Component {
         room: string;
         world: string;
         shard: string;
-        terrain: TerrainMap;
+        terrain: CellMap;
         x: number;
         y: number;
         worlds: { [worldName: string]: { shards: string[] } };
@@ -36,6 +36,12 @@ interface BuildingPlannerProps extends React.Component {
     removeResource(x: number, y: number): void;
 
     changeScale(e: any, decrease: boolean): void;
+
+    setShowTowerDamage(on: boolean): void;
+}
+
+interface PlannerProps {
+    planner: BuildingPlannerProps;
 }
 
 interface ModalProps {
@@ -78,4 +84,5 @@ interface MapCellProps {
     rampart: boolean;
     source: boolean;
     mineral: string | null;
+    text: string;
 }

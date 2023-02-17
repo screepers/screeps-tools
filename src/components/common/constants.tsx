@@ -16,6 +16,14 @@ export const PLANNER = {
 /**
  * Screeps Game Constants
  */
+export const TERRAIN_MASK_WALL = 1;
+export const TERRAIN_MASK_SWAMP = 2;
+
+export const TOWER_FALLOFF = 0.75;
+export const TOWER_FALLOFF_RANGE = 20;
+export const TOWER_OPTIMAL_RANGE = 5;
+export const TOWER_POWER_ATTACK = 600;
+
 export const CREEP_LIFE_TIME: number = 1500;
 export const CREEP_CLAIM_LIFE_TIME: number = 600;
 export const LAB_BOOST_ENERGY: number = 20;

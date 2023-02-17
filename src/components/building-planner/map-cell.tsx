@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as Constants from '../common/constants';
+import {TERRAIN_MASK_SWAMP, TERRAIN_MASK_WALL} from '../common/constants';
 
 export class MapCell extends React.Component<MapCellProps> {
     state: Readonly<{
@@ -19,6 +19,7 @@ export class MapCell extends React.Component<MapCellProps> {
         rampart: boolean;
         source: boolean;
         mineral: string | null;
+        text: string;
     }>;
 
     constructor(props: MapCellProps) {
@@ -40,7 +41,8 @@ export class MapCell extends React.Component<MapCellProps> {
             },
             rampart: this.props.rampart,
             source: this.props.source,
-            mineral: this.props.mineral
+            mineral: this.props.mineral,
+            text: this.props.text,
         };
     }
 
@@ -50,7 +52,8 @@ export class MapCell extends React.Component<MapCellProps> {
             road: newProps.road,
             rampart: newProps.rampart,
             source: newProps.source,
-            mineral: newProps.mineral
+            mineral: newProps.mineral,
+            text: newProps.text,
         });
     }
 
@@ -140,6 +143,10 @@ export class MapCell extends React.Component<MapCellProps> {
             </svg>);
         }
 
+        if (this.state.text) {
+            content.push(<div className="cell-text">{this.state.text}</div>);
+        }
+
         return (content.length ? content : ' ');
     }
 
@@ -170,9 +177,9 @@ export class MapCell extends React.Component<MapCellProps> {
             className += this.state.mineral + ' ';
         }
 
-        if (this.props.terrain & 1) {
+        if (this.props.terrain & TERRAIN_MASK_WALL) {
             return className + 'cell wall';
-        } else if (this.props.terrain & 2) {
+        } else if (this.props.terrain & TERRAIN_MASK_SWAMP) {
             return className + 'cell swamp';
         } else {
             return className + 'cell plain';
@@ -207,29 +214,7 @@ export class MapCell extends React.Component<MapCellProps> {
         } else {
             e.preventDefault();
 
-            if (this.props.planner.paintCell(this.props.x, this.props.y)) {
-                if (Constants.TERRAIN_NAMES[this.props.planner.state.brush] !== undefined) {
-                    this.setState({terrain: Constants.TERRAIN_CODES[this.props.planner.state.brush]})
-                } else if (Constants.RESOURCES[this.props.planner.state.brush] !== undefined) {
-                    if (this.props.planner.state.brush === "source") {
-                        this.setState({source: true});
-                    } else {
-                        this.setState({mineral: this.props.planner.state.brush});
-                    }
-                } else {
-                    switch (this.props.planner.state.brush) {
-                        case("road"):
-                            this.setState({road: true});
-                            break;
-                        case("rampart"):
-                            this.setState({rampart: true});
-                            break;
-                        default:
-                            this.setState({structure: this.props.planner.state.brush});
-                            break;
-                    }
-                }
-            }
+            this.props.planner.paintCell(this.props.x, this.props.y);
         }
     }
 

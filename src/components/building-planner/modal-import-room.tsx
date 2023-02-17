@@ -153,10 +153,10 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         fetch(`${apiURL(world)}/api/game/room-terrain?shard=${shard}&room=${room}&encoded=1`).then((response) => {
             response.json().then((data: any) => {
                 let terrain = data.terrain[0].terrain;
-                let terrainMap: TerrainMap = {};
-                for (var y = 0; y < 50; y++) {
+                let terrainMap: CellMap = {};
+                for (let y = 0; y < 50; y++) {
                     terrainMap[y] = {};
-                    for (var x = 0; x < 50; x++) {
+                    for (let x = 0; x < 50; x++) {
                         let code = terrain.charAt(y * 50 + x);
                         terrainMap[y][x] = code;
                     }

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as LZString from 'lz-string';
 import * as Constants from '../common/constants';
-import {RESOURCES, TERRAIN_CODES} from '../common/constants';
+import {RESOURCES, TERRAIN_CODES, TERRAIN_MASK_WALL} from '../common/constants';
 import {MapCell} from './map-cell';
 import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
@@ -9,14 +9,15 @@ import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Col, Container, Navbar, Row} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import {apiURL, screepsWorlds} from '../common/utils';
+import {apiURL, screepsWorlds, towerDPS} from '../common/utils';
+import {TowerDamageButton} from './tower-damage-button';
 
 export class BuildingPlanner extends React.Component {
     state: Readonly<{
         room: string;
         world: string;
         shard: string;
-        terrain: TerrainMap;
+        terrain: CellMap;
         x: number;
         y: number;
         worlds: { [worldName: string]: { shards: string[] } };
@@ -33,6 +34,8 @@ export class BuildingPlanner extends React.Component {
         scaleMin: number;
         scaleMax: number;
         scaleStep: number;
+        showTowerDamage: boolean;
+        towerDamage: CellMap;
     }>;
 
     constructor(props: any) {
@@ -55,7 +58,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     getInitialState() {
-        let terrain: TerrainMap = {};
+        let terrain: CellMap = {};
 
         for (let y = 0; y < 50; y++) {
             terrain[y] = {};
@@ -92,6 +95,8 @@ export class BuildingPlanner extends React.Component {
             scaleMin: 1.0,
             scaleMax: 4.0,
             scaleStep: 0.1,
+            showTowerDamage: false,
+            towerDamage: {},
         };
     }
 
@@ -136,7 +141,7 @@ export class BuildingPlanner extends React.Component {
             fetch(`${apiURL(world)}/api/game/room-terrain?shard=${json.shard}&room=${json.name}&encoded=1`).then((response) => {
                 response.json().then((data: any) => {
                     let terrain = data.terrain[0].terrain;
-                    let terrainMap: TerrainMap = {};
+                    let terrainMap: CellMap = {};
                     for (let y = 0; y < 50; y++) {
                         terrainMap[y] = {};
                         for (let x = 0; x < 50; x++) {
@@ -148,7 +153,7 @@ export class BuildingPlanner extends React.Component {
                 });
             });
         } else if (json.roomFeatures) {
-            const terrain: TerrainMap = {};
+            const terrain: CellMap = {};
 
             for (let y = 0; y < 50; y++) {
                 terrain[y] = {};
@@ -218,7 +223,15 @@ export class BuildingPlanner extends React.Component {
                 return false;
             }
 
-            this.state.terrain[y][x] = terrain;
+            this.setState({
+                terrain: {
+                    ...this.state.terrain,
+                    [y]: {
+                         ...this.state.terrain[y],
+                        [x]: terrain
+                    }
+                }
+            }, () => this.refreshTowerDamage());
             return true;
         }
 
@@ -295,7 +308,9 @@ export class BuildingPlanner extends React.Component {
             }
         }
 
-        this.setState({structures: structures});
+        if (added) {
+            this.setState({structures: structures}, () => this.refreshTowerDamage());
+        }
         return added;
     }
 
@@ -306,9 +321,9 @@ export class BuildingPlanner extends React.Component {
             structures[structure] = structures[structure].filter(pos => {
                 return !(pos.x === x && pos.y === y);
             });
-        }
 
-        this.setState({structures: structures});
+            this.setState({structures}, () => this.refreshTowerDamage());
+        }
     }
 
     removeResource(x: number, y: number) {
@@ -585,6 +600,50 @@ export class BuildingPlanner extends React.Component {
         }
     }
 
+    setShowTowerDamage(on: boolean) {
+        this.setState({showTowerDamage: on});
+        if (on) {
+            this.refreshTowerDamage();
+        }
+    }
+
+    refreshTowerDamage() {
+        const towerPos = this.state.structures['tower'] ?? [];
+
+        const towerDamage: CellMap = {};
+        for (let y = 0; y < 50; y++) {
+            towerDamage[y] = {};
+            for (let x = 0; x < 50; x++) {
+                // Show nothing on walls that do not have tunnels
+                if (this.state.terrain[y][x] & TERRAIN_MASK_WALL) {
+                    if (this.state.structures['road']) {
+                        if (!this.state.structures['road'].some(({x: xx, y: yy}) => xx === x && yy === y)) {
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+
+                towerDamage[y][x] = 0;
+
+                for (const {x: tx, y: ty} of towerPos) {
+                    towerDamage[y][x] += towerDPS(Math.max(Math.abs(tx - x), Math.abs(ty - y)));
+                }
+            }
+        }
+
+        this.setState({towerDamage});
+    }
+
+    getCellText(x: number, y: number): string {
+        if (this.state.showTowerDamage && this.state.towerDamage[y] !== undefined && this.state.towerDamage[y][x] !== undefined) {
+            return this.state.towerDamage[y][x].toString();
+        } else {
+            return '';
+        }
+    }
+
     render() {
         const scaleAsFloat = this.convertToFixed(this.state.scale);
         const marginLeft = this.convertToFixed(Math.max(0, (window.innerWidth - 800 * this.state.scale) / 2));
@@ -616,6 +675,9 @@ export class BuildingPlanner extends React.Component {
                                 />
                             </Col>
                             <Col xs={{size: 'auto', order: 1}} sm={{order: 1}} md={{order: 2}}>
+                                <TowerDamageButton
+                                    planner={this}
+                                />
                                 <ModalImportRoomForm
                                     planner={this}
                                     room={this.state.room}
@@ -685,6 +747,7 @@ export class BuildingPlanner extends React.Component {
                                     source={this.hasSource(x, y)}
                                     mineral={this.getMineral(x, y)}
                                     key={'mc-' + x + '-' + y}
+                                    text={this.getCellText(x, y)}
                                 />
                             )
                         })}
