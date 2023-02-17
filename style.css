@@ -395,12 +395,25 @@ input[type=number]::-webkit-outer-spin-button {
   box-shadow: inset rgba(38, 38, 38, 0.2) 0 0 0 1px;
 }
 .building-planner .map .tile .cell img,
-.building-planner .map .tile .cell svg {
+.building-planner .map .tile .cell svg,
+.building-planner .map .tile .cell .cell-text {
   position: absolute;
   top: 0;
   left: 0;
   height: 16px;
   width: 16px;
+}
+.building-planner .map .tile .cell .cell-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 4;
+  user-select: none;
+  font-weight: bold;
+  font-size: 6px;
+  color: white;
+  text-stroke: 0.5px black;
+  -webkit-text-stroke: 0.5px black;
 }
 .building-planner .map .tile .cell img {
   z-index: 3;
