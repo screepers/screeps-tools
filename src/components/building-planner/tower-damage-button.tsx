@@ -9,7 +9,7 @@ export class TowerDamageButton extends React.Component<PlannerProps> {
         super(props);
 
         this.state = {
-            on: false
+            on: this.props.planner.state.showTowerDamage
         };
     }
 

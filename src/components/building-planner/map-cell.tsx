@@ -20,6 +20,7 @@ export class MapCell extends React.Component<MapCellProps> {
         source: boolean;
         mineral: string | null;
         text: string;
+        textSize: number;
     }>;
 
     constructor(props: MapCellProps) {
@@ -43,6 +44,7 @@ export class MapCell extends React.Component<MapCellProps> {
             source: this.props.source,
             mineral: this.props.mineral,
             text: this.props.text,
+            textSize: this.props.textSize,
         };
     }
 
@@ -54,6 +56,7 @@ export class MapCell extends React.Component<MapCellProps> {
             source: newProps.source,
             mineral: newProps.mineral,
             text: newProps.text,
+            textSize: newProps.textSize,
         });
     }
 
@@ -144,7 +147,7 @@ export class MapCell extends React.Component<MapCellProps> {
         }
 
         if (this.state.text) {
-            content.push(<div className="cell-text">{this.state.text}</div>);
+            content.push(<div className="cell-text" style={{fontSize: this.state.textSize}}>{this.state.text}</div>);
         }
 
         return (content.length ? content : ' ');

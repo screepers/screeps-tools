@@ -1,10 +1,10 @@
 import * as React from 'react';
 import * as Constants from '../common/constants';
-import {apiURL, screepsWorlds} from '../common/utils';
+import {apiURL, SCREEPS_WORLDS} from '../common/utils';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faCloudUpload} from '@fortawesome/free-solid-svg-icons';
+import {faDownload} from '@fortawesome/free-solid-svg-icons';
 
 export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProps> {
     state: Readonly<{
@@ -219,7 +219,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         }
         const selected: OptionTypeBase = {
             value: world,
-            label: screepsWorlds[world]
+            label: SCREEPS_WORLDS[world]
         };
         return selected;
     }
@@ -230,7 +230,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         Object.keys(this.props.worlds).map(world => {
             let props: OptionTypeBase = {
                 value: world,
-                label: screepsWorlds[world]
+                label: SCREEPS_WORLDS[world]
             };
             options.push(props);
         });
@@ -274,7 +274,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         return (
             <div>
                 <button className="btn btn-secondary" onClick={() => this.toggleModal()} title="Import Room">
-                    <FontAwesomeIcon icon={faCloudUpload} />
+                    <FontAwesomeIcon icon={faDownload} />
                 </button>
                 <Modal isOpen={this.state.modal} toggle={() => this.toggleModal()} className="import-room">
                     <ModalHeader toggle={() => this.toggleModal()}>Import Room</ModalHeader>

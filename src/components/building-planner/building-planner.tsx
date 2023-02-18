@@ -9,8 +9,14 @@ import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Col, Container, Navbar, Row} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import {apiURL, screepsWorlds, towerDPS} from '../common/utils';
+import {apiURL, SCREEPS_WORLDS, towerDPS} from '../common/utils';
 import {TowerDamageButton} from './tower-damage-button';
+
+const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'towerDamage'];
+
+const SCALE_MIN: number = 1.0;
+const SCALE_MAX: number = 4.0;
+const SCALE_STEP: number = 0.1;
 
 export class BuildingPlanner extends React.Component {
     state: Readonly<{
@@ -26,14 +32,8 @@ export class BuildingPlanner extends React.Component {
         structures: { [structure: string]: { x: number; y: number; }[] };
         sources: { x: number; y: number; }[];
         minerals: { mineralType: string, x: number; y: number }[];
-        settings: {
-            showStatsOverlay: boolean;
-            allowBorderStructure: boolean;
-        };
+        settings: BuildingPlannerSettings;
         scale: number;
-        scaleMin: number;
-        scaleMax: number;
-        scaleStep: number;
         showTowerDamage: boolean;
         towerDamage: CellMap;
     }>;
@@ -57,7 +57,7 @@ export class BuildingPlanner extends React.Component {
         }
     }
 
-    getInitialState() {
+    getInitialState(reset?: boolean) {
         let terrain: CellMap = {};
 
         for (let y = 0; y < 50; y++) {
@@ -67,7 +67,7 @@ export class BuildingPlanner extends React.Component {
             }
         }
 
-        return {
+        const state = {
             room: Constants.PLANNER.ROOM,
             world: Constants.PLANNER.WORLD,
             shard: Constants.PLANNER.SHARD,
@@ -90,24 +90,50 @@ export class BuildingPlanner extends React.Component {
             settings: {
                 showStatsOverlay: true,
                 allowBorderStructure: false,
+                cellTextFontSize: 6,
             },
             scale: 1.5,
-            scaleMin: 1.0,
-            scaleMax: 4.0,
-            scaleStep: 0.1,
             showTowerDamage: false,
             towerDamage: {},
         };
+
+        if (!reset) {
+            const storedState = localStorage.getItem('buildingPlannerState');
+            if (storedState !== null) {
+                try {
+                    const parsedState = JSON.parse(storedState);
+                    Object.assign(state.settings, parsedState.settings);
+                    delete parsedState.settings;
+                    Object.assign(state, parsedState);
+                    state.towerDamage = this.towerDamage(state);
+                } catch (e) {
+                    console.error('There was an error while loading the saved state.');
+                    console.error(e);
+                }
+            }
+        }
+
+        return state;
+    }
+
+    saveState() {
+        const state = Object.assign({}, this.state) as {[key: string]: any};
+
+        for (const key of NOT_SAVED_STATE_KEYS) {
+            delete state[key];
+        }
+
+        localStorage.setItem('buildingPlannerState', JSON.stringify(state));
     }
 
     resetState() {
-        this.setState(this.getInitialState());
+        this.setState(this.getInitialState(true), () => this.refreshTowerDamage());
         this.loadShards();
     }
 
     loadShards() {
         const component = this;
-        for (const world in screepsWorlds) {
+        for (const world in SCREEPS_WORLDS) {
             fetch(`${apiURL(world)}/api/game/shards/info`).then((response) => {
                 response.json().then((data: any) => {
                     if (!data || Object.keys(data).length === 0) {
@@ -216,6 +242,11 @@ export class BuildingPlanner extends React.Component {
     }
 
     paintCell(x: number, y: number) {
+        const afterSave = () => {
+            this.refreshTowerDamage();
+            this.saveState();
+        }
+
         const terrain = Constants.TERRAIN_CODES[this.state.brush];
         if (terrain !== undefined) {
             const prevTerrain = this.state.terrain[y][x];
@@ -231,7 +262,7 @@ export class BuildingPlanner extends React.Component {
                         [x]: terrain
                     }
                 }
-            }, () => this.refreshTowerDamage());
+            }, afterSave);
             return true;
         }
 
@@ -239,7 +270,9 @@ export class BuildingPlanner extends React.Component {
             if (this.state.brush === "source") {
                 if (!this.hasSource(x, y)) {
                     this.removeResource(x, y);
-                    this.setState({sources: [...this.state.sources, {x, y}]});
+                    this.setState({
+                        sources: [...this.state.sources, {x, y}]
+                    }, afterSave);
                     return true;
                 } else {
                     return false;
@@ -247,7 +280,9 @@ export class BuildingPlanner extends React.Component {
             } else {
                 if (this.getMineral(x, y) !== this.state.brush) {
                     this.removeResource(x, y);
-                    this.setState({minerals: [...this.state.minerals, {mineralType: this.state.brush, x, y}]});
+                    this.setState({
+                        minerals: [...this.state.minerals, {mineralType: this.state.brush, x, y}]
+                    }, afterSave);
                     return true;
                 } else {
                     return true;
@@ -309,7 +344,7 @@ export class BuildingPlanner extends React.Component {
         }
 
         if (added) {
-            this.setState({structures: structures}, () => this.refreshTowerDamage());
+            this.setState({structures: structures}, afterSave);
         }
         return added;
     }
@@ -330,13 +365,13 @@ export class BuildingPlanner extends React.Component {
         const withoutXYSource = this.state.sources.filter(({x: sourceX, y: sourceY}) =>
             x !== sourceX || y !== sourceY);
         if (withoutXYSource.length !== this.state.sources.length) {
-            this.setState({sources: withoutXYSource});
+            this.setState({sources: withoutXYSource}, () => this.saveState());
         }
 
         const withoutXYMineral = this.state.minerals.filter(({x: mineralX, y: mineralY}) =>
             x !== mineralX || y !== mineralY);
         if (withoutXYMineral.length !== this.state.minerals.length) {
-            this.setState({minerals: withoutXYMineral});
+            this.setState({minerals: withoutXYMineral}, () => this.saveState());
         }
     }
 
@@ -546,14 +581,14 @@ export class BuildingPlanner extends React.Component {
     }
 
     setBrush(brush: string) {
-        this.setState({brush: brush});
+        this.setState({brush: brush}, () => this.saveState());
     }
 
     setRCL(rcl: number) {
-        this.setState({rcl: rcl});
+        this.setState({rcl: rcl}, () => this.saveState());
 
         if (Constants.CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
-            this.setState({brush: null});
+            this.setState({brush: null}, () => this.saveState());
         }
     }
 
@@ -591,33 +626,33 @@ export class BuildingPlanner extends React.Component {
         } else {
             // map-cell onWheel
             current = this.state.scale;
-            change = decrease ? -this.state.scaleStep : this.state.scaleStep;
+            change = decrease ? -SCALE_STEP : SCALE_STEP;
             update = current + change;
         }
 
-        if (update >= this.state.scaleMin || update < this.state.scaleMax) {
-            this.setState({scale: this.convertToFixed(update)});
+        if (update >= SCALE_MIN || update < SCALE_MAX) {
+            this.setState({scale: this.convertToFixed(update)}, () => this.saveState());
         }
     }
 
     setShowTowerDamage(on: boolean) {
-        this.setState({showTowerDamage: on});
+        this.setState({showTowerDamage: on}, () => this.saveState());
         if (on) {
             this.refreshTowerDamage();
         }
     }
 
-    refreshTowerDamage() {
-        const towerPos = this.state.structures['tower'] ?? [];
+    towerDamage(state: typeof this.state) {
+        const towerPos = state.structures['tower'] ?? [];
 
         const towerDamage: CellMap = {};
         for (let y = 0; y < 50; y++) {
             towerDamage[y] = {};
             for (let x = 0; x < 50; x++) {
                 // Show nothing on walls that do not have tunnels
-                if (this.state.terrain[y][x] & TERRAIN_MASK_WALL) {
-                    if (this.state.structures['road']) {
-                        if (!this.state.structures['road'].some(({x: xx, y: yy}) => xx === x && yy === y)) {
+                if (state.terrain[y][x] & TERRAIN_MASK_WALL) {
+                    if (state.structures['road']) {
+                        if (!state.structures['road'].some(({x: xx, y: yy}) => xx === x && yy === y)) {
                             continue;
                         }
                     } else {
@@ -633,7 +668,15 @@ export class BuildingPlanner extends React.Component {
             }
         }
 
-        this.setState({towerDamage});
+        return towerDamage;
+    }
+
+    refreshTowerDamage() {
+        this.setState({towerDamage: this.towerDamage(this.state)});
+    }
+
+    setSettings(settings: BuildingPlannerSettings) {
+        this.setState({settings}, () => this.saveState());
     }
 
     getCellText(x: number, y: number): string {
@@ -704,9 +747,9 @@ export class BuildingPlanner extends React.Component {
                                             type="range"
                                             name="scale"
                                             id="scale"
-                                            min={this.state.scaleMin}
-                                            max={this.state.scaleMax}
-                                            step={this.state.scaleStep}
+                                            min={SCALE_MIN}
+                                            max={SCALE_MAX}
+                                            step={SCALE_STEP}
                                             value={this.state.scale}
                                             title={'Zoom: ' + scaleAsFloat}
                                             onChange={(e) => this.changeScale(e)}
@@ -748,6 +791,7 @@ export class BuildingPlanner extends React.Component {
                                     mineral={this.getMineral(x, y)}
                                     key={'mc-' + x + '-' + y}
                                     text={this.getCellText(x, y)}
+                                    textSize={this.state.settings.cellTextFontSize}
                                 />
                             )
                         })}

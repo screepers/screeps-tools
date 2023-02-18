@@ -6,7 +6,7 @@ import {
     TOWER_POWER_ATTACK
 } from './constants';
 
-export const screepsWorlds: {[key: string]: string} = {
+export const SCREEPS_WORLDS: {[key: string]: string} = {
     mmo: 'MMO',
     season: 'Season',
 };

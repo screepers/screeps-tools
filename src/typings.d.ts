@@ -18,11 +18,9 @@ interface BuildingPlannerProps extends React.Component {
         structures: { [structure: string]: { x: number; y: number; }[] };
         sources: { x: number; y: number; }[];
         minerals: { mineralType: string, x: number; y: number }[];
-        settings: {
-            showStatsOverlay: boolean;
-            allowBorderStructure: boolean;
-        };
+        settings: BuildingPlannerSettings;
         scale: number;
+        showTowerDamage: boolean;
     };
 
     resetState(): void;
@@ -38,6 +36,8 @@ interface BuildingPlannerProps extends React.Component {
     changeScale(e: any, decrease: boolean): void;
 
     setShowTowerDamage(on: boolean): void;
+
+    setSettings(settings: BuildingPlannerSettings): void;
 }
 
 interface PlannerProps {
@@ -85,4 +85,11 @@ interface MapCellProps {
     source: boolean;
     mineral: string | null;
     text: string;
+    textSize: number;
+}
+
+interface BuildingPlannerSettings {
+    showStatsOverlay: boolean;
+    allowBorderStructure: boolean;
+    cellTextFontSize: number;
 }
