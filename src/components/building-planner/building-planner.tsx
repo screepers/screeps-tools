@@ -97,19 +97,19 @@ export class BuildingPlanner extends React.Component {
             towerDamage: {},
         };
 
-        if (!reset) {
-            const storedState = localStorage.getItem('buildingPlannerState');
-            if (storedState !== null) {
-                try {
-                    const parsedState = JSON.parse(storedState);
-                    Object.assign(state.settings, parsedState.settings);
-                    delete parsedState.settings;
+        const storedState = localStorage.getItem('buildingPlannerState');
+        if (storedState !== null) {
+            try {
+                const parsedState = JSON.parse(storedState);
+                Object.assign(state.settings, parsedState.settings);
+                delete parsedState.settings;
+                if (!reset) {
                     Object.assign(state, parsedState);
                     state.towerDamage = this.towerDamage(state);
-                } catch (e) {
-                    console.error('There was an error while loading the saved state.');
-                    console.error(e);
                 }
+            } catch (e) {
+                console.error('There was an error while loading the saved state.');
+                console.error(e);
             }
         }
 
