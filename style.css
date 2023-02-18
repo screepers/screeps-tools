@@ -30,7 +30,7 @@ select.form-control {
   border-radius: 2px;
   margin-bottom: 5px;
 }
-input.form-control {
+.creep-designer input.form-control {
   padding: 0;
 }
 input[type=checkbox] {
@@ -412,8 +412,8 @@ input[type=number]::-webkit-outer-spin-button {
   font-weight: bold;
   font-size: 6px;
   color: white;
-  text-stroke: 0.5px black;
-  -webkit-text-stroke: 0.5px black;
+  text-stroke: 0.08em black;
+  -webkit-text-stroke: 0.08em black;
 }
 .building-planner .map .tile .cell img {
   z-index: 3;
