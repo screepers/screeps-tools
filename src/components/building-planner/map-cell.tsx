@@ -19,6 +19,7 @@ export class MapCell extends React.Component<MapCellProps> {
         rampart: boolean;
         source: boolean;
         mineral: string | null;
+        selected: boolean;
         text: string;
         textSize: number;
     }>;
@@ -43,6 +44,7 @@ export class MapCell extends React.Component<MapCellProps> {
             rampart: this.props.rampart,
             source: this.props.source,
             mineral: this.props.mineral,
+            selected: this.props.selected,
             text: this.props.text,
             textSize: this.props.textSize,
         };
@@ -55,6 +57,7 @@ export class MapCell extends React.Component<MapCellProps> {
             rampart: newProps.rampart,
             source: newProps.source,
             mineral: newProps.mineral,
+            selected: newProps.selected,
             text: newProps.text,
             textSize: newProps.textSize,
         });
@@ -146,9 +149,7 @@ export class MapCell extends React.Component<MapCellProps> {
             </svg>);
         }
 
-        if (this.state.text) {
-            content.push(<div className="cell-text" style={{fontSize: this.state.textSize}}>{this.state.text}</div>);
-        }
+        content.push(<div className="cell-overlay" style={{fontSize: this.state.textSize}}>{this.state.text}</div>);
 
         return (content.length ? content : ' ');
     }
@@ -236,7 +237,7 @@ export class MapCell extends React.Component<MapCellProps> {
 
     render() {
         return (
-            <div className="tile">
+            <div className={`tile ${this.state.selected ? 'selected' : ''}`}>
                 <div className={this.className()}
                     onMouseEnter={this.mouseEnter.bind(this)}
                     onMouseLeave={this.mouseLeave.bind(this)}

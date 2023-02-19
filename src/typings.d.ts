@@ -1,3 +1,8 @@
+interface XY {
+    x: number;
+    y: number;
+}
+
 interface CellMap {
     [y: number]: {
         [x: number]: number
@@ -81,6 +86,7 @@ interface MapCellProps {
     rampart: boolean;
     source: boolean;
     mineral: string | null;
+    selected: boolean;
     text: string;
     textSize: number;
 }

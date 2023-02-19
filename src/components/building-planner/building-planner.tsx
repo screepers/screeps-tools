@@ -18,8 +18,8 @@ import Select, {OptionTypeBase} from 'react-select';
 import {towerDPS} from '../../screeps/utils';
 import {apiURL} from '../../screeps/api';
 import {SCREEPS_WORLDS} from './constants';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTowerObservation } from '@fortawesome/free-solid-svg-icons';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faPen, faTowerObservation} from '@fortawesome/free-solid-svg-icons';
 
 const STATE_LOCAL_STORAGE_KEY = 'buildingPlannerStateV2';
 
@@ -51,12 +51,14 @@ export class BuildingPlanner extends React.Component {
         brush: string;
         rcl: number;
         structures: { [structure: string]: { x: number; y: number; }[] };
-        sources: { x: number; y: number; }[];
+        sources: XY[];
         minerals: { mineralType: string, x: number; y: number }[];
         settings: BuildingPlannerSettings;
         scale: number;
         showTowerDamage: boolean;
         showExtraTools: boolean;
+        cellSelection: boolean;
+        selectedCells: CellMap;
         towerDamage: CellMap;
     }>;
 
@@ -121,6 +123,8 @@ export class BuildingPlanner extends React.Component {
             scale: 1.5,
             showTowerDamage: false,
             showExtraTools: false,
+            cellSelection: false,
+            selectedCells: [],
             towerDamage: {},
         };
 
@@ -270,6 +274,22 @@ export class BuildingPlanner extends React.Component {
     }
 
     paintCell(x: number, y: number) {
+        if (this.state.cellSelection) {
+            const selectedCells: CellMap = {
+                ...this.state.selectedCells,
+                [y]: {
+                    ...this.state.selectedCells[y]
+                }
+            };
+            if (selectedCells[y][x]) {
+                delete selectedCells[y][x];
+            } else {
+                selectedCells[y][x] = 1;
+            }
+            this.setState({selectedCells: selectedCells}, () => this.saveState());
+            return true;
+        }
+
         const afterSave = () => {
             this.refreshTowerDamage();
             this.saveState();
@@ -496,6 +516,10 @@ export class BuildingPlanner extends React.Component {
         return null;
     }
 
+    isSelected(x: number, y: number): boolean {
+        return this.state.selectedCells[y] !== undefined && !!this.state.selectedCells[y][x];
+    }
+
     getSelectedBrush() {
         if (!this.state.brush) {
             return null;
@@ -712,6 +736,12 @@ export class BuildingPlanner extends React.Component {
         });
     }
 
+    toggleCellSelection() {
+        this.setState({cellSelection: !this.state.cellSelection}, () => {
+            this.saveState();
+        });
+    }
+
     getCellText(x: number, y: number): string {
         if (this.state.showTowerDamage && this.state.towerDamage[y] !== undefined && this.state.towerDamage[y][x] !== undefined) {
             return this.state.towerDamage[y][x].toString();
@@ -819,8 +849,17 @@ export class BuildingPlanner extends React.Component {
                         {this.state.showExtraTools && <Row className="justify-content-center">
                             <Col xs={{size: 'auto'}}>
                                 <div>
-                                    <button className="btn btn-secondary" onClick={() => this.toggleTowerDamage()} title="Toggle tower damage">
-                                        <FontAwesomeIcon icon={faTowerObservation} color={this.state.showTowerDamage ? 'green' : 'white'} />
+                                    <button className="btn btn-secondary" onClick={() => this.toggleTowerDamage()}
+                                            title="Toggle tower damage">
+                                        <FontAwesomeIcon icon={faTowerObservation}
+                                                         color={this.state.showTowerDamage ? 'green' : 'white'}/>
+                                    </button>
+                                </div>
+                                <div>
+                                    <button className="btn btn-secondary" onClick={() => this.toggleCellSelection()}
+                                            title="Toggle cell selection">
+                                        <FontAwesomeIcon icon={faPen}
+                                                         color={this.state.cellSelection ? 'green' : 'white'}/>
                                     </button>
                                 </div>
                             </Col>
@@ -847,6 +886,7 @@ export class BuildingPlanner extends React.Component {
                                     rampart={this.isRampart(x, y)}
                                     source={this.hasSource(x, y)}
                                     mineral={this.getMineral(x, y)}
+                                    selected={this.isSelected(x, y)}
                                     key={'mc-' + x + '-' + y}
                                     text={this.getCellText(x, y)}
                                     textSize={this.state.settings.cellTextFontSize}

@@ -484,7 +484,7 @@ input[type=number]::-webkit-outer-spin-button {
 
                 img,
                 svg,
-                .cell-text {
+                .cell-overlay {
                     position: absolute;
                     top: 0;
                     left: 0;
@@ -492,7 +492,7 @@ input[type=number]::-webkit-outer-spin-button {
                     width: 16px;
                 }
 
-                .cell-text {
+                .cell-overlay {
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -525,6 +525,12 @@ input[type=number]::-webkit-outer-spin-button {
                 &.rampart {
                     background-color:#314b31;
                     box-shadow: inset rgba(67, 134, 67, 0.6) 0 0 0 1px;
+                }
+            }
+
+            &.selected {
+                .cell-overlay {
+                    background-color: hsla(200, 100%, 50%, 0.2);
                 }
             }
 
