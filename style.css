@@ -364,12 +364,19 @@ input[type=number]::-webkit-outer-spin-button {
   margin: 0;
   vertical-align: text-bottom;
 }
-.building-planner .mapContainer {
+.building-planner #room-map-container {
   position: relative;
   overflow: auto;
   margin: 15px 15px 0 15px;
 }
-.building-planner .map {
+.building-planner #building-planner-instructions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  color: #303030;
+}
+.building-planner #room-map {
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -380,12 +387,12 @@ input[type=number]::-webkit-outer-spin-button {
   background: #303030;
   transform-origin: top left;
 }
-.building-planner .map .tile {
+.building-planner #room-map .tile {
   display: flex;
   height: 16px;
   width: 16px;
 }
-.building-planner .map .tile .cell {
+.building-planner #room-map .tile .cell {
   position: relative;
   width: 16px;
   height: 16px;
@@ -394,16 +401,16 @@ input[type=number]::-webkit-outer-spin-button {
   margin: inherit;
   box-shadow: inset rgba(38, 38, 38, 0.2) 0 0 0 1px;
 }
-.building-planner .map .tile .cell img,
-.building-planner .map .tile .cell svg,
-.building-planner .map .tile .cell .cell-text {
+.building-planner #room-map .tile .cell img,
+.building-planner #room-map .tile .cell svg,
+.building-planner #room-map .tile .cell .cell-overlay {
   position: absolute;
   top: 0;
   left: 0;
   height: 16px;
   width: 16px;
 }
-.building-planner .map .tile .cell .cell-text {
+.building-planner #room-map .tile .cell .cell-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -415,34 +422,37 @@ input[type=number]::-webkit-outer-spin-button {
   text-stroke: 0.08em black;
   -webkit-text-stroke: 0.08em black;
 }
-.building-planner .map .tile .cell img {
+.building-planner #room-map .tile .cell img {
   z-index: 3;
   user-select: none;
 }
-.building-planner .map .tile .cell svg {
+.building-planner #room-map .tile .cell svg {
   z-index: 2;
 }
-.building-planner .map .tile .cell.wall {
+.building-planner #room-map .tile .cell.wall {
   background: #171717;
 }
-.building-planner .map .tile .cell.swamp {
+.building-planner #room-map .tile .cell.swamp {
   background-color: #292b18;
 }
-.building-planner .map .tile .cell.rampart {
+.building-planner #room-map .tile .cell.rampart {
   background-color: #314b31;
   box-shadow: inset rgba(67, 134, 67, 0.6) 0 0 0 1px;
 }
-.building-planner .map .tile:hover {
+.building-planner #room-map .tile.selected .cell-overlay {
+  background-color: hsla(200, 100%, 50%, 0.2);
+}
+.building-planner #room-map .tile:hover {
   background-color: #555;
   border-color: #555;
 }
-.building-planner .map .tile:hover .cell.wall {
+.building-planner #room-map .tile:hover .cell.wall {
   background-color: #2a2a2a;
 }
-.building-planner .map .tile:hover .cell.swamp {
+.building-planner #room-map .tile:hover .cell.swamp {
   background-color: #444638;
 }
-.building-planner .map .tile:hover .cell.rampart {
+.building-planner #room-map .tile:hover .cell.rampart {
   background-color: #375d37;
 }
 .building-planner .stats-overlay {
@@ -458,7 +468,7 @@ input[type=number]::-webkit-outer-spin-button {
   width: 2.4em;
 }
 @media (max-width: 768px) {
-  .building-planner .map {
+  .building-planner #room-map {
     min-width: 100%;
   }
   .sm-hidden {
