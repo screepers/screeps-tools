@@ -443,13 +443,21 @@ input[type=number]::-webkit-outer-spin-button {
         }
     }
 
-    .mapContainer {
+    #room-map-container {
         position: relative;
         overflow: auto;
         margin: 15px 15px 0 15px;
     }
+
+    #building-planner-instructions {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        color: #303030;
+    }
     
-    .map {
+    #room-map {
         position: relative;
         display: flex;
         flex-wrap: wrap;
@@ -558,7 +566,7 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 @media (max-width: 768px) {
-    .building-planner .map {
+    .building-planner #room-map {
         min-width: 100%;
     }
     .sm-hidden {

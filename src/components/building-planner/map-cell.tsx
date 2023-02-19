@@ -234,13 +234,6 @@ export class MapCell extends React.Component<MapCellProps> {
         }
     }
 
-    onWheel(e: any) {
-        if (e.shiftKey) {
-            const decrease = (e.deltaY > 0);
-            this.props.planner.changeScale(false, decrease);
-        }
-    }
-
     render() {
         return (
             <div className="tile">
@@ -249,7 +242,6 @@ export class MapCell extends React.Component<MapCellProps> {
                     onMouseLeave={this.mouseLeave.bind(this)}
                     onClick={this.onClick.bind(this)}
                     onContextMenu={this.onContextMenu.bind(this)}
-                    onWheel={this.onWheel.bind(this)}
                     data-x={this.props.x}
                     data-y={this.props.y}>
                     {this.getCellContent()}

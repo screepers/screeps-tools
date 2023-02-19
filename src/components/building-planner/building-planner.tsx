@@ -2,7 +2,8 @@ import * as React from 'react';
 import * as LZString from 'lz-string';
 import {
     CONTROLLER_STRUCTURES,
-    RESOURCES, STRUCTURES,
+    RESOURCES,
+    STRUCTURES,
     TERRAIN_CODES,
     TERRAIN_MASK_WALL,
     TERRAIN_NAMES
@@ -18,6 +19,8 @@ import {towerDPS} from '../../screeps/utils';
 import {TowerDamageButton} from './tower-damage-button';
 import {apiURL} from '../../screeps/api';
 import {SCREEPS_WORLDS} from './constants';
+
+const STATE_LOCAL_STORAGE_KEY = 'buildingPlannerStateV2';
 
 const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'towerDamage'];
 
@@ -61,6 +64,8 @@ export class BuildingPlanner extends React.Component {
     }
 
     componentDidMount() {
+        document.getElementById('room-map-container')?.addEventListener('wheel', this.onWheel.bind(this), {passive: false});
+
         this.loadShards();
 
         let params = location.href.split('?')[1];
@@ -116,7 +121,7 @@ export class BuildingPlanner extends React.Component {
             towerDamage: {},
         };
 
-        const storedState = localStorage.getItem('buildingPlannerState');
+        const storedState = localStorage.getItem(STATE_LOCAL_STORAGE_KEY);
         if (storedState !== null) {
             try {
                 const parsedState = JSON.parse(storedState);
@@ -136,13 +141,13 @@ export class BuildingPlanner extends React.Component {
     }
 
     saveState() {
-        const state = Object.assign({}, this.state) as {[key: string]: any};
+        const state = Object.assign({}, this.state) as { [key: string]: any };
 
         for (const key of NOT_SAVED_STATE_KEYS) {
             delete state[key];
         }
 
-        localStorage.setItem('buildingPlannerState', JSON.stringify(state));
+        localStorage.setItem(STATE_LOCAL_STORAGE_KEY, JSON.stringify(state));
     }
 
     resetState() {
@@ -278,7 +283,7 @@ export class BuildingPlanner extends React.Component {
                 terrain: {
                     ...this.state.terrain,
                     [y]: {
-                         ...this.state.terrain[y],
+                        ...this.state.terrain[y],
                         [x]: terrain
                     }
                 }
@@ -638,20 +643,19 @@ export class BuildingPlanner extends React.Component {
     }
 
     changeScale(e: any, decrease: boolean = false) {
-        let current, change, update;
+        let scale;
         if (e) {
             // element onChange
-            current = e.target.valueAsNumber;
-            update = current;
+            scale = e.target.valueAsNumber;
         } else {
             // map-cell onWheel
-            current = this.state.scale;
-            change = decrease ? -SCALE_STEP : SCALE_STEP;
-            update = current + change;
+            const change = decrease ? -SCALE_STEP : SCALE_STEP;
+            scale = this.state.scale + change;
         }
 
-        if (update >= SCALE_MIN || update < SCALE_MAX) {
-            this.setState({scale: this.convertToFixed(update)}, () => this.saveState());
+        const fixedScale = Math.max(SCALE_MIN, Math.min(SCALE_MAX, scale));
+        if (fixedScale !== this.state.scale) {
+            this.setState({scale: fixedScale}, () => this.saveState());
         }
     }
 
@@ -707,9 +711,17 @@ export class BuildingPlanner extends React.Component {
         }
     }
 
+    onWheel(e: any) {
+        if (e.shiftKey) {
+            const decrease = (e.deltaY > 0);
+            this.changeScale(false, decrease);
+            e.preventDefault();
+        }
+    }
+
     render() {
-        const scaleAsFloat = this.convertToFixed(this.state.scale);
-        const marginLeft = this.convertToFixed(Math.max(0, (window.innerWidth - 800 * this.state.scale) / 2));
+        const scaleStr = this.state.scale.toFixed(1);
+        const marginLeft = Math.max(0, (window.innerWidth - 800 * this.state.scale) / 2).toFixed(1);
         return (
             <div className="building-planner">
                 <Navbar fluid className="controls" sticky="top">
@@ -770,15 +782,15 @@ export class BuildingPlanner extends React.Component {
                                             min={SCALE_MIN}
                                             max={SCALE_MAX}
                                             step={SCALE_STEP}
-                                            value={this.state.scale}
-                                            title={'Zoom: ' + scaleAsFloat}
+                                            value={scaleStr}
+                                            title={'Zoom: ' + scaleStr}
                                             onChange={(e) => this.changeScale(e)}
                                         />
                                         <label
                                             htmlFor="zoom"
-                                            title={'Zoom: ' + scaleAsFloat}
+                                            title={'Zoom: ' + scaleStr}
                                         >
-                                            {scaleAsFloat}
+                                            {scaleStr}
                                         </label>
                                     </div>
                                 </div>
@@ -794,8 +806,13 @@ export class BuildingPlanner extends React.Component {
                         </Row>
                     </Container>
                 </Navbar>
-                <div className="mapContainer">
-                    <div className="map"
+                <div id="room-map-container">
+                    <div id="building-planner-instructions">
+                        Shift+Scroll to zoom<br />
+                        Shift+LMB to remove<br />
+                        RMB to remove
+                    </div>
+                    <div id="room-map"
                          style={{transform: 'scale(' + this.state.scale + ')', marginLeft: marginLeft + 'px'}}>
                         {[...Array(50)].map((yval, y: number) => {
                             return [...Array(50)].map((xval, x: number) =>
