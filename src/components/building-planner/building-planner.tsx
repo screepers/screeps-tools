@@ -1,7 +1,12 @@
 import * as React from 'react';
 import * as LZString from 'lz-string';
-import * as Constants from '../common/constants';
-import {RESOURCES, TERRAIN_CODES, TERRAIN_MASK_WALL} from '../common/constants';
+import {
+    CONTROLLER_STRUCTURES,
+    RESOURCES, STRUCTURES,
+    TERRAIN_CODES,
+    TERRAIN_MASK_WALL,
+    TERRAIN_NAMES
+} from '../../screeps/constants';
 import {MapCell} from './map-cell';
 import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
@@ -9,10 +14,22 @@ import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Col, Container, Navbar, Row} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import {apiURL, SCREEPS_WORLDS, towerDPS} from '../common/utils';
+import {towerDPS} from '../../screeps/utils';
 import {TowerDamageButton} from './tower-damage-button';
+import {apiURL} from '../../screeps/api';
+import {SCREEPS_WORLDS} from './constants';
 
 const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'towerDamage'];
+
+/**
+ * Building Planner
+ */
+const BUILDING_PLANNER_DEFAULTS = {
+    RCL: 8,
+    ROOM: '',
+    SHARD: 'shard0',
+    WORLD: 'mmo',
+};
 
 const SCALE_MIN: number = 1.0;
 const SCALE_MAX: number = 4.0;
@@ -50,10 +67,12 @@ export class BuildingPlanner extends React.Component {
         let searchParams = new URLSearchParams(params);
 
         if (searchParams.get('share')) {
-            let json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
+            const json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
             if (json) {
                 this.loadJson(JSON.parse(json));
             }
+            // Removing the share part to not wipe the state after refresh
+            window.history.pushState({}, document.title, `${location.origin}${location.pathname}${location.hash}`);
         }
     }
 
@@ -68,9 +87,9 @@ export class BuildingPlanner extends React.Component {
         }
 
         const state = {
-            room: Constants.PLANNER.ROOM,
-            world: Constants.PLANNER.WORLD,
-            shard: Constants.PLANNER.SHARD,
+            room: BUILDING_PLANNER_DEFAULTS.ROOM,
+            world: BUILDING_PLANNER_DEFAULTS.WORLD,
+            shard: BUILDING_PLANNER_DEFAULTS.SHARD,
             terrain: terrain,
             x: 0,
             y: 0,
@@ -83,7 +102,7 @@ export class BuildingPlanner extends React.Component {
                 }
             },
             brush: 'spawn',
-            rcl: Constants.PLANNER.RCL,
+            rcl: BUILDING_PLANNER_DEFAULTS.RCL,
             structures: {},
             sources: [],
             minerals: [],
@@ -231,14 +250,15 @@ export class BuildingPlanner extends React.Component {
         });
 
         component.setState({
-            room: json.name ?? Constants.PLANNER.ROOM,
-            world: json.world ?? Constants.PLANNER.WORLD,
-            shard: json.shard ?? Constants.PLANNER.SHARD,
+            room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
+            world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
+            shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
             rcl: typeof (json.rcl) === 'number'
                 ? Math.max(1, Math.min(8, json.rcl))
-                : Constants.PLANNER.RCL,
+                : BUILDING_PLANNER_DEFAULTS.RCL,
             structures
         });
+        this.saveState();
     }
 
     paintCell(x: number, y: number) {
@@ -247,7 +267,7 @@ export class BuildingPlanner extends React.Component {
             this.saveState();
         }
 
-        const terrain = Constants.TERRAIN_CODES[this.state.brush];
+        const terrain = TERRAIN_CODES[this.state.brush];
         if (terrain !== undefined) {
             const prevTerrain = this.state.terrain[y][x];
             if (prevTerrain === terrain) {
@@ -266,7 +286,7 @@ export class BuildingPlanner extends React.Component {
             return true;
         }
 
-        if (Constants.RESOURCES[this.state.brush] !== undefined) {
+        if (RESOURCES[this.state.brush] !== undefined) {
             if (this.state.brush === "source") {
                 if (!this.hasSource(x, y)) {
                     this.removeResource(x, y);
@@ -298,12 +318,12 @@ export class BuildingPlanner extends React.Component {
             allowed = true;
         }
 
-        if (allowed && Constants.CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
+        if (allowed && CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
             if (!structures[this.state.brush]) {
                 structures[this.state.brush] = [];
             }
 
-            if (structures[this.state.brush].length < Constants.CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
+            if (structures[this.state.brush].length < CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
                 let foundAtPos = false;
 
                 // remove existing structures at this position except ramparts
@@ -473,9 +493,9 @@ export class BuildingPlanner extends React.Component {
             return null;
         }
         let label;
-        if (Constants.STRUCTURES[this.state.brush] !== undefined) {
+        if (STRUCTURES[this.state.brush] !== undefined) {
             label = this.getStructureBrushLabel(this.state.brush);
-        } else if (Constants.TERRAIN_NAMES[this.state.brush] !== undefined) {
+        } else if (TERRAIN_NAMES[this.state.brush] !== undefined) {
             label = this.getTerrainBrushLabel(this.state.brush)
         } else {
             label = this.getResourceBrushLabel(this.state.brush);
@@ -489,7 +509,7 @@ export class BuildingPlanner extends React.Component {
 
     getBrushes() {
         const options: OptionTypeBase[] = [];
-        Object.keys(Constants.STRUCTURES).map(key => {
+        Object.keys(STRUCTURES).map(key => {
             let props: OptionTypeBase = {
                 value: key,
                 label: this.getStructureBrushLabel(key)
@@ -499,14 +519,14 @@ export class BuildingPlanner extends React.Component {
             }
             options.push(props);
         });
-        Object.keys(Constants.TERRAIN_NAMES).map(key => {
+        Object.keys(TERRAIN_NAMES).map(key => {
             let props: OptionTypeBase = {
                 value: key,
                 label: this.getTerrainBrushLabel(key)
             };
             options.push(props);
         });
-        Object.keys(Constants.RESOURCES).map(key => {
+        Object.keys(RESOURCES).map(key => {
             let props: OptionTypeBase = {
                 value: key,
                 label: this.getResourceBrushLabel(key)
@@ -517,7 +537,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     getStructureDisabled(key: string) {
-        const total = Constants.CONTROLLER_STRUCTURES[key][this.state.rcl];
+        const total = CONTROLLER_STRUCTURES[key][this.state.rcl];
         if (total === 0) {
             return true;
         }
@@ -526,7 +546,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     getTerrainBrushLabel(key: string) {
-        const terrainName = Constants.TERRAIN_NAMES[key];
+        const terrainName = TERRAIN_NAMES[key];
         const placed = Object.values(this.state.terrain).reduce((acc, terrainRow) =>
             acc + Object.values(terrainRow).filter((terrain) => terrain === key).length, 0);
         return (
@@ -539,7 +559,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     getResourceBrushLabel(key: string) {
-        const resource = Constants.RESOURCES[key];
+        const resource = RESOURCES[key];
         let placed;
         if (resource === "source") {
             placed = this.state.sources.length;
@@ -556,9 +576,9 @@ export class BuildingPlanner extends React.Component {
     }
 
     getStructureBrushLabel(key: string) {
-        const structure = Constants.STRUCTURES[key];
+        const structure = STRUCTURES[key];
         const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
-        const total = Constants.CONTROLLER_STRUCTURES[key][this.state.rcl];
+        const total = CONTROLLER_STRUCTURES[key][this.state.rcl];
         return (
             <div>
                 <img src={`assets/structures/${key}.png`} alt={structure}/>{' '}
@@ -587,7 +607,7 @@ export class BuildingPlanner extends React.Component {
     setRCL(rcl: number) {
         this.setState({rcl: rcl}, () => this.saveState());
 
-        if (Constants.CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
+        if (CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
             this.setState({brush: null}, () => this.saveState());
         }
     }

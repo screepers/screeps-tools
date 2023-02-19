@@ -73,7 +73,7 @@ The complete static page is now available in the `static` directory.
 To deploy screeps-tools to GitHub Pages using `gh-pages`, run `npm run deploy`.
 
 The URL of the proxy server is currently hardcoded in
-`src/components/common/constants.tsx` in constant `PROXY_SERVER_URL`.
+`src/components/common/constants.ts` in constant `PROXY_SERVER_URL`.
 
 To deploy your own screeps.com API proxy server in Apache2, you can use
 this configuration:

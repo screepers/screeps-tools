@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as Constants from '../common/constants';
+import * as Constants from '../../screeps/constants';
 import {Container, Row, Col, Input} from 'reactstrap';
 import {Creep} from './creep';
 
@@ -213,7 +213,8 @@ export class CreepDesigner extends React.Component{
             counts.push(this.state.body[part]);
         });
         
-        return "/creep-designer/?share=" + counts.join('-');
+        const data = counts.join('-');
+        return `?share=${data}${location.hash}`
     }
     
     creepLifespan() {

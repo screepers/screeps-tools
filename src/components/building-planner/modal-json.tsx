@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as LZString from 'lz-string';
-import * as Constants from '../common/constants';
 import {Col, Input, Label, Modal, ModalBody, ModalHeader, Row} from 'reactstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faFileCode} from '@fortawesome/free-solid-svg-icons';
+import {CONTROLLER_STRUCTURES} from '../../screeps/constants';
 
 export class ModalJson extends React.Component<ModalProps> {
     state: Readonly<{
@@ -32,7 +32,7 @@ export class ModalJson extends React.Component<ModalProps> {
             rcl: parent.state.rcl,
             buildings: buildings
         };
-        const keepStructures = Object.keys(Constants.CONTROLLER_STRUCTURES).filter((name) => name !== "controller");
+        const keepStructures = Object.keys(CONTROLLER_STRUCTURES).filter((name) => name !== "controller");
 
         Object.keys(parent.state.structures).forEach((structure) => {
             if (parent.state.structures[structure].length > 0) {
@@ -95,9 +95,10 @@ export class ModalJson extends React.Component<ModalProps> {
         this.props.planner.loadJson(parsed);
     }
 
-    shareableLink() {
-        let jsonString = JSON.stringify(this.createJson());
-        return "/building-planner/?share=" + LZString.compressToEncodedURIComponent(jsonString);
+    shareLink() {
+        const jsonString = JSON.stringify(this.createJson());
+        const compressedData = LZString.compressToEncodedURIComponent(jsonString);
+        return `?share=${compressedData}${location.hash}`
     }
 
     toggleModal() {
@@ -129,7 +130,7 @@ export class ModalJson extends React.Component<ModalProps> {
                         </Row>
                         <Row>
                             <Col xs={4}>
-                                <a href={this.shareableLink()} id="share-link">Share Link</a>
+                                <a href={this.shareLink()} id="share-link">Share Link</a>
                             </Col>
                             <Col xs={8}>
                                 <Label className="room-features">

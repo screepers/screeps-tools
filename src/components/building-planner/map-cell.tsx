@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {TERRAIN_MASK_SWAMP, TERRAIN_MASK_WALL} from '../common/constants';
+import {TERRAIN_MASK_SWAMP, TERRAIN_MASK_WALL} from '../../screeps/constants';
 
 export class MapCell extends React.Component<MapCellProps> {
     state: Readonly<{

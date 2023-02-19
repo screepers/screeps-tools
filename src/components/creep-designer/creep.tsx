@@ -64,10 +64,10 @@ function bodyPartCountToDeg(count: number) {
 }
 
 function bodyPartWedge(startX: number, startY: number, startAngle: number, endAngle: number, radius: number) {
-    var x1 = parseFloat((startX + radius * Math.cos(Math.PI * startAngle/180)).toFixed(3));
-    var y1 = parseFloat((startY + radius * Math.sin(Math.PI * startAngle/180)).toFixed(3));
-    var x2 = parseFloat((startX + radius * Math.cos(Math.PI * endAngle/180)).toFixed(3));
-    var y2 = parseFloat((startY + radius * Math.sin(Math.PI * endAngle/180)).toFixed(3));
+    let x1 = parseFloat((startX + radius * Math.cos(Math.PI * startAngle/180)).toFixed(3));
+    let y1 = parseFloat((startY + radius * Math.sin(Math.PI * startAngle/180)).toFixed(3));
+    let x2 = parseFloat((startX + radius * Math.cos(Math.PI * endAngle/180)).toFixed(3));
+    let y2 = parseFloat((startY + radius * Math.sin(Math.PI * endAngle/180)).toFixed(3));
     
     let largeArc = 0;
     let travel = startAngle - endAngle;

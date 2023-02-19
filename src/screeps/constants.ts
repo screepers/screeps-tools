@@ -1,19 +1,4 @@
 /**
- * Proxy server URL
- */
-export const PROXY_SERVER_URL = 'https://screeps.xilexio.eu.org'
-
-/**
- * Building Planner
- */
-export const PLANNER = {
-    RCL: 8,
-    ROOM: '',
-    SHARD: 'shard0',
-    WORLD: 'mmo',
-};
-
-/**
  * Screeps Game Constants
  */
 export const TERRAIN_MASK_WALL = 1;
@@ -230,8 +215,8 @@ export const TERRAIN_NAMES: {[terrain: string]: string} = {
 
 export const TERRAIN_CODES: {[terrain: string]: number} = {
     plain: 0,
-    wall: 1,
-    swamp: 2
+    wall: TERRAIN_MASK_WALL,
+    swamp: TERRAIN_MASK_SWAMP
 };
 
 export const RESOURCES: {[name: string]: string} = {

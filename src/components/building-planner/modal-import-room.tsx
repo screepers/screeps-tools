@@ -1,10 +1,11 @@
 import * as React from 'react';
-import * as Constants from '../common/constants';
-import {apiURL, SCREEPS_WORLDS} from '../common/utils';
+import {SCREEPS_WORLDS} from './constants';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons';
+import {apiURL} from '../../screeps/api';
+import {CONTROLLER_STRUCTURES} from '../../screeps/constants';
 
 export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProps> {
     state: Readonly<{
@@ -178,7 +179,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
 
                 let keepStructures = ['controller'];
                 if (includeStructs) {
-                    keepStructures.push(...Object.keys(Constants.CONTROLLER_STRUCTURES));
+                    keepStructures.push(...Object.keys(CONTROLLER_STRUCTURES));
                 }
                 for (let o of data.objects) {
                     if (o.type == 'source') {

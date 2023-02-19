@@ -1,19 +1,4 @@
-import {
-    PROXY_SERVER_URL,
-    TOWER_FALLOFF,
-    TOWER_FALLOFF_RANGE,
-    TOWER_OPTIMAL_RANGE,
-    TOWER_POWER_ATTACK
-} from './constants';
-
-export const SCREEPS_WORLDS: {[key: string]: string} = {
-    mmo: 'MMO',
-    season: 'Season',
-};
-
-export function apiURL(world: string) {
-    return PROXY_SERVER_URL + (world === 'mmo' ? '' : '/' + world);
-}
+import {TOWER_FALLOFF, TOWER_FALLOFF_RANGE, TOWER_OPTIMAL_RANGE, TOWER_POWER_ATTACK} from './constants';
 
 const towerFalloffPerTile = TOWER_FALLOFF / (TOWER_FALLOFF_RANGE - TOWER_OPTIMAL_RANGE);
 
