@@ -20,7 +20,6 @@ interface BuildingPlannerProps extends React.Component {
         minerals: { mineralType: string, x: number; y: number }[];
         settings: BuildingPlannerSettings;
         scale: number;
-        showTowerDamage: boolean;
     };
 
     resetState(): void;
@@ -34,8 +33,6 @@ interface BuildingPlannerProps extends React.Component {
     removeResource(x: number, y: number): void;
 
     changeScale(e: any, decrease: boolean): void;
-
-    setShowTowerDamage(on: boolean): void;
 
     setSettings(settings: BuildingPlannerSettings): void;
 }

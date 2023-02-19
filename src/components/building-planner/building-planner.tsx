@@ -16,9 +16,10 @@ import {ModalImportRoomForm} from './modal-import-room';
 import {Col, Container, Navbar, Row} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {towerDPS} from '../../screeps/utils';
-import {TowerDamageButton} from './tower-damage-button';
 import {apiURL} from '../../screeps/api';
 import {SCREEPS_WORLDS} from './constants';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTowerObservation } from '@fortawesome/free-solid-svg-icons';
 
 const STATE_LOCAL_STORAGE_KEY = 'buildingPlannerStateV2';
 
@@ -55,6 +56,7 @@ export class BuildingPlanner extends React.Component {
         settings: BuildingPlannerSettings;
         scale: number;
         showTowerDamage: boolean;
+        showExtraTools: boolean;
         towerDamage: CellMap;
     }>;
 
@@ -118,6 +120,7 @@ export class BuildingPlanner extends React.Component {
             },
             scale: 1.5,
             showTowerDamage: false,
+            showExtraTools: false,
             towerDamage: {},
         };
 
@@ -659,13 +662,6 @@ export class BuildingPlanner extends React.Component {
         }
     }
 
-    setShowTowerDamage(on: boolean) {
-        this.setState({showTowerDamage: on}, () => this.saveState());
-        if (on) {
-            this.refreshTowerDamage();
-        }
-    }
-
     towerDamage(state: typeof this.state) {
         const towerPos = state.structures['tower'] ?? [];
 
@@ -701,6 +697,19 @@ export class BuildingPlanner extends React.Component {
 
     setSettings(settings: BuildingPlannerSettings) {
         this.setState({settings}, () => this.saveState());
+    }
+
+    toggleExtraTools() {
+        this.setState({showExtraTools: !this.state.showExtraTools}, () => this.saveState());
+    }
+
+    toggleTowerDamage() {
+        this.setState({showTowerDamage: !this.state.showTowerDamage}, () => {
+            if (this.state.showTowerDamage) {
+                this.saveState();
+                this.refreshTowerDamage();
+            }
+        });
     }
 
     getCellText(x: number, y: number): string {
@@ -750,9 +759,6 @@ export class BuildingPlanner extends React.Component {
                                 />
                             </Col>
                             <Col xs={{size: 'auto', order: 1}} sm={{order: 1}} md={{order: 2}}>
-                                <TowerDamageButton
-                                    planner={this}
-                                />
                                 <ModalImportRoomForm
                                     planner={this}
                                     room={this.state.room}
@@ -794,6 +800,12 @@ export class BuildingPlanner extends React.Component {
                                         </label>
                                     </div>
                                 </div>
+                                <div>
+                                    <button className="btn btn-secondary" title="More tools"
+                                            onClick={() => this.toggleExtraTools()}>
+                                        More
+                                    </button>
+                                </div>
                                 {this.state.settings.showStatsOverlay && <div className="stats-overlay">
                                     {this.state.room &&
                                         <span title={this.state.shard ?? ''}>
@@ -804,12 +816,21 @@ export class BuildingPlanner extends React.Component {
                                 </div>}
                             </Col>
                         </Row>
+                        {this.state.showExtraTools && <Row className="justify-content-center">
+                            <Col xs={{size: 'auto'}}>
+                                <div>
+                                    <button className="btn btn-secondary" onClick={() => this.toggleTowerDamage()} title="Toggle tower damage">
+                                        <FontAwesomeIcon icon={faTowerObservation} color={this.state.showTowerDamage ? 'green' : 'white'} />
+                                    </button>
+                                </div>
+                            </Col>
+                        </Row>}
                     </Container>
                 </Navbar>
                 <div id="room-map-container">
                     <div id="building-planner-instructions">
-                        Shift+Scroll to zoom<br />
-                        Shift+LMB to remove<br />
+                        Shift+Scroll to zoom<br/>
+                        Shift+LMB to remove<br/>
                         RMB to remove
                     </div>
                     <div id="room-map"
