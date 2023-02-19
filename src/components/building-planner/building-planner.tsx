@@ -868,6 +868,7 @@ export class BuildingPlanner extends React.Component {
                 </Navbar>
                 <div id="room-map-container">
                     <div id="building-planner-instructions">
+                        LMB to place<br/>
                         Shift+Scroll to zoom<br/>
                         Shift+LMB to remove<br/>
                         RMB to remove
