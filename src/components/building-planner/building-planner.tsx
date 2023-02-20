@@ -271,7 +271,7 @@ export class BuildingPlanner extends React.Component {
         console.log('Imported JSON:')
         console.log(json);
 
-        if (json.roomFeatures) {
+        if (json.roomFeatures || !json.shard || !json.name) {
             const terrain: CellMap = {};
 
             for (let y = 0; y < 50; y++) {
@@ -309,7 +309,27 @@ export class BuildingPlanner extends React.Component {
                 }
             });
 
-            this.setState({terrain, sources, minerals}, () => {
+            let structures: {
+                [structure: string]: XY[]
+            } = {};
+
+            Object.keys(json.buildings).forEach((structure) => {
+                structures[structure] = json.buildings[structure];
+            });
+
+            component.setState({
+                room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
+                world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
+                shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
+                rcl: typeof (json.rcl) === 'number'
+                    ? Math.max(1, Math.min(8, json.rcl))
+                    : BUILDING_PLANNER_DEFAULTS.RCL,
+                terrain,
+                sources,
+                minerals,
+                structures,
+                selectedCells: {},
+            }, () => {
                 this.saveState();
                 this.refreshTowerDamage();
             });
@@ -360,12 +380,12 @@ export class BuildingPlanner extends React.Component {
                         }
                     }
 
-                    let terrain = terrainData.terrain[0].terrain;
-                    let terrainMap: CellMap = {};
+                    let encodedTerrain = terrainData.terrain[0].terrain;
+                    let terrain: CellMap = {};
                     for (let y = 0; y < 50; y++) {
-                        terrainMap[y] = {};
+                        terrain[y] = {};
                         for (let x = 0; x < 50; x++) {
-                            terrainMap[y][x] = terrain.charAt(y * 50 + x);
+                            terrain[y][x] = encodedTerrain.charAt(y * 50 + x);
                         }
                     }
 
@@ -373,36 +393,16 @@ export class BuildingPlanner extends React.Component {
                         world: json.world,
                         shard: json.shard,
                         room: json.name,
-                        terrain: terrainMap,
+                        terrain,
                         structures,
                         sources,
                         mineral,
+                        selectedCells: {},
                     }, () => () => {
                         this.saveState();
                         this.refreshTowerDamage();
                     });
                 });
-            });
-        } else {
-            let structures: {
-                [structure: string]: XY[]
-            } = {};
-
-            Object.keys(json.buildings).forEach((structure) => {
-                structures[structure] = json.buildings[structure];
-            });
-
-            component.setState({
-                room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
-                world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
-                shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
-                rcl: typeof (json.rcl) === 'number'
-                    ? Math.max(1, Math.min(8, json.rcl))
-                    : BUILDING_PLANNER_DEFAULTS.RCL,
-                structures
-            }, () => {
-                this.saveState();
-                this.refreshTowerDamage();
             });
         }
     }
