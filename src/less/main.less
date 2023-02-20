@@ -16,6 +16,22 @@ a {
     color: #5973FF !important;
 }
 
+.screeps-tools {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+
+    > .header {
+        flex-basis: 40px;
+        flex-grow: 0;
+    }
+
+    > .header + div {
+        flex-basis: 0;
+        flex-grow: 1;
+    }
+}
+
 button.btn-secondary {
     background-color: #333;
     border-color: #333;
@@ -105,11 +121,9 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .header {
-    height: 40px;
     background-image: linear-gradient(to bottom, #1f1f1f 0%, #1a1a1a 100%);
     border-bottom: 1px solid #111 !important;
     color: #fff;
-    overflow:hidden;
     
     img.logo {
         width: 163px;
@@ -309,44 +323,16 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .building-planner {
-    button.burger-menu {
-        position: absolute;
-        right: 15px;
-        top: 48px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        width: 2rem;
-        height: 2rem;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0;
-        z-index: 10;
-        
-        &:focus {
-            outline: none;
-        }
-        
-        div {
-            width: 2rem;
-            height: 0.25rem;
-            background: #fff;
-            border-radius: 10px;
-            position: relative;
-            transform-origin: 1px;
-        }
+    flex-shrink: 1;
+    overflow: hidden;
 
-        &.open div {
-            background: #222;
-        }
+    display: flex;
+    flex-direction: column;
 
-        &:hover div {
-            background: #5973FF;
-        }
-    }
-    
     .controls {
+        flex-basis: auto;
+        flex-grow: 0;
+
         background-color: #222;
         color: #ccc;
         padding: 10px 15px 0;
@@ -444,9 +430,13 @@ input[type=number]::-webkit-outer-spin-button {
     }
 
     #room-map-container {
+        flex-basis: 0;
+        flex-grow: 1;
+        flex-shrink: 1;
+
         position: relative;
         overflow: auto;
-        margin: 15px 15px 0 15px;
+        margin: 15px;
     }
 
     #building-planner-instructions {
@@ -557,7 +547,7 @@ input[type=number]::-webkit-outer-spin-button {
 
     .stats-overlay {
         margin-left: 20px;
-        font-size: 1.4em;
+        font-size: 1.2em;
         line-height: 1.7;
 
         span:not(:first-child) {

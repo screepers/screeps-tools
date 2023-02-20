@@ -39,7 +39,7 @@
         "@fortawesome/fontawesome-svg-core": "^6.3.0",
         "@fortawesome/free-solid-svg-icons": "^6.3.0",
         "@fortawesome/react-fontawesome": "^0.2.0",
-        "bootstrap": "^4.5.2",
+        "bootstrap": "^4.6.1",
         "lz-string": "^1.4.4",
         "postcss": "^8.2.13",
         "react": "^17.0.2",

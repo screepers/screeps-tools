@@ -4,8 +4,6 @@ import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, Mod
 import Select, {OptionTypeBase} from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons';
-import {apiURL} from '../../screeps/api';
-import {CONTROLLER_STRUCTURES} from '../../screeps/constants';
 
 export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProps> {
     state: Readonly<{
@@ -52,8 +50,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         const field: 'room' | 'world' | 'shard' = e.target.name;
         const value = e.target.value;
 
-        if (this.state[field].validateOnChange === false &&
-            this.state.submitCalled === false) {
+        if (!this.state[field].validateOnChange && !this.state.submitCalled) {
             this.setState({
                 [field]: {
                     value: value,
@@ -61,7 +58,6 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                     valid: validationFunc(value)
                 }
             });
-            this.props.planner.setState({[field]: value});
         }
     }
 
@@ -72,7 +68,6 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                 valid: (this.state[field].validateOnChange ? validationFunc(value) : true)
             }
         });
-        this.props.planner.setState({[field]: value});
 
         if (field === 'world') {
             // Changing world select option will select the first shard drop-down option
@@ -83,7 +78,6 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                     valid: this.validateShard(value)
                 }
             });
-            this.props.planner.setState({shard: firstOption});
         }
     }
 
@@ -113,16 +107,15 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         e.preventDefault();
         this.toggleModal();
 
-        const parent = this.props.planner;
-        const room = this.state.room.value;
+        const name = this.state.room.value;
         const world = this.state.world.value;
         const shard = this.state.shard.value;
-        const includeStructs = this.state.showStructures;
+        const includeStructures = this.state.showStructures;
 
         const validation = [
             {
                 field: 'room',
-                value: room,
+                value: name,
                 validationFunc: this.validateRoom
             },
             {
@@ -151,66 +144,17 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
             }
         }
 
-        fetch(`${apiURL(world)}/api/game/room-terrain?shard=${shard}&room=${room}&encoded=1`).then((response) => {
-            response.json().then((data: any) => {
-                let terrain = data.terrain[0].terrain;
-                let terrainMap: CellMap = {};
-                for (let y = 0; y < 50; y++) {
-                    terrainMap[y] = {};
-                    for (let x = 0; x < 50; x++) {
-                        let code = terrain.charAt(y * 50 + x);
-                        terrainMap[y][x] = code;
-                    }
-                }
-                parent.setState({
-                    terrain: terrainMap,
-                    room: room, 
-                    world: world, 
-                    shard: shard
-                });
-            });
-        });
+        const importedData: any = {
+            world,
+            shard,
+            name,
+        };
 
-        fetch(`${apiURL(world)}/api/game/room-objects?shard=${shard}&room=${room}`).then((response) => {
-            response.json().then((data: any) => {
-                let sources: {x: number, y: number}[] = [];
-                let mineral: {[mineralType: string]: {x: number, y: number}} = {};
-                let structures: {[structure: string]: {x: number, y: number}[]} = {};
+        if (!includeStructures) {
+            importedData.buildings = {};
+        }
 
-                let keepStructures = ['controller'];
-                if (includeStructs) {
-                    keepStructures.push(...Object.keys(CONTROLLER_STRUCTURES));
-                }
-                for (let o of data.objects) {
-                    if (o.type == 'source') {
-                        sources.push({
-                            x: o.x,
-                            y: o.y
-                        });
-                    } else if (o.type == 'mineral') {
-                        mineral[o.mineralType] = {
-                            x: o.x,
-                            y: o.y
-                        };
-                    } else {
-                        if (keepStructures.indexOf(o.type) > -1) {
-                            if (!structures[o.type]) {
-                                structures[o.type] = [];
-                            }
-                            structures[o.type].push({
-                                x: o.x,
-                                y: o.y
-                            });
-                        }
-                    }
-                }
-                parent.setState({
-                    structures: structures,
-                    sources: sources,
-                    mineral: mineral
-                });
-            });
-        });
+        this.props.planner.importJson(importedData);
     }
 
     getSelectedWorld() {

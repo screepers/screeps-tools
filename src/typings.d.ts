@@ -29,7 +29,11 @@ interface BuildingPlannerProps extends React.Component {
 
     resetState(): void;
 
-    loadJson(json: any): any;
+    importJson(json: any): any;
+
+    exportJson(includeRoomFeatures: boolean): any;
+
+    copyShareLink(includeRoomFeatures: boolean): void;
 
     paintCell(x: number, y: number): boolean;
 
@@ -40,10 +44,6 @@ interface BuildingPlannerProps extends React.Component {
     changeScale(e: any, decrease: boolean): void;
 
     setSettings(settings: BuildingPlannerSettings): void;
-}
-
-interface PlannerProps {
-    planner: BuildingPlannerProps;
 }
 
 interface ModalProps {

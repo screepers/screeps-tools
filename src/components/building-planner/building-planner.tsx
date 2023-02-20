@@ -13,17 +13,17 @@ import {ModalJson} from './modal-json';
 import {ModalReset} from './modal-reset';
 import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
-import {Col, Container, Navbar, Row} from 'reactstrap';
+import {Col, Container, Navbar, Row, Toast, ToastBody} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {towerDPS} from '../../screeps/utils';
 import {apiURL} from '../../screeps/api';
 import {SCREEPS_WORLDS} from './constants';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faPen, faTowerObservation} from '@fortawesome/free-solid-svg-icons';
+import {faHighlighter, faLink, faTowerObservation} from '@fortawesome/free-solid-svg-icons';
 
 const STATE_LOCAL_STORAGE_KEY = 'buildingPlannerStateV2';
 
-const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'towerDamage'];
+const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'towerDamage', 'toastMessage'];
 
 /**
  * Building Planner
@@ -31,7 +31,7 @@ const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'towerDamage'];
 const BUILDING_PLANNER_DEFAULTS = {
     RCL: 8,
     ROOM: '',
-    SHARD: 'shard0',
+    SHARD: '',
     WORLD: 'mmo',
 };
 
@@ -60,6 +60,7 @@ export class BuildingPlanner extends React.Component {
         cellSelection: boolean;
         selectedCells: CellMap;
         towerDamage: CellMap;
+        toastMessage: string;
     }>;
 
     constructor(props: any) {
@@ -78,7 +79,7 @@ export class BuildingPlanner extends React.Component {
         if (searchParams.get('share')) {
             const json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
             if (json) {
-                this.loadJson(JSON.parse(json));
+                this.importJson(JSON.parse(json));
             }
             // Removing the share part to not wipe the state after refresh
             window.history.pushState({}, document.title, `${location.origin}${location.pathname}${location.hash}`);
@@ -126,6 +127,7 @@ export class BuildingPlanner extends React.Component {
             cellSelection: false,
             selectedCells: [],
             towerDamage: {},
+            toastMessage: '',
         };
 
         const storedState = localStorage.getItem(STATE_LOCAL_STORAGE_KEY);
@@ -158,58 +160,118 @@ export class BuildingPlanner extends React.Component {
     }
 
     resetState() {
-        this.setState(this.getInitialState(true), () => this.refreshTowerDamage());
+        this.setState(this.getInitialState(true), () => {
+            this.saveState();
+            this.refreshTowerDamage();
+        });
         this.loadShards();
+    }
+
+    fetchFromAPI(path: string, world: string, handler: (data: any) => void) {
+        const url = `${apiURL(world)}${path}`;
+        fetch(url).then((response) => {
+            response.json().then((data: any) => {
+                if (data.error) {
+                    this.showToast(`Error: ${data.error}.`)
+                } else {
+                    handler(data)
+                }
+            }).catch(() => {
+                this.showToast(`Invalid JSON fetched from API at ${url}.`)
+            });
+        }).catch(() => {
+            this.showToast(`Failed to fetch data from API at ${url}.`)
+        });
     }
 
     loadShards() {
         const component = this;
         for (const world in SCREEPS_WORLDS) {
-            fetch(`${apiURL(world)}/api/game/shards/info`).then((response) => {
-                response.json().then((data: any) => {
-                    if (!data || Object.keys(data).length === 0) {
-                        return;
-                    }
-                    const shards: string[] = [];
-                    data.shards.forEach((shard: { name: string }) => {
-                        shards.push(shard.name);
-                    });
-                    component.setState({
-                        worlds: {
-                            ...this.state.worlds,
-                            [world]: {
-                                shards: shards
-                            }
+            this.fetchFromAPI(`/api/game/shards/info`, world, (data) => {
+                if (!data || Object.keys(data).length === 0) {
+                    return;
+                }
+                const shards: string[] = [];
+                data.shards.forEach((shard: { name: string }) => {
+                    shards.push(shard.name);
+                });
+                component.setState({
+                    worlds: {
+                        ...this.state.worlds,
+                        [world]: {
+                            shards: shards
                         }
-                    });
+                    }
                 });
             });
         }
     }
 
-    loadJson(json: any) {
+    exportJson(includeRoomFeatures = false) {
+        let buildings: { [structure: string]: XY[] } = {};
+        let roomFeatures: { [name: string]: XY[] } = {};
+
+        let json = {
+            name: this.state.room,
+            shard: this.state.shard,
+            rcl: this.state.rcl,
+            buildings: buildings
+        };
+        const keepStructures = Object.keys(CONTROLLER_STRUCTURES).filter((name) => name !== "controller");
+
+        Object.keys(this.state.structures).forEach((structure) => {
+            if (this.state.structures[structure].length > 0) {
+                if (keepStructures.indexOf(structure) > -1) {
+                    if (!buildings[structure]) {
+                        buildings[structure] = this.state.structures[structure];
+                    }
+                } else {
+                    if (!roomFeatures[structure]) {
+                        roomFeatures[structure] = this.state.structures[structure];
+                    }
+                }
+            }
+        });
+
+        for (let y = 0; y < 50; y++) {
+            for (let x = 0; x < 50; x++) {
+                const terrain = this.state.terrain[y][x];
+                if (terrain & 3) {
+                    const terrainName = terrain & 1 ? "wall" : "swamp";
+                    if (!roomFeatures[terrainName]) {
+                        roomFeatures[terrainName] = [];
+                    }
+                    roomFeatures[terrainName].push({x, y});
+                }
+            }
+        }
+
+        if (this.state.sources && this.state.sources.length > 0) {
+            roomFeatures.source = this.state.sources;
+        }
+
+        for (const {mineralType, x, y} of this.state.minerals) {
+            if (roomFeatures[mineralType] === undefined) {
+                roomFeatures[mineralType] = [];
+            }
+            roomFeatures[mineralType].push({x, y});
+        }
+
+        const result = includeRoomFeatures ? {...json, roomFeatures} : json;
+
+        console.log('Exported JSON:')
+        console.log(json);
+
+        return result;
+    }
+
+    importJson(json: any) {
         const component = this;
 
-        if (json.shard && json.name) {
-            let world = 'mmo';
-            if (json.world && json.world === 'season') {
-                world = 'season';
-            }
-            fetch(`${apiURL(world)}/api/game/room-terrain?shard=${json.shard}&room=${json.name}&encoded=1`).then((response) => {
-                response.json().then((data: any) => {
-                    let terrain = data.terrain[0].terrain;
-                    let terrainMap: CellMap = {};
-                    for (let y = 0; y < 50; y++) {
-                        terrainMap[y] = {};
-                        for (let x = 0; x < 50; x++) {
-                            terrainMap[y][x] = terrain.charAt(y * 50 + x);
-                        }
-                    }
+        console.log('Imported JSON:')
+        console.log(json);
 
-                    component.setState({terrain: terrainMap});
-                });
-            });
-        } else if (json.roomFeatures) {
+        if (json.roomFeatures) {
             const terrain: CellMap = {};
 
             for (let y = 0; y < 50; y++) {
@@ -221,7 +283,7 @@ export class BuildingPlanner extends React.Component {
 
             Object.entries(TERRAIN_CODES).forEach(([name, code]) => {
                 if (json.roomFeatures[name] !== undefined) {
-                    json.roomFeatures[name].pos.forEach(({x, y}: { x: number; y: number }) => {
+                    json.roomFeatures[name].forEach(({x, y}: { x: number; y: number }) => {
                         terrain[y][x] = code;
                     });
                 }
@@ -229,14 +291,14 @@ export class BuildingPlanner extends React.Component {
 
             let sources: { x: number, y: number }[] = [];
             if (json.roomFeatures.source !== undefined) {
-                sources = json.roomFeatures.source.pos;
+                sources = json.roomFeatures.source;
             }
 
             const minerals: { mineralType: string, x: number, y: number }[] = [];
             Object.keys(RESOURCES).forEach((name) => {
-                if (name !== "source") {
+                if (name !== 'source') {
                     if (json.roomFeatures[name] !== undefined) {
-                        json.roomFeatures[name].pos.forEach(({x, y}: { x: number, y: number }) => {
+                        json.roomFeatures[name].forEach(({x, y}: { x: number, y: number }) => {
                             minerals.push({
                                 mineralType: name,
                                 x,
@@ -247,30 +309,102 @@ export class BuildingPlanner extends React.Component {
                 }
             });
 
-            this.setState({terrain, sources, minerals});
+            this.setState({terrain, sources, minerals}, () => {
+                this.saveState();
+                this.refreshTowerDamage();
+            });
+        } else if (json.shard && json.name) {
+            let world = 'mmo';
+            if (json.world && json.world === 'season') {
+                world = 'season';
+            }
+            this.fetchFromAPI(`/api/game/room-terrain?shard=${json.shard}&room=${json.name}&encoded=1`, world, (terrainData) => {
+                console.log('Imported terrain JSON:')
+                console.log(terrainData);
+
+                this.fetchFromAPI(`/api/game/room-objects?shard=${json.shard}&room=${json.name}`, world, (data) => {
+                    console.log('Imported structures JSON:')
+                    console.log(data);
+
+                    const sources: XY[] = [];
+                    const mineral: {[mineralType: string]: XY} = {};
+                    let structures: {[structure: string]: XY[]} = {};
+
+                    let keepStructures = ['controller'];
+                    if (!json.buildings) {
+                        keepStructures.push(...Object.keys(CONTROLLER_STRUCTURES));
+                    } else {
+                        structures = json.buildings;
+                    }
+                    for (let o of data.objects) {
+                        if (o.type == 'source') {
+                            sources.push({
+                                x: o.x,
+                                y: o.y
+                            });
+                        } else if (o.type == 'mineral') {
+                            mineral[o.mineralType] = {
+                                x: o.x,
+                                y: o.y
+                            };
+                        } else {
+                            if (keepStructures.indexOf(o.type) > -1) {
+                                if (!structures[o.type]) {
+                                    structures[o.type] = [];
+                                }
+                                structures[o.type].push({
+                                    x: o.x,
+                                    y: o.y
+                                });
+                            }
+                        }
+                    }
+
+                    let terrain = terrainData.terrain[0].terrain;
+                    let terrainMap: CellMap = {};
+                    for (let y = 0; y < 50; y++) {
+                        terrainMap[y] = {};
+                        for (let x = 0; x < 50; x++) {
+                            terrainMap[y][x] = terrain.charAt(y * 50 + x);
+                        }
+                    }
+
+                    component.setState({
+                        world: json.world,
+                        shard: json.shard,
+                        room: json.name,
+                        terrain: terrainMap,
+                        structures,
+                        sources,
+                        mineral,
+                    }, () => () => {
+                        this.saveState();
+                        this.refreshTowerDamage();
+                    });
+                });
+            });
+        } else {
+            let structures: {
+                [structure: string]: XY[]
+            } = {};
+
+            Object.keys(json.buildings).forEach((structure) => {
+                structures[structure] = json.buildings[structure];
+            });
+
+            component.setState({
+                room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
+                world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
+                shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
+                rcl: typeof (json.rcl) === 'number'
+                    ? Math.max(1, Math.min(8, json.rcl))
+                    : BUILDING_PLANNER_DEFAULTS.RCL,
+                structures
+            }, () => {
+                this.saveState();
+                this.refreshTowerDamage();
+            });
         }
-
-        let structures: {
-            [structure: string]: Array<{
-                x: number;
-                y: number;
-            }>
-        } = {};
-
-        Object.keys(json.buildings).forEach((structure) => {
-            structures[structure] = json.buildings[structure].pos;
-        });
-
-        component.setState({
-            room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
-            world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
-            shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
-            rcl: typeof (json.rcl) === 'number'
-                ? Math.max(1, Math.min(8, json.rcl))
-                : BUILDING_PLANNER_DEFAULTS.RCL,
-            structures
-        });
-        this.saveState();
     }
 
     paintCell(x: number, y: number) {
@@ -291,8 +425,8 @@ export class BuildingPlanner extends React.Component {
         }
 
         const afterSave = () => {
-            this.refreshTowerDamage();
             this.saveState();
+            this.refreshTowerDamage();
         }
 
         const terrain = TERRAIN_CODES[this.state.brush];
@@ -719,6 +853,23 @@ export class BuildingPlanner extends React.Component {
         this.setState({towerDamage: this.towerDamage(this.state)});
     }
 
+    showToast(message: string) {
+        this.setState({toastMessage: message}, () => {
+            setTimeout(() => {
+                this.setState({toastMessage: ''});
+            }, 3000);
+        })
+    }
+
+    copyShareLink(includeRoomFeatures: boolean) {
+        const jsonString = JSON.stringify(this.exportJson(includeRoomFeatures));
+        const compressedData = LZString.compressToEncodedURIComponent(jsonString);
+        const link = `${location.origin}${location.pathname}?share=${compressedData}${location.hash}`
+        navigator.clipboard.writeText(link).then(() => {
+            this.showToast('Share link copied to the clipboard.');
+        });
+    }
+
     setSettings(settings: BuildingPlannerSettings) {
         this.setState({settings}, () => this.saveState());
     }
@@ -801,6 +952,11 @@ export class BuildingPlanner extends React.Component {
                                     planner={this}
                                     modal={false}
                                 />
+                                <div>
+                                    <button className="btn btn-secondary" onClick={() => this.copyShareLink(false)} title="Copy share link to clipboard">
+                                        <FontAwesomeIcon icon={faLink}/>
+                                    </button>
+                                </div>
                                 <ModalReset
                                     planner={this}
                                     modal={false}
@@ -837,10 +993,7 @@ export class BuildingPlanner extends React.Component {
                                     </button>
                                 </div>
                                 {this.state.settings.showStatsOverlay && <div className="stats-overlay">
-                                    {this.state.room &&
-                                        <span title={this.state.shard ?? ''}>
-                                           {this.state.room}
-                                       </span>}
+                                    {this.state.room && <span>{this.state.shard.replace('shard', 'S')} {this.state.room}</span>}
                                     <span className="coordinate">X: {this.state.x}</span>
                                     <span className="coordinate">Y: {this.state.y}</span>
                                 </div>}
@@ -858,7 +1011,7 @@ export class BuildingPlanner extends React.Component {
                                 <div>
                                     <button className="btn btn-secondary" onClick={() => this.toggleCellSelection()}
                                             title="Toggle cell selection">
-                                        <FontAwesomeIcon icon={faPen}
+                                        <FontAwesomeIcon icon={faHighlighter}
                                                          color={this.state.cellSelection ? 'green' : 'white'}/>
                                     </button>
                                 </div>
@@ -896,6 +1049,13 @@ export class BuildingPlanner extends React.Component {
                         })}
                     </div>
                 </div>
+                {this.state.toastMessage && <div className="fixed-top p-3" style={{zIndex: 2000}}>
+                    <Toast className="p-2 bg-light">
+                        <ToastBody>
+                            {this.state.toastMessage}
+                        </ToastBody>
+                    </Toast>
+                </div>}
             </div>
         );
     }

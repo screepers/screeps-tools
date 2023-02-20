@@ -10,6 +10,7 @@ export default {
     output: {
         file: 'static/bundle.js',
         format: 'iife',
+        sourcemap: true,
         globals: {
             fs: false,
             path: false,
