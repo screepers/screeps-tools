@@ -14,6 +14,19 @@ body {
 a {
   color: #5973FF !important;
 }
+.screeps-tools {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.screeps-tools > .header {
+  flex-basis: 40px;
+  flex-grow: 0;
+}
+.screeps-tools > .header + div {
+  flex-basis: 0;
+  flex-grow: 1;
+}
 button.btn-secondary {
   background-color: #333;
   border-color: #333;
@@ -84,11 +97,9 @@ input[type=number]::-webkit-outer-spin-button {
   font-size: 1.3em;
 }
 .header {
-  height: 40px;
   background-image: linear-gradient(to bottom, #1f1f1f 0%, #1a1a1a 100%);
   border-bottom: 1px solid #111 !important;
   color: #fff;
-  overflow: hidden;
 }
 .header img.logo {
   width: 163px;
@@ -251,39 +262,15 @@ input[type=number]::-webkit-outer-spin-button {
   float: left;
   margin: 0;
 }
-.building-planner button.burger-menu {
-  position: absolute;
-  right: 15px;
-  top: 48px;
+.building-planner {
+  flex-shrink: 1;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  width: 2rem;
-  height: 2rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  z-index: 10;
-}
-.building-planner button.burger-menu:focus {
-  outline: none;
-}
-.building-planner button.burger-menu div {
-  width: 2rem;
-  height: 0.25rem;
-  background: #fff;
-  border-radius: 10px;
-  position: relative;
-  transform-origin: 1px;
-}
-.building-planner button.burger-menu.open div {
-  background: #222;
-}
-.building-planner button.burger-menu:hover div {
-  background: #5973FF;
 }
 .building-planner .controls {
+  flex-basis: auto;
+  flex-grow: 0;
   background-color: #222;
   color: #ccc;
   padding: 10px 15px 0;
@@ -365,9 +352,12 @@ input[type=number]::-webkit-outer-spin-button {
   vertical-align: text-bottom;
 }
 .building-planner #room-map-container {
+  flex-basis: 0;
+  flex-grow: 1;
+  flex-shrink: 1;
   position: relative;
   overflow: auto;
-  margin: 15px 15px 0 15px;
+  margin: 15px;
 }
 .building-planner #building-planner-instructions {
   position: absolute;
@@ -457,7 +447,7 @@ input[type=number]::-webkit-outer-spin-button {
 }
 .building-planner .stats-overlay {
   margin-left: 20px;
-  font-size: 1.4em;
+  font-size: 1.2em;
   line-height: 1.7;
 }
 .building-planner .stats-overlay span:not(:first-child) {
