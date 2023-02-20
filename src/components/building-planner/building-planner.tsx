@@ -266,8 +266,6 @@ export class BuildingPlanner extends React.Component {
     }
 
     importJson(json: any) {
-        const component = this;
-
         console.log('Imported JSON:')
         console.log(json);
 
@@ -317,7 +315,7 @@ export class BuildingPlanner extends React.Component {
                 structures[structure] = json.buildings[structure];
             });
 
-            component.setState({
+            this.setState({
                 room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
                 world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
                 shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
@@ -347,7 +345,7 @@ export class BuildingPlanner extends React.Component {
                     console.log(data);
 
                     const sources: XY[] = [];
-                    const mineral: {[mineralType: string]: XY} = {};
+                    const minerals: { mineralType: string, x: number; y: number }[] = [];
                     let structures: {[structure: string]: XY[]} = {};
 
                     let keepStructures = ['controller'];
@@ -363,10 +361,11 @@ export class BuildingPlanner extends React.Component {
                                 y: o.y
                             });
                         } else if (o.type == 'mineral') {
-                            mineral[o.mineralType] = {
+                            minerals.push({
+                                mineralType: o.mineralType,
                                 x: o.x,
                                 y: o.y
-                            };
+                            });
                         } else {
                             if (keepStructures.indexOf(o.type) > -1) {
                                 if (!structures[o.type]) {
@@ -389,14 +388,14 @@ export class BuildingPlanner extends React.Component {
                         }
                     }
 
-                    component.setState({
+                    this.setState({
                         world: json.world,
                         shard: json.shard,
                         room: json.name,
                         terrain,
                         structures,
                         sources,
-                        mineral,
+                        minerals,
                         selectedCells: {},
                     }, () => () => {
                         this.saveState();
@@ -539,7 +538,10 @@ export class BuildingPlanner extends React.Component {
                 return !(pos.x === x && pos.y === y);
             });
 
-            this.setState({structures}, () => this.refreshTowerDamage());
+            this.setState({structures}, () => {
+                this.saveState();
+                this.refreshTowerDamage()
+            });
         }
     }
 
