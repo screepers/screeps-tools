@@ -20,5 +20,14 @@ export const Index = () => (
                 </Card>
             </Col>
         </Row>
+        <Row>
+            <Col sm={6}>
+                <Card body inverse style={{ backgroundColor: '#222', borderColor: '#1e1e1e' }}>
+                    <CardTitle>Resources</CardTitle>
+                    <CardText>Check out a collection of screeps resources found in the wild.</CardText>
+                    <Link to='/resources'><Button>View resources</Button></Link>
+                </Card>
+            </Col>
+        </Row>
     </Container>
 );
