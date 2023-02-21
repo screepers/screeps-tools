@@ -23,10 +23,12 @@ import {faHighlighter, faLink, faTowerObservation} from '@fortawesome/free-solid
 import {floodFill} from '../../algorithms/floodFill';
 import {XYSet} from '../../coordinates/XY';
 import {KeyedSet} from '../../data-structures/KeyedSet';
+import {cDistanceTransform, obstacles2baseDistanceTransformMatrix} from '../../algorithms/distanceTransform';
 
 const NO_ANALYSIS = 0;
 const TOWER_DAMAGE_ANALYSIS = 1;
 const FLOOD_FIELD_ANALYSIS = 2;
+const DISTANCE_TRANSFORM_ANALYSIS = 3;
 
 const STATE_LOCAL_STORAGE_KEY = 'buildingPlannerStateV2';
 
@@ -862,7 +864,7 @@ export class BuildingPlanner extends React.Component {
         return towerDamage;
     }
 
-    obstacles(state: typeof this.state): KeyedSet<XY> {
+    obstacles(state: typeof this.state, ignoreStructures?: boolean): KeyedSet<XY> {
         const result = XYSet();
         for (let y = 0; y < ROOM_SIZE; y++) {
             for (let x = 0; x < ROOM_SIZE; x++) {
@@ -871,11 +873,13 @@ export class BuildingPlanner extends React.Component {
                 }
             }
         }
-        Object.entries(state.structures).forEach(([structureType, pos]: [string, XY[]]) => {
-            if (structureType !== 'road' && structureType !== 'rampart' && structureType !== 'container') {
-                pos.forEach((xy: XY) => result.add(xy));
-            }
-        });
+        if (!ignoreStructures) {
+            Object.entries(state.structures).forEach(([structureType, pos]: [string, XY[]]) => {
+                if (structureType !== 'road' && structureType !== 'rampart' && structureType !== 'container') {
+                    pos.forEach((xy: XY) => result.add(xy));
+                }
+            });
+        }
         return result;
     }
 
@@ -905,6 +909,19 @@ export class BuildingPlanner extends React.Component {
         return result;
     }
 
+    distanceTransform(state: typeof this.state): CellMap {
+        const matrix = obstacles2baseDistanceTransformMatrix(this.obstacles(state));
+        const dt = cDistanceTransform(matrix);
+        const result: CellMap = {};
+        for (let y = 0; y < ROOM_SIZE; y++) {
+            result[y] = {};
+            for (let x = 0; x < ROOM_SIZE; x++) {
+                result[y][x] = dt.get(x, y);
+            }
+        }
+        return result;
+    }
+
     setStateAndRefresh(state: any, skipSave?: boolean, directSave?: boolean) {
         let completeState = {
             ...this.state,
@@ -918,11 +935,9 @@ export class BuildingPlanner extends React.Component {
         if (completeState.analysisMode === TOWER_DAMAGE_ANALYSIS) {
             recalculatedState.analysisResult = this.towerDamage(completeState);
         } else if (completeState.analysisMode === FLOOD_FIELD_ANALYSIS) {
-            if (this.selectedCells(completeState).length !== 0) {
-                recalculatedState.analysisResult = this.floodFill(completeState);
-            } else {
-                recalculatedState.analysisResult = {};
-            }
+            recalculatedState.analysisResult = this.floodFill(completeState);
+        } else if (completeState.analysisMode === DISTANCE_TRANSFORM_ANALYSIS) {
+            recalculatedState.analysisResult = this.distanceTransform(completeState);
         }
 
         if (directSave) {
@@ -1099,6 +1114,14 @@ export class BuildingPlanner extends React.Component {
                                             title="Flood field from selected">
                                         <span style={{color: this.state.analysisMode === FLOOD_FIELD_ANALYSIS ? 'green' : 'inherit'}}>
                                             FF
+                                        </span>
+                                    </button>
+                                </div>
+                                <div>
+                                    <button className="btn btn-secondary" onClick={() => this.setAnalysisMode(DISTANCE_TRANSFORM_ANALYSIS)}
+                                            title="Distance transform in Chebyshev metric">
+                                        <span style={{color: this.state.analysisMode === DISTANCE_TRANSFORM_ANALYSIS ? 'green' : 'inherit'}}>
+                                            DT
                                         </span>
                                     </button>
                                 </div>

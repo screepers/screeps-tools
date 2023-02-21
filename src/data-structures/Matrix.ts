@@ -53,6 +53,12 @@ export class Matrix implements ReadableMatrix {
     return this.matrix.some((v) => v === value);
   }
 
+  public fill(value: number) {
+    for (let i = this.width * this.height; i >= 0; --i) {
+      this.matrix[i] = value;
+    }
+  }
+
   public count(value: number): number {
     const m: HasReduce<Uint8Array | Uint16Array | Uint32Array> = this.matrix;
     return m.reduce((acc: number, v: number) => acc + (v === value ? 1 : 0), 0);

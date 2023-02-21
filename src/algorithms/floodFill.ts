@@ -1,6 +1,5 @@
 import { cBall, forEachXYInRect, inRect, Rect, rectBoundary, rectWH, roomRect } from '../coordinates/Rect';
 import { forEachXYAround, XY, xyCDist, XYSet } from '../coordinates/XY';
-import {assert} from '../screeps/utils';
 import {KeyedSet} from '../data-structures/KeyedSet';
 import {Matrix, ReadableMatrix} from '../data-structures/Matrix';
 import {OBSTACLE_COST, UNREACHABLE_COST} from '../screeps/constants';
@@ -13,12 +12,15 @@ export function floodFill(obstacles: KeyedSet<XY>, start: XY | XY[], slice?: Rec
     start = [start];
   }
 
-  assert(start.length !== 0);
-
   const actualSlice = slice ?? roomRect();
 
   const { height, width } = rectWH(actualSlice);
   const result = new Matrix(Uint16Array, width, height);
+
+  if (start.length === 0) {
+    result.fill(UNREACHABLE_COST);
+    return result;
+  }
 
   let current: XY[] = [];
   let next: XY[] = [];
