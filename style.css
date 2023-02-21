@@ -93,6 +93,9 @@ input[type=number]::-webkit-outer-spin-button {
 .index {
   padding-top: 40px;
 }
+.index .row {
+  margin-bottom: 40px;
+}
 .index .card .card-title {
   font-size: 1.3em;
 }
@@ -448,7 +451,7 @@ input[type=number]::-webkit-outer-spin-button {
 .building-planner .stats-overlay {
   margin-left: 20px;
   font-size: 1.2em;
-  line-height: 1.7;
+  line-height: 1.9;
 }
 .building-planner .stats-overlay span:not(:first-child) {
   margin-left: 10px;
@@ -456,6 +459,12 @@ input[type=number]::-webkit-outer-spin-button {
 .building-planner .stats-overlay .coordinate {
   display: inline-block;
   width: 2.4em;
+}
+.resources-list {
+  margin: 10px 40px 10px 40px;
+  padding: 10px;
+  background-color: #222;
+  color: #ccc;
 }
 @media (max-width: 768px) {
   .building-planner #room-map {
