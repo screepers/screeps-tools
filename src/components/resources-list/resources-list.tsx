@@ -5,10 +5,10 @@ export class ResourcesList extends React.Component {
         return (
             <div className="resources-list text-light">
                 <p>
-                    This page is a loose collection of links to resources that can be used to improve design of a
+                    This page is a loose collection of links to resources that can be used to improve the design of a
                     Screeps bot.
                     This includes links to other analysis tools or spreadsheets, articles about advanced Screeps
-                    concepts, source codes of other bots to analyze.
+                    concepts, source codes of other bots to analyze, etc.
                 </p>
 
                 <h4>
@@ -48,7 +48,8 @@ export class ResourcesList extends React.Component {
                                 The International
                             </a>
                         </strong> -
-                        a strong, fully automatic bot with active community developing it (see #the-international at
+                        arguably the strongest open source bot at the moment with automatic colonization, capable
+                        defense, dynamic base planning and an active community developing it (see #the-international at
                         the <a href="https://discord.gg/screeps">Discord</a>).
                     </li>
                     <li>
@@ -57,32 +58,40 @@ export class ResourcesList extends React.Component {
                                 Overmind
                             </a>
                         </strong> -
-                        a rather strong, mature, fully automatic bot with its forks still being developed by other
-                        players (see #overmind at
+                        arguably the second strongest open source bot at the moment with automatic colonization, capable
+                        defense, bunker bases. It is no longer actively developed by the original author,
+                        but its forks are by other players (see #overmind at
                         the <a href="https://discord.gg/screeps">Discord</a>).
                     </li>
                     <li>
                         <strong><a href="https://github.com/TooAngel/screeps">TooAngel</a></strong> -
-                        a mature, fully automatic bot that is still being developed with a quirk of offering
-                        other players quests with rewards (see #tooangel at
-                        the <a href="https://discord.gg/screeps">Discord</a>).
+                        a mature both with fully automatic colonization, weak defense, but optimized economy. It is
+                        still being developed by the original author (see #tooangel at
+                        the <a href="https://discord.gg/screeps">Discord</a>). It has some unusual quirks like giving
+                        quests to other players for rewards.
+                    </li>
+                    <li>
+                        <strong><a href="https://github.com/Jomik/screeps-ai">Jomik's bot</a></strong> -
+                        a thoroughly typed TypeScript bot that is chock full of TypeScript tricks. It is a great
+                        educational material for players looking to code their own bot in TypeScript and looking
+                        for solutions to many problems at the intersection of TS and @types/screeps (see also
+                        #typescript at the <a href="https://discord.gg/screeps">Discord</a>). It features
+                        an OS-based approach (tasks split into processes managed like processes in an operating system)
+                        through the usage of green threads.
                     </li>
                     <li>
                         <strong><a href="https://github.com/ScreepsQuorum/screeps-quorum">Quorum</a></strong> -
-                        a mature, fully automatic bot that is not being developed anymore (see #quorum at
+                        a mature, fully automatic bot that is not being actively developed anymore (see #quorum at
                         the <a href="https://discord.gg/screeps">Discord</a>).
                     </li>
                     <li>
                         <strong><a href="https://github.com/bonzaiferroni/bonzAI">bonzAI</a></strong> -
-                        a mature, fully automatic bot that is not being developed anymore (see #bonzai at
+                        a mature, fully automatic bot that is not being actively developed anymore (see #bonzai at
                         the <a href="https://discord.gg/screeps">Discord</a>).
                     </li>
                     <li>
-                        <strong><a href="https://github.com/Jomik/screeps-ai">Jomik's bot</a></strong> -
-                        a thoroughly typed TypeScript bot that is chock full of TypeScript tricks. Doubles as a great
-                        educational material for players looking to code their own bot in TypeScript and looking
-                        for solutions to many problems at the intersection of TS and @types/screeps (see also
-                        #typescript at the <a href="https://discord.gg/screeps">Discord</a>).
+                        <strong><a href="https://github.com/Mirroar/hivemind">Hivemind</a></strong> -
+                        another mature, fully automatic bot that is still being maintained.
                     </li>
                 </ul>
 
