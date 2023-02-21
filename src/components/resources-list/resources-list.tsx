@@ -74,10 +74,10 @@ export class ResourcesList extends React.Component {
                         <strong><a href="https://github.com/Jomik/screeps-ai">Jomik's bot</a></strong> -
                         a thoroughly typed TypeScript bot that is chock full of TypeScript tricks. It is a great
                         educational material for players looking to code their own bot in TypeScript and looking
-                        for solutions to many problems at the intersection of TS and @types/screeps (see also
+                        for solutions to many problems at the intersection of TS and Screeps (see also
                         #typescript at the <a href="https://discord.gg/screeps">Discord</a>). It features
                         an OS-based approach (tasks split into processes managed like processes in an operating system)
-                        through the usage of green threads.
+                        through the usage of green threads, inspired by goroutines.
                     </li>
                     <li>
                         <strong><a href="https://github.com/JonathanSafer/screeps">Piky (Yoner's bot)</a></strong> -
