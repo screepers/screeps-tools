@@ -249,3 +249,9 @@ export const STRUCTURES: {[structure: string]: string} = {
     road: "Road",
     controller: "Controller",
 };
+
+export const OBSTACLE_COST = 255;
+export const UNREACHABLE_COST = 254;
+export const MOVE_COSTS = [1, OBSTACLE_COST, 5];
+
+export const ROOM_SIZE = 50;

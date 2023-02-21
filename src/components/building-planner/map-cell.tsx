@@ -226,12 +226,7 @@ export class MapCell extends React.Component<MapCellProps> {
         e.preventDefault();
 
         if (this.state.structure !== '' || this.state.road || this.state.rampart || this.state.mineral || this.state.source) {
-            this.props.planner.removeStructure(this.props.x, this.props.y, this.state.structure);
-            this.props.planner.removeStructure(this.props.x, this.props.y, 'rampart');
-            this.props.planner.removeStructure(this.props.x, this.props.y, 'road');
-            this.props.planner.removeResource(this.props.x, this.props.y);
-
-            this.setState({structure: '', road: false, rampart: false});
+            this.props.planner.clearCell(this.props.x, this.props.y);
         }
     }
 

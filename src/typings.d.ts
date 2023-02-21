@@ -35,11 +35,9 @@ interface BuildingPlannerProps extends React.Component {
 
     copyShareLink(includeRoomFeatures: boolean): void;
 
-    paintCell(x: number, y: number): boolean;
+    paintCell(x: number, y: number): void;
 
-    removeStructure(x: number, y: number, structure: string | null): void;
-
-    removeResource(x: number, y: number): void;
+    clearCell(x: number, y: number): void;
 
     changeScale(e: any, decrease: boolean): void;
 

@@ -1,12 +1,12 @@
 import * as React from 'react';
 import * as LZString from 'lz-string';
 import {
-    CONTROLLER_STRUCTURES,
-    RESOURCES,
+    CONTROLLER_STRUCTURES, OBSTACLE_COST,
+    RESOURCES, ROOM_SIZE,
     STRUCTURES,
     TERRAIN_CODES,
     TERRAIN_MASK_WALL,
-    TERRAIN_NAMES
+    TERRAIN_NAMES, UNREACHABLE_COST
 } from '../../screeps/constants';
 import {MapCell} from './map-cell';
 import {ModalJson} from './modal-json';
@@ -20,14 +20,18 @@ import {apiURL} from '../../screeps/api';
 import {SCREEPS_WORLDS} from './constants';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faHighlighter, faLink, faTowerObservation} from '@fortawesome/free-solid-svg-icons';
+import {floodFill} from '../../algorithms/floodFill';
+import {XYSet} from '../../coordinates/XY';
+import {KeyedSet} from '../../data-structures/KeyedSet';
+
+const NO_ANALYSIS = 0;
+const TOWER_DAMAGE_ANALYSIS = 1;
+const FLOOD_FIELD_ANALYSIS = 2;
 
 const STATE_LOCAL_STORAGE_KEY = 'buildingPlannerStateV2';
 
-const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'towerDamage', 'toastMessage'];
+const NOT_SAVED_STATE_KEYS = ['x', 'y', 'worlds', 'analysisResult', 'toastMessage'];
 
-/**
- * Building Planner
- */
 const BUILDING_PLANNER_DEFAULTS = {
     RCL: 8,
     ROOM: '',
@@ -45,27 +49,28 @@ export class BuildingPlanner extends React.Component {
         world: string;
         shard: string;
         terrain: CellMap;
-        x: number;
-        y: number;
-        worlds: { [worldName: string]: { shards: string[] } };
         brush: string;
         rcl: number;
-        structures: { [structure: string]: { x: number; y: number; }[] };
+        structures: { [structure: string]: XY[] };
         sources: XY[];
         minerals: { mineralType: string, x: number; y: number }[];
         settings: BuildingPlannerSettings;
         scale: number;
-        showTowerDamage: boolean;
         showExtraTools: boolean;
-        cellSelection: boolean;
+        selectingCells: boolean;
         selectedCells: CellMap;
-        towerDamage: CellMap;
         toastMessage: string;
+        x: number;
+        y: number;
+        worlds: { [worldName: string]: { shards: string[] } };
+        analysisMode: number;
+        analysisResult: CellMap;
     }>;
 
     constructor(props: any) {
         super(props);
         this.state = this.getInitialState();
+        this.setStateAndRefresh(this.state, true, true);
     }
 
     componentDidMount() {
@@ -101,16 +106,6 @@ export class BuildingPlanner extends React.Component {
             world: BUILDING_PLANNER_DEFAULTS.WORLD,
             shard: BUILDING_PLANNER_DEFAULTS.SHARD,
             terrain: terrain,
-            x: 0,
-            y: 0,
-            worlds: {
-                mmo: {
-                    shards: []
-                },
-                season: {
-                    shards: []
-                }
-            },
             brush: 'spawn',
             rcl: BUILDING_PLANNER_DEFAULTS.RCL,
             structures: {},
@@ -122,12 +117,22 @@ export class BuildingPlanner extends React.Component {
                 cellTextFontSize: 6,
             },
             scale: 1.5,
-            showTowerDamage: false,
             showExtraTools: false,
-            cellSelection: false,
-            selectedCells: [],
-            towerDamage: {},
+            selectingCells: false,
+            selectedCells: {},
             toastMessage: '',
+            x: 0,
+            y: 0,
+            worlds: {
+                mmo: {
+                    shards: []
+                },
+                season: {
+                    shards: []
+                }
+            },
+            analysisMode: NO_ANALYSIS,
+            analysisResult: {},
         };
 
         const storedState = localStorage.getItem(STATE_LOCAL_STORAGE_KEY);
@@ -138,7 +143,6 @@ export class BuildingPlanner extends React.Component {
                 delete parsedState.settings;
                 if (!reset) {
                     Object.assign(state, parsedState);
-                    state.towerDamage = this.towerDamage(state);
                 }
             } catch (e) {
                 console.error('There was an error while loading the saved state.');
@@ -160,10 +164,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     resetState() {
-        this.setState(this.getInitialState(true), () => {
-            this.saveState();
-            this.refreshTowerDamage();
-        });
+        this.setStateAndRefresh(this.getInitialState(true));
         this.loadShards();
     }
 
@@ -176,16 +177,17 @@ export class BuildingPlanner extends React.Component {
                 } else {
                     handler(data)
                 }
-            }).catch(() => {
+            }).catch((e) => {
                 this.showToast(`Invalid JSON fetched from API at ${url}.`)
+                console.error(e);
             });
-        }).catch(() => {
+        }).catch((e) => {
             this.showToast(`Failed to fetch data from API at ${url}.`)
+            console.error(e);
         });
     }
 
     loadShards() {
-        const component = this;
         for (const world in SCREEPS_WORLDS) {
             this.fetchFromAPI(`/api/game/shards/info`, world, (data) => {
                 if (!data || Object.keys(data).length === 0) {
@@ -195,7 +197,7 @@ export class BuildingPlanner extends React.Component {
                 data.shards.forEach((shard: { name: string }) => {
                     shards.push(shard.name);
                 });
-                component.setState({
+                this.setState({
                     worlds: {
                         ...this.state.worlds,
                         [world]: {
@@ -237,7 +239,7 @@ export class BuildingPlanner extends React.Component {
             for (let x = 0; x < 50; x++) {
                 const terrain = this.state.terrain[y][x];
                 if (terrain & 3) {
-                    const terrainName = terrain & 1 ? "wall" : "swamp";
+                    const terrainName = terrain & 1 ? 'wall' : 'swamp';
                     if (!roomFeatures[terrainName]) {
                         roomFeatures[terrainName] = [];
                     }
@@ -315,7 +317,7 @@ export class BuildingPlanner extends React.Component {
                 structures[structure] = json.buildings[structure];
             });
 
-            this.setState({
+            this.setStateAndRefresh({
                 room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
                 world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
                 shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
@@ -327,9 +329,6 @@ export class BuildingPlanner extends React.Component {
                 minerals,
                 structures,
                 selectedCells: {},
-            }, () => {
-                this.saveState();
-                this.refreshTowerDamage();
             });
         } else if (json.shard && json.name) {
             let world = 'mmo';
@@ -339,6 +338,15 @@ export class BuildingPlanner extends React.Component {
             this.fetchFromAPI(`/api/game/room-terrain?shard=${json.shard}&room=${json.name}&encoded=1`, world, (terrainData) => {
                 console.log('Imported terrain JSON:')
                 console.log(terrainData);
+
+                let encodedTerrain = terrainData.terrain[0].terrain;
+                let terrain: CellMap = {};
+                for (let y = 0; y < 50; y++) {
+                    terrain[y] = {};
+                    for (let x = 0; x < 50; x++) {
+                        terrain[y][x] = parseInt(encodedTerrain.charAt(y * 50 + x));
+                    }
+                }
 
                 this.fetchFromAPI(`/api/game/room-objects?shard=${json.shard}&room=${json.name}`, world, (data) => {
                     console.log('Imported structures JSON:')
@@ -379,16 +387,7 @@ export class BuildingPlanner extends React.Component {
                         }
                     }
 
-                    let encodedTerrain = terrainData.terrain[0].terrain;
-                    let terrain: CellMap = {};
-                    for (let y = 0; y < 50; y++) {
-                        terrain[y] = {};
-                        for (let x = 0; x < 50; x++) {
-                            terrain[y][x] = encodedTerrain.charAt(y * 50 + x);
-                        }
-                    }
-
-                    this.setState({
+                    this.setStateAndRefresh({
                         world: json.world,
                         shard: json.shard,
                         room: json.name,
@@ -397,9 +396,6 @@ export class BuildingPlanner extends React.Component {
                         sources,
                         minerals,
                         selectedCells: {},
-                    }, () => () => {
-                        this.saveState();
-                        this.refreshTowerDamage();
                     });
                 });
             });
@@ -407,35 +403,28 @@ export class BuildingPlanner extends React.Component {
     }
 
     paintCell(x: number, y: number) {
-        if (this.state.cellSelection) {
+        if (this.state.selectingCells) {
             const selectedCells: CellMap = {
                 ...this.state.selectedCells,
                 [y]: {
                     ...this.state.selectedCells[y]
                 }
             };
-            if (selectedCells[y][x]) {
-                delete selectedCells[y][x];
-            } else {
+            if (!selectedCells[y][x]) {
                 selectedCells[y][x] = 1;
+                this.setStateAndRefresh({selectedCells});
             }
-            this.setState({selectedCells: selectedCells}, () => this.saveState());
-            return true;
-        }
-
-        const afterSave = () => {
-            this.saveState();
-            this.refreshTowerDamage();
+            return;
         }
 
         const terrain = TERRAIN_CODES[this.state.brush];
         if (terrain !== undefined) {
             const prevTerrain = this.state.terrain[y][x];
             if (prevTerrain === terrain) {
-                return false;
+                return;
             }
 
-            this.setState({
+            this.setStateAndRefresh({
                 terrain: {
                     ...this.state.terrain,
                     [y]: {
@@ -443,32 +432,27 @@ export class BuildingPlanner extends React.Component {
                         [x]: terrain
                     }
                 }
-            }, afterSave);
-            return true;
+            });
+            return;
         }
 
         if (RESOURCES[this.state.brush] !== undefined) {
             if (this.state.brush === "source") {
                 if (!this.hasSource(x, y)) {
                     this.removeResource(x, y);
-                    this.setState({
+                    this.setStateAndRefresh({
                         sources: [...this.state.sources, {x, y}]
-                    }, afterSave);
-                    return true;
-                } else {
-                    return false;
+                    });
                 }
             } else {
                 if (this.getMineral(x, y) !== this.state.brush) {
                     this.removeResource(x, y);
-                    this.setState({
+                    this.setStateAndRefresh({
                         minerals: [...this.state.minerals, {mineralType: this.state.brush, x, y}]
-                    }, afterSave);
-                    return true;
-                } else {
-                    return true;
+                    });
                 }
             }
+            return;
         }
 
         let structures = this.state.structures;
@@ -525,9 +509,38 @@ export class BuildingPlanner extends React.Component {
         }
 
         if (added) {
-            this.setState({structures: structures}, afterSave);
+            this.setStateAndRefresh({structures: structures});
         }
         return added;
+    }
+
+    clearCell(x: number, y: number) {
+        if (this.state.selectingCells) {
+            const selectedCells: CellMap = {
+                ...this.state.selectedCells,
+                [y]: {
+                    ...this.state.selectedCells[y]
+                }
+            };
+            if (selectedCells[y][x]) {
+                delete selectedCells[y][x];
+                this.setStateAndRefresh({selectedCells});
+            }
+        } else {
+            let structures = {
+                ...this.state.structures
+            };
+
+            for (let structure in this.state.structures) {
+                structures[structure] = structures[structure].filter(({x: xx, y: yy}) => x !== xx || y !== yy);
+            }
+
+            const sources = this.state.sources.filter(({x: xx, y: yy}) => x !== xx || y !== yy);
+
+            const minerals = this.state.minerals.filter(({x: xx, y: yy}) => x !== xx || y !== yy);
+
+            this.setStateAndRefresh({structures, sources, minerals})
+        }
     }
 
     removeStructure(x: number, y: number, structure: string | null) {
@@ -538,24 +551,22 @@ export class BuildingPlanner extends React.Component {
                 return !(pos.x === x && pos.y === y);
             });
 
-            this.setState({structures}, () => {
-                this.saveState();
-                this.refreshTowerDamage()
-            });
+            this.setStateAndRefresh({structures});
         }
     }
 
+    // Should be removed and usages replaced with further modified clearCell with filter parameters
     removeResource(x: number, y: number) {
         const withoutXYSource = this.state.sources.filter(({x: sourceX, y: sourceY}) =>
             x !== sourceX || y !== sourceY);
         if (withoutXYSource.length !== this.state.sources.length) {
-            this.setState({sources: withoutXYSource}, () => this.saveState());
+            this.setStateAndRefresh({sources: withoutXYSource});
         }
 
         const withoutXYMineral = this.state.minerals.filter(({x: mineralX, y: mineralY}) =>
             x !== mineralX || y !== mineralY);
         if (withoutXYMineral.length !== this.state.minerals.length) {
-            this.setState({minerals: withoutXYMineral}, () => this.saveState());
+            this.setStateAndRefresh({minerals: withoutXYMineral});
         }
     }
 
@@ -769,14 +780,14 @@ export class BuildingPlanner extends React.Component {
     }
 
     setBrush(brush: string) {
-        this.setState({brush: brush}, () => this.saveState());
+        this.setStateAndRefresh({brush: brush});
     }
 
     setRCL(rcl: number) {
-        this.setState({rcl: rcl}, () => this.saveState());
+        this.setStateAndRefresh({rcl: rcl});
 
         if (CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
-            this.setState({brush: null}, () => this.saveState());
+            this.setStateAndRefresh({brush: null});
         }
     }
 
@@ -818,11 +829,11 @@ export class BuildingPlanner extends React.Component {
 
         const fixedScale = Math.max(SCALE_MIN, Math.min(SCALE_MAX, scale));
         if (fixedScale !== this.state.scale) {
-            this.setState({scale: fixedScale}, () => this.saveState());
+            this.setStateAndRefresh({scale: fixedScale});
         }
     }
 
-    towerDamage(state: typeof this.state) {
+    towerDamage(state: typeof this.state): CellMap {
         const towerPos = state.structures['tower'] ?? [];
 
         const towerDamage: CellMap = {};
@@ -851,15 +862,85 @@ export class BuildingPlanner extends React.Component {
         return towerDamage;
     }
 
-    refreshTowerDamage() {
-        this.setState({towerDamage: this.towerDamage(this.state)});
+    obstacles(state: typeof this.state): KeyedSet<XY> {
+        const result = XYSet();
+        for (let y = 0; y < ROOM_SIZE; y++) {
+            for (let x = 0; x < ROOM_SIZE; x++) {
+                if (state.terrain[y] && state.terrain[y][x] === TERRAIN_MASK_WALL) {
+                    result.add({x, y});
+                }
+            }
+        }
+        Object.entries(state.structures).forEach(([structureType, pos]: [string, XY[]]) => {
+            if (structureType !== 'road' && structureType !== 'rampart' && structureType !== 'container') {
+                pos.forEach((xy: XY) => result.add(xy));
+            }
+        });
+        return result;
+    }
+
+    selectedCells(state: typeof this.state): XY[] {
+        const selectedCells: XY[] = [];
+        for (let y = 0; y < ROOM_SIZE; y++) {
+            for (let x = 0; x < ROOM_SIZE; x++) {
+                if (state.selectedCells[y] && state.selectedCells[y][x]) {
+                    selectedCells.push({x, y});
+                }
+            }
+        }
+        return selectedCells;
+    }
+
+    floodFill(state: typeof this.state): CellMap {
+        const ff = floodFill(this.obstacles(state), this.selectedCells(state));
+        const result: CellMap = {};
+        for (let y = 0; y < ROOM_SIZE; y++) {
+            for (let x = 0; x < ROOM_SIZE; x++) {
+                if (ff.get(x, y) !== OBSTACLE_COST && ff.get(x, y) !== UNREACHABLE_COST) {
+                    result[y] = result[y] ?? {};
+                    result[y][x] = ff.get(x, y);
+                }
+            }
+        }
+        return result;
+    }
+
+    setStateAndRefresh(state: any, skipSave?: boolean, directSave?: boolean) {
+        let completeState = {
+            ...this.state,
+            ...state
+        }
+
+        let recalculatedState = {
+            ...state
+        };
+
+        if (completeState.analysisMode === TOWER_DAMAGE_ANALYSIS) {
+            recalculatedState.analysisResult = this.towerDamage(completeState);
+        } else if (completeState.analysisMode === FLOOD_FIELD_ANALYSIS) {
+            if (this.selectedCells(completeState).length !== 0) {
+                recalculatedState.analysisResult = this.floodFill(completeState);
+            } else {
+                recalculatedState.analysisResult = {};
+            }
+        }
+
+        if (directSave) {
+            this.state = recalculatedState;
+        } else {
+            this.setState(recalculatedState, () => {
+                if (!skipSave) {
+                    this.saveState();
+                }
+            });
+        }
     }
 
     showToast(message: string) {
         this.setState({toastMessage: message}, () => {
             setTimeout(() => {
                 this.setState({toastMessage: ''});
-            }, 3000);
+            }, 5000);
         })
     }
 
@@ -873,33 +954,28 @@ export class BuildingPlanner extends React.Component {
     }
 
     setSettings(settings: BuildingPlannerSettings) {
-        this.setState({settings}, () => this.saveState());
+        this.setStateAndRefresh({settings});
     }
 
     toggleExtraTools() {
-        this.setState({showExtraTools: !this.state.showExtraTools}, () => this.saveState());
-    }
-
-    toggleTowerDamage() {
-        this.setState({showTowerDamage: !this.state.showTowerDamage}, () => {
-            if (this.state.showTowerDamage) {
-                this.saveState();
-                this.refreshTowerDamage();
-            }
-        });
+        this.setStateAndRefresh({showExtraTools: !this.state.showExtraTools});
     }
 
     toggleCellSelection() {
-        this.setState({cellSelection: !this.state.cellSelection}, () => {
-            this.saveState();
+        this.setStateAndRefresh({selectingCells: !this.state.selectingCells});
+    }
+
+    setAnalysisMode(mode: number) {
+        this.setStateAndRefresh({
+            analysisMode: this.state.analysisMode === mode ? NO_ANALYSIS : mode
         });
     }
 
     getCellText(x: number, y: number): string {
-        if (this.state.showTowerDamage && this.state.towerDamage[y] !== undefined && this.state.towerDamage[y][x] !== undefined) {
-            return this.state.towerDamage[y][x].toString();
-        } else {
+        if (this.state.analysisMode === NO_ANALYSIS || this.state.analysisResult[y] === undefined || this.state.analysisResult[y][x] === undefined) {
             return '';
+        } else {
+            return this.state.analysisResult[y][x].toString();
         }
     }
 
@@ -1004,17 +1080,25 @@ export class BuildingPlanner extends React.Component {
                         {this.state.showExtraTools && <Row className="justify-content-center">
                             <Col xs={{size: 'auto'}}>
                                 <div>
-                                    <button className="btn btn-secondary" onClick={() => this.toggleTowerDamage()}
-                                            title="Toggle tower damage">
-                                        <FontAwesomeIcon icon={faTowerObservation}
-                                                         color={this.state.showTowerDamage ? 'green' : 'white'}/>
-                                    </button>
-                                </div>
-                                <div>
                                     <button className="btn btn-secondary" onClick={() => this.toggleCellSelection()}
                                             title="Toggle cell selection">
                                         <FontAwesomeIcon icon={faHighlighter}
-                                                         color={this.state.cellSelection ? 'green' : 'white'}/>
+                                                         color={this.state.selectingCells ? 'green' : 'white'}/>
+                                    </button>
+                                </div>
+                                <div>
+                                    <button className="btn btn-secondary" onClick={() => this.setAnalysisMode(TOWER_DAMAGE_ANALYSIS)}
+                                            title="Toggle tower damage">
+                                        <FontAwesomeIcon icon={faTowerObservation}
+                                                         color={this.state.analysisMode === TOWER_DAMAGE_ANALYSIS ? 'green' : 'white'}/>
+                                    </button>
+                                </div>
+                                <div>
+                                    <button className="btn btn-secondary" onClick={() => this.setAnalysisMode(FLOOD_FIELD_ANALYSIS)}
+                                            title="Flood field from selected">
+                                        <span style={{color: this.state.analysisMode === FLOOD_FIELD_ANALYSIS ? 'green' : 'white'}}>
+                                            FF
+                                        </span>
                                     </button>
                                 </div>
                             </Col>
