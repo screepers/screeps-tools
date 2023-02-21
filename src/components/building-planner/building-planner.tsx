@@ -910,7 +910,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     distanceTransform(state: typeof this.state): CellMap {
-        const matrix = obstacles2baseDistanceTransformMatrix(this.obstacles(state));
+        const matrix = obstacles2baseDistanceTransformMatrix(this.obstacles(state, true));
         const dt = cDistanceTransform(matrix);
         const result: CellMap = {};
         for (let y = 0; y < ROOM_SIZE; y++) {
