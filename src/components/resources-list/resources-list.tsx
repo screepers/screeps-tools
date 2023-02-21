@@ -80,18 +80,22 @@ export class ResourcesList extends React.Component {
                         through the usage of green threads.
                     </li>
                     <li>
+                        <strong><a href="https://github.com/JonathanSafer/screeps">Piky (Yoner's bot)</a></strong> -
+                        a mature bot that is optimized for low-CPU situations, not being actively developed anymore.
+                    </li>
+                    <li>
                         <strong><a href="https://github.com/ScreepsQuorum/screeps-quorum">Quorum</a></strong> -
-                        a mature, fully automatic bot that is not being actively developed anymore (see #quorum at
+                        a mature bot that is not being actively developed anymore (see #quorum at
                         the <a href="https://discord.gg/screeps">Discord</a>).
                     </li>
                     <li>
                         <strong><a href="https://github.com/bonzaiferroni/bonzAI">bonzAI</a></strong> -
-                        a mature, fully automatic bot that is not being actively developed anymore (see #bonzai at
+                        a mature bot that is not being actively developed anymore (see #bonzai at
                         the <a href="https://discord.gg/screeps">Discord</a>).
                     </li>
                     <li>
-                        <strong><a href="https://github.com/Mirroar/hivemind">Hivemind</a></strong> -
-                        another mature, fully automatic bot that is still being maintained.
+                        <strong><a href="https://github.com/Mirroar/hivemind">Hivemind (Mirroar's bot)</a></strong> -
+                        a mature bot that is still being maintained.
                     </li>
                 </ul>
 

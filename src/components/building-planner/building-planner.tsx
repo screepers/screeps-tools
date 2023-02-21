@@ -1066,6 +1066,7 @@ export class BuildingPlanner extends React.Component {
                                 </div>
                                 <div>
                                     <button className="btn btn-secondary" title="More tools"
+                                            style={{color: this.state.showExtraTools ? 'green': 'inherit'}}
                                             onClick={() => this.toggleExtraTools()}>
                                         More
                                     </button>
@@ -1083,20 +1084,20 @@ export class BuildingPlanner extends React.Component {
                                     <button className="btn btn-secondary" onClick={() => this.toggleCellSelection()}
                                             title="Toggle cell selection">
                                         <FontAwesomeIcon icon={faHighlighter}
-                                                         color={this.state.selectingCells ? 'green' : 'white'}/>
+                                                         color={this.state.selectingCells ? 'green' : 'inherit'}/>
                                     </button>
                                 </div>
                                 <div>
                                     <button className="btn btn-secondary" onClick={() => this.setAnalysisMode(TOWER_DAMAGE_ANALYSIS)}
                                             title="Toggle tower damage">
                                         <FontAwesomeIcon icon={faTowerObservation}
-                                                         color={this.state.analysisMode === TOWER_DAMAGE_ANALYSIS ? 'green' : 'white'}/>
+                                                         color={this.state.analysisMode === TOWER_DAMAGE_ANALYSIS ? 'green' : 'inherit'}/>
                                     </button>
                                 </div>
                                 <div>
                                     <button className="btn btn-secondary" onClick={() => this.setAnalysisMode(FLOOD_FIELD_ANALYSIS)}
                                             title="Flood field from selected">
-                                        <span style={{color: this.state.analysisMode === FLOOD_FIELD_ANALYSIS ? 'green' : 'white'}}>
+                                        <span style={{color: this.state.analysisMode === FLOOD_FIELD_ANALYSIS ? 'green' : 'inherit'}}>
                                             FF
                                         </span>
                                     </button>
