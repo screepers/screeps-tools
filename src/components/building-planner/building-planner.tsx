@@ -1,11 +1,10 @@
 import * as React from 'react';
 import * as LZString from 'lz-string';
 import {
-    CONTROLLER_STRUCTURES, OBSTACLE_COST,
+    OBSTACLE_COST,
     RESOURCES, ROOM_SIZE,
     STRUCTURES,
     TERRAIN_CODES,
-    TERRAIN_MASK_WALL,
     TERRAIN_NAMES, UNREACHABLE_COST
 } from '../../screeps/constants';
 import {MapCell} from './map-cell';
@@ -24,6 +23,7 @@ import {floodFill} from '../../algorithms/floodFill';
 import {XYSet} from '../../coordinates/XY';
 import {KeyedSet} from '../../data-structures/KeyedSet';
 import {cDistanceTransform, obstacles2baseDistanceTransformMatrix} from '../../algorithms/distanceTransform';
+import {CONTROLLER_STRUCTURES} from '../../screeps/game-constants';
 
 const NO_ANALYSIS = 0;
 const TOWER_DAMAGE_ANALYSIS = 1;

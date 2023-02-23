@@ -1,7 +1,14 @@
 import * as React from 'react';
-import * as Constants from '../../screeps/constants';
 import {Container, Row, Col, Input} from 'reactstrap';
 import {Creep} from './creep';
+import {
+    BODYPART_COST,
+    BODYPARTS, CONTROLLER_STRUCTURES, CREEP_CLAIM_LIFE_TIME,
+    CREEP_LIFE_TIME, EXTENSION_ENERGY_CAPACITY,
+    LAB_BOOST_ENERGY,
+    LAB_BOOST_MINERAL, SPAWN_ENERGY_CAPACITY
+} from '../../screeps/game-constants';
+import {BODYPART_NAMES, BOOSTS, RCL_ENERGY} from '../../screeps/constants';
 
 export class CreepDesigner extends React.Component{
     state: Readonly <{
@@ -80,7 +87,7 @@ export class CreepDesigner extends React.Component{
                 let creepBody = this.state.body;
                 let i = 0;
                 body.split('-').forEach(count => {
-                    creepBody[Object.keys(Constants.BODYPARTS)[i]] = parseInt(count);
+                    creepBody[Object.keys(BODYPARTS)[i]] = parseInt(count);
                     i += 1;
                 });
                 
@@ -141,8 +148,8 @@ export class CreepDesigner extends React.Component{
         let cost = 0;
         let component = this;
         
-        if (part && Constants.BODYPART_COST[part]) {
-            cost = (component.state.body[part] * Constants.BODYPART_COST[part]);
+        if (part && BODYPART_COST[part]) {
+            cost = (component.state.body[part] * BODYPART_COST[part]);
         }
         
         return cost;
@@ -152,8 +159,8 @@ export class CreepDesigner extends React.Component{
         let cost = 0;
         let component = this;
         
-        Object.keys(Constants.BODYPARTS).forEach(part => {
-            cost += (component.state.body[part] * Constants.BODYPART_COST[part]);
+        Object.keys(BODYPARTS).forEach(part => {
+            cost += (component.state.body[part] * BODYPART_COST[part]);
         });
         
         return cost;
@@ -162,11 +169,11 @@ export class CreepDesigner extends React.Component{
     totalCostWithBoosting(timeMultiplier: number = 1) {
         let cost = this.totalCost();
 
-        for (let part of Object.keys(Constants.BODYPARTS)) {
-            if (Constants.BOOSTS[part] !== undefined) {
+        for (let part of Object.keys(BODYPARTS)) {
+            if (BOOSTS[part] !== undefined) {
                 let boostType = this.state.boost[part];
                 if (boostType !== null) {
-                    cost += (this.state.body[part] * Constants.LAB_BOOST_ENERGY);
+                    cost += (this.state.body[part] * LAB_BOOST_ENERGY);
                 }
             }
         }
@@ -174,10 +181,10 @@ export class CreepDesigner extends React.Component{
     }
 
     mineralCost(part: string, timeMultiplier: number = 1) {
-        if (Constants.BOOSTS[part] !== undefined) {
+        if (BOOSTS[part] !== undefined) {
             let boostType = this.state.boost[part];
             if (boostType !== null) {
-                return (this.state.body[part] * Constants.LAB_BOOST_MINERAL) * timeMultiplier;
+                return (this.state.body[part] * LAB_BOOST_MINERAL) * timeMultiplier;
             }
         }
         return 0;
@@ -187,7 +194,7 @@ export class CreepDesigner extends React.Component{
         let count = 0;
         let component = this;
         
-        Object.keys(Constants.BODYPARTS).forEach(part => {
+        Object.keys(BODYPARTS).forEach(part => {
             count += component.state.body[part];
         });
         
@@ -197,9 +204,9 @@ export class CreepDesigner extends React.Component{
     body() {
         let body = '';
         
-        Object.keys(Constants.BODYPARTS).forEach(part => {
+        Object.keys(BODYPARTS).forEach(part => {
             for (let i = 0; i < this.state.body[part]; i++) {
-                body += Constants.BODYPARTS[part] + ',';
+                body += BODYPARTS[part] + ',';
             }
         });
         
@@ -209,7 +216,7 @@ export class CreepDesigner extends React.Component{
     shareLink() {
         let counts: number[] = [];
         
-        Object.keys(Constants.BODYPARTS).forEach(part => {
+        Object.keys(BODYPARTS).forEach(part => {
             counts.push(this.state.body[part]);
         });
         
@@ -219,9 +226,9 @@ export class CreepDesigner extends React.Component{
     
     creepLifespan() {
         if (this.state.body.claim > 0) {
-            return Constants.CREEP_CLAIM_LIFE_TIME;
+            return CREEP_CLAIM_LIFE_TIME;
         } else {
-            return Constants.CREEP_LIFE_TIME;
+            return CREEP_LIFE_TIME;
         }
     }
 
@@ -238,8 +245,8 @@ export class CreepDesigner extends React.Component{
     requiredRCL() {
         let rclRequired = 8;
         let cost = this.totalCost();
-        Object.keys(Constants.RCL_ENERGY).reverse().forEach(rcl => {
-            if (cost <= Constants.RCL_ENERGY[parseInt(rcl)]) {
+        Object.keys(RCL_ENERGY).reverse().forEach(rcl => {
+            if (cost <= RCL_ENERGY[parseInt(rcl)]) {
                 rclRequired = parseInt(rcl);
             }
         });
@@ -251,8 +258,8 @@ export class CreepDesigner extends React.Component{
         let data = e.target.value;
         let body = this.state.body;
         
-        Object.keys(Constants.BODYPARTS).forEach(part => {
-            body[part] = (data.match(new RegExp(Constants.BODYPARTS[part], 'g')) || []).length
+        Object.keys(BODYPARTS).forEach(part => {
+            body[part] = (data.match(new RegExp(BODYPARTS[part], 'g')) || []).length
         });
         
         if (!e.noState) {
@@ -262,9 +269,9 @@ export class CreepDesigner extends React.Component{
 
     boostOptions(part: string) {
         let options: React.ReactFragment[] = [];
-        if (Constants.BOOSTS[part] !== undefined) {
+        if (BOOSTS[part] !== undefined) {
             options.push(<option value="">-</option>);
-            for (let resource of Object.keys(Constants.BOOSTS[part])) {
+            for (let resource of Object.keys(BOOSTS[part])) {
                 options.push(<option value={resource}>{resource}</option>);
             }
         }
@@ -319,10 +326,10 @@ export class CreepDesigner extends React.Component{
             returnValue *= this.state.unitCount;
         }
 
-        if (Constants.BOOSTS[part] !== undefined) {
+        if (BOOSTS[part] !== undefined) {
             let boostType = this.state.boost[part];
-            if (boostType !== null && Constants.BOOSTS[part][boostType][action] !== undefined) {
-                returnValue *= Constants.BOOSTS[part][boostType][action];
+            if (boostType !== null && BOOSTS[part][boostType][action] !== undefined) {
+                returnValue *= BOOSTS[part][boostType][action];
             }
         }
 
@@ -337,8 +344,8 @@ export class CreepDesigner extends React.Component{
         if (move > 0) {
             let moveBoost = 1;
             let boostType = this.state.boost['move'];
-            if (boostType !== null && Constants.BOOSTS['move'][boostType]['fatigue'] !== undefined) {
-                moveBoost = Constants.BOOSTS['move'][boostType]['fatigue'];
+            if (boostType !== null && BOOSTS['move'][boostType]['fatigue'] !== undefined) {
+                moveBoost = BOOSTS['move'][boostType]['fatigue'];
             }
 
             let W = this.countParts() - move - (full ? 0 : carry);
@@ -390,7 +397,7 @@ export class CreepDesigner extends React.Component{
         let structures = this.state.structures;
         
         for (let type of this.energyStructures) {
-            structures[type] = Constants.CONTROLLER_STRUCTURES[type][rcl];
+            structures[type] = CONTROLLER_STRUCTURES[type][rcl];
         }
 
         this.setState({controller: rcl, structures: structures});
@@ -402,9 +409,9 @@ export class CreepDesigner extends React.Component{
 
     getEnergyCapacity(type: string) {
         if (type == 'spawn') {
-            return Constants.SPAWN_ENERGY_CAPACITY;
+            return SPAWN_ENERGY_CAPACITY;
         } else if (type == 'extension') {
-            return Constants.EXTENSION_ENERGY_CAPACITY[this.state.controller];
+            return EXTENSION_ENERGY_CAPACITY[this.state.controller];
         }
         return 0;
     }
@@ -447,7 +454,7 @@ export class CreepDesigner extends React.Component{
             structures[type] = count;
         }
 
-        let max = Constants.CONTROLLER_STRUCTURES[type][this.state.controller];
+        let max = CONTROLLER_STRUCTURES[type][this.state.controller];
         if (max !== undefined && structures[type] > max) {
             structures[type] = max;
         }
@@ -495,7 +502,7 @@ export class CreepDesigner extends React.Component{
             return 0;
         }
 
-        let resist = (100 * this.state.body.tough) / Constants.BOOSTS.tough[boost].damage;
+        let resist = (100 * this.state.body.tough) / BOOSTS.tough[boost].damage;
         if (useUnitMultiplier) {
             resist *= this.state.unitCount;
         }
@@ -612,18 +619,18 @@ export class CreepDesigner extends React.Component{
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {Object.keys(Constants.BODYPARTS).map(part => {
+                                    {Object.keys(BODYPARTS).map(part => {
                                         return (
                                             <tr key={part} className={this.state.body[part] > 0 ? 'active' : ''}>
-                                                <td className="part">{Constants.BODYPART_NAMES[part]}</td>
-                                                <td className="price">{Constants.BODYPART_COST[part]}</td>
+                                                <td className="part">{BODYPART_NAMES[part]}</td>
+                                                <td className="price">{BODYPART_COST[part]}</td>
                                                 <td>
                                                     <button className="btn btn-secondary btn-sm" tabIndex={-1} onClick={() => this.removeBodyPart(part, 5)}>--</button>
                                                     <Input type="number" className="count" value={this.state.body[part] ? this.state.body[part] : ''} onChange={(e) => this.setBodyPart(e, part)} />
                                                     <button className="btn btn-secondary btn-sm" tabIndex={-1} onClick={() => this.addBodyPart(part, 5)}>++</button>
                                                 </td>
                                                 <td className="text-center">
-                                                    {Constants.BOOSTS[part] !== undefined && <Input type="select" className="boost" onChange={(e) => this.handleBoostChange(e, part)}>
+                                                    {BOOSTS[part] !== undefined && <Input type="select" className="boost" onChange={(e) => this.handleBoostChange(e, part)}>
                                                         {this.boostOptions(part)}
                                                     </Input>}
                                                 </td>
@@ -854,8 +861,8 @@ export class CreepDesigner extends React.Component{
                                     <td className="text-center">{this.labelPerHour(this.formatNumber(this.totalCostWithBoosting(this.state.unitCount * (this.ticksPerHour() / this.creepLifespan())), 2))}</td>
                                     <td className="text-center">{this.labelPerDay(this.formatNumber(this.totalCostWithBoosting(this.state.unitCount * (this.ticksPerDay() / this.creepLifespan())), 2))}</td>
                                 </tr>
-                                {Object.keys(Constants.BODYPARTS).map(part => {
-                                    if (Constants.BOOSTS[part] !== undefined && this.state.boost[part] !== null && this.state.body[part] > 0) {
+                                {Object.keys(BODYPARTS).map(part => {
+                                    if (BOOSTS[part] !== undefined && this.state.boost[part] !== null && this.state.body[part] > 0) {
                                         return (
                                             <tr className="dark">
                                                 <td>{this.state.boost[part]}</td>

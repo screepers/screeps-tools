@@ -1,4 +1,4 @@
-import {TOWER_FALLOFF, TOWER_FALLOFF_RANGE, TOWER_OPTIMAL_RANGE, TOWER_POWER_ATTACK} from './constants';
+import {TOWER_FALLOFF, TOWER_FALLOFF_RANGE, TOWER_OPTIMAL_RANGE, TOWER_POWER_ATTACK} from './game-constants';
 
 /**
  * Throws an exception if condition is false.
