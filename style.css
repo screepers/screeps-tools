@@ -68,7 +68,8 @@ textarea.form-control {
   max-height: 400px;
   padding: 2px 5px;
 }
-textarea.form-control#json-data {
+textarea.form-control#json-data,
+textarea.form-control#sim-script {
   font-family: monospace;
   font-size: 1rem;
   min-height: 320px;
