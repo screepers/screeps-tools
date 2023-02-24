@@ -3,19 +3,20 @@ import {Container, Row, Col, Input} from 'reactstrap';
 import {Creep} from './creep';
 import {
     BODYPART_COST,
-    BODYPARTS, CONTROLLER_STRUCTURES, CREEP_CLAIM_LIFE_TIME,
+    CONTROLLER_STRUCTURES, CREEP_CLAIM_LIFE_TIME,
     CREEP_LIFE_TIME, EXTENSION_ENERGY_CAPACITY,
     LAB_BOOST_ENERGY,
     LAB_BOOST_MINERAL, SPAWN_ENERGY_CAPACITY
 } from '../../screeps/game-constants';
-import {BODYPART_NAMES, BOOSTS, RCL_ENERGY} from '../../screeps/constants';
+import {BODYPART_NAMES, BODYPARTS, BOOSTS, RCL_ENERGY} from '../../screeps/constants';
+import {forIn} from '../../js-utils';
 
 export class CreepDesigner extends React.Component{
     state: Readonly <{
         unitCount: number;
         tickTime: number;
-        body: {[part: string]: number};
-        boost: {[part: string]: string | null};
+        body: Record<BodyPartConstant, number>;
+        boost: Record<BodyPartConstant, string | null>;
         controller: number;
         structures: {[structureType: string]: number};
     }>;
@@ -87,7 +88,8 @@ export class CreepDesigner extends React.Component{
                 let creepBody = this.state.body;
                 let i = 0;
                 body.split('-').forEach(count => {
-                    creepBody[Object.keys(BODYPARTS)[i]] = parseInt(count);
+                    const part = (Object.keys(BODYPARTS)[i]!) as BodyPartConstant;
+                    creepBody[part] = parseInt(count);
                     i += 1;
                 });
                 
@@ -96,7 +98,7 @@ export class CreepDesigner extends React.Component{
         }
     }
     
-    setBodyPart(e: any, part: string) {
+    setBodyPart(e: any, part: BodyPartConstant) {
         let old_value = parseInt(e.target.defaultValue) || 0;
         let new_value = parseInt(e.target.value) || 0;
 
@@ -112,7 +114,7 @@ export class CreepDesigner extends React.Component{
         e.target.defaultValue = this.state.body[part];
     }
     
-    removeBodyPart(part: string, count: number) {
+    removeBodyPart(part: BodyPartConstant, count: number) {
         let body = this.state.body;
         
         if (body[part]) {
@@ -125,7 +127,7 @@ export class CreepDesigner extends React.Component{
         this.setState({body: body});
     }
     
-    addBodyPart(part: string, count: number) {
+    addBodyPart(part: BodyPartConstant, count: number) {
         let body = this.state.body;
         
         if (this.countParts() < 50) {
@@ -144,7 +146,7 @@ export class CreepDesigner extends React.Component{
         this.setState({body: body});
     }
     
-    partCost(part: string) {
+    partCost(part: BodyPartConstant) {
         let cost = 0;
         let component = this;
         
@@ -159,7 +161,7 @@ export class CreepDesigner extends React.Component{
         let cost = 0;
         let component = this;
         
-        Object.keys(BODYPARTS).forEach(part => {
+        forIn(BODYPARTS, (part) => {
             cost += (component.state.body[part] * BODYPART_COST[part]);
         });
         
@@ -169,18 +171,18 @@ export class CreepDesigner extends React.Component{
     totalCostWithBoosting(timeMultiplier: number = 1) {
         let cost = this.totalCost();
 
-        for (let part of Object.keys(BODYPARTS)) {
+        forIn(BODYPARTS, (part) => {
             if (BOOSTS[part] !== undefined) {
                 let boostType = this.state.boost[part];
                 if (boostType !== null) {
                     cost += (this.state.body[part] * LAB_BOOST_ENERGY);
                 }
             }
-        }
+        });
         return cost * timeMultiplier;
     }
 
-    mineralCost(part: string, timeMultiplier: number = 1) {
+    mineralCost(part: BodyPartConstant, timeMultiplier: number = 1) {
         if (BOOSTS[part] !== undefined) {
             let boostType = this.state.boost[part];
             if (boostType !== null) {
@@ -194,7 +196,7 @@ export class CreepDesigner extends React.Component{
         let count = 0;
         let component = this;
         
-        Object.keys(BODYPARTS).forEach(part => {
+        forIn(BODYPARTS, (part) => {
             count += component.state.body[part];
         });
         
@@ -204,7 +206,7 @@ export class CreepDesigner extends React.Component{
     body() {
         let body = '';
         
-        Object.keys(BODYPARTS).forEach(part => {
+        forIn(BODYPARTS, (part) => {
             for (let i = 0; i < this.state.body[part]; i++) {
                 body += BODYPARTS[part] + ',';
             }
@@ -216,7 +218,7 @@ export class CreepDesigner extends React.Component{
     shareLink() {
         let counts: number[] = [];
         
-        Object.keys(BODYPARTS).forEach(part => {
+        forIn(BODYPARTS, (part) => {
             counts.push(this.state.body[part]);
         });
         
@@ -246,7 +248,7 @@ export class CreepDesigner extends React.Component{
         let rclRequired = 8;
         let cost = this.totalCost();
         Object.keys(RCL_ENERGY).reverse().forEach(rcl => {
-            if (cost <= RCL_ENERGY[parseInt(rcl)]) {
+            if (cost <= RCL_ENERGY[parseInt(rcl)]!) {
                 rclRequired = parseInt(rcl);
             }
         });
@@ -258,7 +260,7 @@ export class CreepDesigner extends React.Component{
         let data = e.target.value;
         let body = this.state.body;
         
-        Object.keys(BODYPARTS).forEach(part => {
+        forIn(BODYPARTS, (part) => {
             body[part] = (data.match(new RegExp(BODYPARTS[part], 'g')) || []).length
         });
         
@@ -267,18 +269,19 @@ export class CreepDesigner extends React.Component{
         }
     }
 
-    boostOptions(part: string) {
+    boostOptions(part: BodyPartConstant) {
         let options: React.ReactFragment[] = [];
-        if (BOOSTS[part] !== undefined) {
+        const partBoosts = BOOSTS[part];
+        if (partBoosts !== undefined) {
             options.push(<option value="">-</option>);
-            for (let resource of Object.keys(BOOSTS[part])) {
+            for (let resource of Object.keys(partBoosts)) {
                 options.push(<option value={resource}>{resource}</option>);
             }
         }
         return options;
     }
 
-    handleBoostChange(e: any, part: string) {
+    handleBoostChange(e: any, part: BodyPartConstant) {
         let boost = this.state.boost;
         let resource = e.target.value && e.target.value || null;
         boost[part] = resource;
@@ -316,7 +319,7 @@ export class CreepDesigner extends React.Component{
         return actions;
     }
 
-    getActionValue(part: string, action: string, useUnitMultiplier: boolean, partMultiplier: number, timeMultiplier: number = 1) {
+    getActionValue(part: BodyPartConstant, action: string, useUnitMultiplier: boolean, partMultiplier: number, timeMultiplier: number = 1) {
         let partCount = this.state.body[part];
         let returnValue = (partCount * partMultiplier);
         if (timeMultiplier !== 1) {
@@ -326,17 +329,18 @@ export class CreepDesigner extends React.Component{
             returnValue *= this.state.unitCount;
         }
 
-        if (BOOSTS[part] !== undefined) {
+        const partBoosts = BOOSTS[part];
+        if (partBoosts !== undefined) {
             let boostType = this.state.boost[part];
-            if (boostType !== null && BOOSTS[part][boostType][action] !== undefined) {
-                returnValue *= BOOSTS[part][boostType][action];
+            if (boostType !== null && partBoosts[boostType]![action] !== undefined) {
+                returnValue *= partBoosts[boostType]![action]!;
             }
         }
 
         return returnValue;
     }
     
-    getActionValueFormatted(part: string, action: string, useUnitMultiplier: boolean, partMultiplier: number, timeMultiplier: number = 1) {
+    getActionValueFormatted(part: BodyPartConstant, action: string, useUnitMultiplier: boolean, partMultiplier: number, timeMultiplier: number = 1) {
         return this.formatNumber(this.getActionValue(part, action, useUnitMultiplier, partMultiplier, timeMultiplier), 2);
     }
 
@@ -344,8 +348,8 @@ export class CreepDesigner extends React.Component{
         if (move > 0) {
             let moveBoost = 1;
             let boostType = this.state.boost['move'];
-            if (boostType !== null && BOOSTS['move'][boostType]['fatigue'] !== undefined) {
-                moveBoost = BOOSTS['move'][boostType]['fatigue'];
+            if (boostType !== null && BOOSTS['move']![boostType]!['fatigue'] !== undefined) {
+                moveBoost = BOOSTS['move']![boostType]!['fatigue']!;
             }
 
             let W = this.countParts() - move - (full ? 0 : carry);
@@ -372,13 +376,13 @@ export class CreepDesigner extends React.Component{
             i = 0;
         } else {
             for (i = units.length - 1; i > 0; i--) {
-                if (num >= units[i].value) {
+                if (num >= units[i]!.value) {
                     break;
                 }
             }
         }
         let rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-        return (num / units[i].value).toFixed(digits).replace(rx, "$1") + units[i].symbol;
+        return (num / units[i]!.value).toFixed(digits).replace(rx, "$1") + units[i]!.symbol;
     }
 
     changeTickTime(e: any) {
@@ -397,7 +401,7 @@ export class CreepDesigner extends React.Component{
         let structures = this.state.structures;
         
         for (let type of this.energyStructures) {
-            structures[type] = CONTROLLER_STRUCTURES[type][rcl];
+            structures[type] = CONTROLLER_STRUCTURES[type]![rcl]!;
         }
 
         this.setState({controller: rcl, structures: structures});
@@ -411,7 +415,7 @@ export class CreepDesigner extends React.Component{
         if (type == 'spawn') {
             return SPAWN_ENERGY_CAPACITY;
         } else if (type == 'extension') {
-            return EXTENSION_ENERGY_CAPACITY[this.state.controller];
+            return EXTENSION_ENERGY_CAPACITY[this.state.controller]!;
         }
         return 0;
     }
@@ -437,7 +441,7 @@ export class CreepDesigner extends React.Component{
         
         if (structures[type]) {
             structures[type] -= count;
-            if (structures[type] < 0) {
+            if (structures[type]! < 0) {
                 structures[type] = 0;
             }
         }
@@ -454,8 +458,8 @@ export class CreepDesigner extends React.Component{
             structures[type] = count;
         }
 
-        let max = CONTROLLER_STRUCTURES[type][this.state.controller];
-        if (max !== undefined && structures[type] > max) {
+        let max = CONTROLLER_STRUCTURES[type]![this.state.controller];
+        if (max !== undefined && structures[type]! > max) {
             structures[type] = max;
         }
         
@@ -463,7 +467,7 @@ export class CreepDesigner extends React.Component{
     }
     
     structureSum(type: string) {
-        return (this.state.structures[type] * this.getEnergyCapacity(type));
+        return (this.state.structures[type]! * this.getEnergyCapacity(type));
     }
 
     totalEnergyCapacity() {
@@ -502,7 +506,7 @@ export class CreepDesigner extends React.Component{
             return 0;
         }
 
-        let resist = (100 * this.state.body.tough) / BOOSTS.tough[boost].damage;
+        let resist = (100 * this.state.body.tough) / BOOSTS.tough![boost]!.damage!;
         if (useUnitMultiplier) {
             resist *= this.state.unitCount;
         }
@@ -619,7 +623,8 @@ export class CreepDesigner extends React.Component{
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {Object.keys(BODYPARTS).map(part => {
+                                    {Object.keys(BODYPARTS).map((partName) => {
+                                        const part = partName as BodyPartConstant;
                                         return (
                                             <tr key={part} className={this.state.body[part] > 0 ? 'active' : ''}>
                                                 <td className="part">{BODYPART_NAMES[part]}</td>
@@ -652,7 +657,7 @@ export class CreepDesigner extends React.Component{
                                     </tr>
                                     {this.energyStructures.map(type => {
                                         return (
-                                            <tr key={type} className={this.state.structures[type] > 0 ? 'active' : ''}>
+                                            <tr key={type} className={this.state.structures[type]! > 0 ? 'active' : ''}>
                                                 <td className="part">{this.capitalize(type)}</td>
                                                 <td className="price">{this.getEnergyCapacity(type)}</td>
                                                 <td>
@@ -861,7 +866,8 @@ export class CreepDesigner extends React.Component{
                                     <td className="text-center">{this.labelPerHour(this.formatNumber(this.totalCostWithBoosting(this.state.unitCount * (this.ticksPerHour() / this.creepLifespan())), 2))}</td>
                                     <td className="text-center">{this.labelPerDay(this.formatNumber(this.totalCostWithBoosting(this.state.unitCount * (this.ticksPerDay() / this.creepLifespan())), 2))}</td>
                                 </tr>
-                                {Object.keys(BODYPARTS).map(part => {
+                                {Object.keys(BODYPARTS).map((partName) => {
+                                    const part = partName as BodyPartConstant;
                                     if (BOOSTS[part] !== undefined && this.state.boost[part] !== null && this.state.body[part] > 0) {
                                         return (
                                             <tr className="dark">
@@ -879,6 +885,8 @@ export class CreepDesigner extends React.Component{
                                                 <td className="text-center">{this.labelPerDay(this.formatNumber(this.mineralCost(part, this.state.unitCount * (this.ticksPerDay() / this.creepLifespan())), 2))}</td>
                                             </tr>
                                         );
+                                    } else {
+                                        return undefined;
                                     }
                                 })}
                                 </tbody>

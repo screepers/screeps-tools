@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Col, Input, Label, Modal, ModalBody, ModalHeader, Row} from 'reactstrap';
+import {Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row} from 'reactstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faFileCode} from '@fortawesome/free-solid-svg-icons';
 
@@ -20,18 +20,19 @@ export class ModalJson extends React.Component<ModalProps> {
     }
 
     displayJson() {
-        const data = this.props.planner.exportJson(this.state.roomFeatures);
+        const data = this.props.planner.exportBlueprint(this.state.roomFeatures);
         return this.state.format
             ? JSON.stringify(data, null, 2)
                 .replace(/{\n\s+"x": ([0-9]{1,4}),\n\s+"y": ([0-9]{1,4})\n\s+}/g, '{"x":$1,"y":$2}')
             : JSON.stringify(data);
     }
 
-    importJson(e: any) {
+    importBlueprint(e: any) {
+        // Removing module.exports = and the semicolon in case it was copied from JS.
         const rx = /^(module\.exports *= *)?(\{.*}) *;?$/gm;
         const json = rx.exec(e.target.value.replaceAll('\n', ' ').trim());
-        const parsed = JSON.parse(json![2]);
-        this.props.planner.importJson(parsed);
+        const parsed = JSON.parse(json![2]!);
+        this.props.planner.importBlueprint(parsed);
     }
 
     toggleModal() {
@@ -57,22 +58,25 @@ export class ModalJson extends React.Component<ModalProps> {
                     <ModalBody>
                         <Row>
                             <Col xs={12}>
-                                <Input type="textarea" wrap="soft" value={this.state.modal ? this.displayJson() : ''} id="json-data"
-                                       onChange={(e) => this.importJson(e)}/>
+                                <p>
+                                    Room in <a href="https://github.com/screepers/screeps-tools/blob/master/src/typings.d.ts"><code>EncodedBlueprint</code></a> format
+                                    can be exported/imported by copying/pasting the JSON below or through the share link.
+                                </p>
                             </Col>
                         </Row>
                         <Row>
-                            <Col xs={4}>
-                                <button className="btn btn-primary btn-sm" type="button" id="share-link"
-                                        onClick={() => this.props.planner.copyShareLink(this.state.roomFeatures)}>
-                                    Copy share Link to clipboard
-                                </button>
+                            <Col xs={12}>
+                                <Input type="textarea" wrap="soft" value={this.state.modal ? this.displayJson() : ''}
+                                       id="json-data"
+                                       onChange={(e) => this.importBlueprint(e)}/>
                             </Col>
-                            <Col xs={8}>
+                        </Row>
+                        <Row>
+                            <Col xs={12}>
                                 <Label className="room-features">
                                     <Input type="checkbox" name="room-features" checked={this.state.roomFeatures}
                                            onChange={(e) => this.toggleRoomFeatures(e)}/>
-                                    Include room features (terrain, controller, ...)
+                                    Include terrain, controller, sources and mineral
                                 </Label>
                                 <Label className="format-json">
                                     <Input type="checkbox" name="format-json" checked={this.state.format}
@@ -82,6 +86,12 @@ export class ModalJson extends React.Component<ModalProps> {
                             </Col>
                         </Row>
                     </ModalBody>
+                    <ModalFooter>
+                        <button className="btn btn-primary" type="button" id="share-link"
+                                onClick={() => this.props.planner.copyShareLink(this.state.roomFeatures)}>
+                            Copy share Link to clipboard
+                        </button>
+                    </ModalFooter>
                 </Modal>
             </div>
         );

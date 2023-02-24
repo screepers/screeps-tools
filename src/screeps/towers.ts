@@ -1,16 +1,5 @@
 import {TOWER_FALLOFF, TOWER_FALLOFF_RANGE, TOWER_OPTIMAL_RANGE, TOWER_POWER_ATTACK} from './game-constants';
 
-/**
- * Throws an exception if condition is false.
- * @param condition The condition that is supposed to evaluate to a true value.
- * @returns The function's argument.
- */
-export function assert<T>(condition: T): asserts condition {
-    if (!condition) {
-        throw new Error('Assertion failed');
-    }
-}
-
 const towerFalloffPerTile = TOWER_FALLOFF / (TOWER_FALLOFF_RANGE - TOWER_OPTIMAL_RANGE);
 
 export function towerEffectiveness(dist: number) {

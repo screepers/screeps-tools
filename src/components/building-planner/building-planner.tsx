@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as LZString from 'lz-string';
 import {
     OBSTACLE_COST,
-    RESOURCES, ROOM_SIZE,
+    RESOURCES, ROOM_SIZE, SCREEPS_WORLDS,
     STRUCTURES,
     TERRAIN_CODES,
     TERRAIN_NAMES, UNREACHABLE_COST
@@ -14,16 +14,17 @@ import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Col, Container, Navbar, Row, Toast, ToastBody} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
-import {towerDPS} from '../../screeps/utils';
+import {towerDPS} from '../../screeps/towers';
 import {apiURL} from '../../screeps/api';
-import {SCREEPS_WORLDS} from './constants';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faHighlighter, faLink, faTowerObservation} from '@fortawesome/free-solid-svg-icons';
-import {floodFill} from '../../algorithms/floodFill';
-import {XYSet} from '../../coordinates/XY';
-import {KeyedSet} from '../../data-structures/KeyedSet';
-import {cDistanceTransform, obstacles2baseDistanceTransformMatrix} from '../../algorithms/distanceTransform';
-import {CONTROLLER_STRUCTURES} from '../../screeps/game-constants';
+import {floodFill} from '../../algorithms/flood-fill';
+import {XYSet} from '../../coordinates/xy';
+import {KeyedSet} from '../../data-structures/keyed-set';
+import {cDistanceTransform, obstacles2baseDistanceTransformMatrix} from '../../algorithms/distance-transform';
+import {CONTROLLER_STRUCTURES, TERRAIN_MASK_SWAMP, TERRAIN_MASK_WALL} from '../../screeps/game-constants';
+import {forIn} from '../../js-utils';
+import {decodeTerrain} from '../../coordinates/terrain';
 
 const NO_ANALYSIS = 0;
 const TOWER_DAMAGE_ANALYSIS = 1;
@@ -55,7 +56,7 @@ export class BuildingPlanner extends React.Component {
         rcl: number;
         structures: { [structure: string]: XY[] };
         sources: XY[];
-        minerals: { mineralType: string, x: number; y: number }[];
+        minerals: { x: number; y: number, mineralType: MineralConstant }[];
         settings: BuildingPlannerSettings;
         scale: number;
         showExtraTools: boolean;
@@ -86,7 +87,7 @@ export class BuildingPlanner extends React.Component {
         if (searchParams.get('share')) {
             const json = LZString.decompressFromEncodedURIComponent(searchParams.get('share')!);
             if (json) {
-                this.importJson(JSON.parse(json));
+                this.importBlueprint(JSON.parse(json));
             }
             // Removing the share part to not wipe the state after refresh
             window.history.pushState({}, document.title, `${location.origin}${location.pathname}${location.hash}`);
@@ -99,7 +100,7 @@ export class BuildingPlanner extends React.Component {
         for (let y = 0; y < 50; y++) {
             terrain[y] = {};
             for (let x = 0; x < 50; x++) {
-                terrain[y][x] = 0;
+                terrain[y]![x] = 0;
             }
         }
 
@@ -175,12 +176,12 @@ export class BuildingPlanner extends React.Component {
         fetch(url).then((response) => {
             response.json().then((data: any) => {
                 if (data.error) {
-                    this.showToast(`Error: ${data.error}.`)
+                    this.showToast(`Logic error returned from API at ${url}: ${data.error}.`)
                 } else {
                     handler(data)
                 }
             }).catch((e) => {
-                this.showToast(`Invalid JSON fetched from API at ${url}.`)
+                this.showToast(`Unrecognized JSON fetched from API at ${url}.`)
                 console.error(e);
             });
         }).catch((e) => {
@@ -211,120 +212,128 @@ export class BuildingPlanner extends React.Component {
         }
     }
 
-    exportJson(includeRoomFeatures = false) {
+    exportBlueprint(includeRoomFeatures = false): EncodedBlueprint {
         let buildings: { [structure: string]: XY[] } = {};
-        let roomFeatures: { [name: string]: XY[] } = {};
 
-        let json = {
-            name: this.state.room,
-            shard: this.state.shard,
+        let blueprint: EncodedBlueprint = {
             rcl: this.state.rcl,
             buildings: buildings
         };
-        const keepStructures = Object.keys(CONTROLLER_STRUCTURES).filter((name) => name !== "controller");
 
-        Object.keys(this.state.structures).forEach((structure) => {
-            if (this.state.structures[structure].length > 0) {
-                if (keepStructures.indexOf(structure) > -1) {
-                    if (!buildings[structure]) {
-                        buildings[structure] = this.state.structures[structure];
+        if (this.state.room && this.state.shard) {
+            blueprint.name = this.state.room;
+            blueprint.shard = this.state.shard;
+        }
+
+        const keepStructures = Object.keys(CONTROLLER_STRUCTURES);
+
+        forIn(this.state.structures, (structureName, xys) => {
+            if (xys.length > 0) {
+                if (keepStructures.indexOf(structureName) > -1) {
+                    if (!buildings[structureName]) {
+                        buildings[structureName] = xys;
                     }
-                } else {
-                    if (!roomFeatures[structure]) {
-                        roomFeatures[structure] = this.state.structures[structure];
-                    }
+                } else if (includeRoomFeatures && structureName === 'controller') {
+                    blueprint.controller = xys[0];
                 }
             }
         });
 
-        for (let y = 0; y < 50; y++) {
-            for (let x = 0; x < 50; x++) {
-                const terrain = this.state.terrain[y][x];
-                if (terrain & 3) {
-                    const terrainName = terrain & 1 ? 'wall' : 'swamp';
-                    if (!roomFeatures[terrainName]) {
-                        roomFeatures[terrainName] = [];
+        if (includeRoomFeatures) {
+            for (let y = 0; y < 50; y++) {
+                for (let x = 0; x < 50; x++) {
+                    const terrain = this.state.terrain[y]![x]!;
+                    if (terrain & (TERRAIN_MASK_WALL | TERRAIN_MASK_SWAMP)) {
+                        const terrainName = terrain & TERRAIN_MASK_WALL ? 'wall' : 'swamp';
+                        if (!blueprint.terrain) {
+                            blueprint.terrain = {};
+                        }
+                        if (!blueprint.terrain[terrainName]) {
+                            blueprint.terrain[terrainName] = [];
+                        }
+                        blueprint.terrain[terrainName]!.push({x, y});
                     }
-                    roomFeatures[terrainName].push({x, y});
                 }
             }
-        }
 
-        if (this.state.sources && this.state.sources.length > 0) {
-            roomFeatures.source = this.state.sources;
-        }
-
-        for (const {mineralType, x, y} of this.state.minerals) {
-            if (roomFeatures[mineralType] === undefined) {
-                roomFeatures[mineralType] = [];
+            if (this.state.sources && this.state.sources.length > 0) {
+                blueprint.sources = this.state.sources;
             }
-            roomFeatures[mineralType].push({x, y});
-        }
 
-        const result = includeRoomFeatures ? {...json, roomFeatures} : json;
+            const mineralData = this.state.minerals[0];
+            if (mineralData) {
+                blueprint.mineral = mineralData;
+            }
+        }
 
         console.log('Exported JSON:')
-        console.log(json);
+        console.log(blueprint);
 
-        return result;
+        return blueprint;
     }
 
-    importJson(json: any) {
+    importBlueprint(json: any) {
         console.log('Imported JSON:')
         console.log(json);
 
-        if (json.roomFeatures || !json.shard || !json.name) {
+        const data = json as EncodedBlueprint & { world?: string };
+
+        if (data.terrain || data.controller || data.sources || data.mineral || !data.shard || !data.name) {
+            console.log('Importing room from JSON alone.');
+
             const terrain: CellMap = {};
 
             for (let y = 0; y < 50; y++) {
                 terrain[y] = {};
                 for (let x = 0; x < 50; x++) {
-                    terrain[y][x] = 0;
+                    terrain[y]![x] = 0;
                 }
             }
 
             Object.entries(TERRAIN_CODES).forEach(([name, code]) => {
-                if (json.roomFeatures[name] !== undefined) {
-                    json.roomFeatures[name].forEach(({x, y}: { x: number; y: number }) => {
-                        terrain[y][x] = code;
-                    });
-                }
-            });
-
-            let sources: { x: number, y: number }[] = [];
-            if (json.roomFeatures.source !== undefined) {
-                sources = json.roomFeatures.source;
-            }
-
-            const minerals: { mineralType: string, x: number, y: number }[] = [];
-            Object.keys(RESOURCES).forEach((name) => {
-                if (name !== 'source') {
-                    if (json.roomFeatures[name] !== undefined) {
-                        json.roomFeatures[name].forEach(({x, y}: { x: number, y: number }) => {
-                            minerals.push({
-                                mineralType: name,
-                                x,
-                                y
-                            });
+                if (name === 'wall' || name === 'swamp') {
+                    if (data.terrain && data.terrain[name]) {
+                        data.terrain[name]!.forEach(({x, y}: { x: number; y: number }) => {
+                            terrain[y]![x] = code;
                         });
                     }
                 }
             });
 
+            let sources: { x: number, y: number }[] = [];
+            if (data.sources) {
+                for (const {x, y} of data.sources) {
+                    sources.push({x, y});
+                }
+            }
+
+            const minerals: { mineralType: string, x: number, y: number }[] = [];
+            if (data.mineral) {
+                minerals.push({
+                    x: data.mineral.x,
+                    y: data.mineral.y,
+                    mineralType: data.mineral.mineralType
+                });
+            }
+
             let structures: {
                 [structure: string]: XY[]
             } = {};
 
-            Object.keys(json.buildings).forEach((structure) => {
-                structures[structure] = json.buildings[structure];
+            forIn(data.buildings, (structureName, xys) => {
+                const structureData = [];
+                for (const {x, y} of xys) {
+                    structureData.push({x, y});
+                }
+                structures[structureName] = structureData;
             });
 
             this.setStateAndRefresh({
-                room: json.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
-                world: json.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
-                shard: json.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
-                rcl: typeof (json.rcl) === 'number'
-                    ? Math.max(1, Math.min(8, json.rcl))
+                room: data.name ?? BUILDING_PLANNER_DEFAULTS.ROOM,
+                world: data.world ?? BUILDING_PLANNER_DEFAULTS.WORLD,
+                shard: data.shard ?? BUILDING_PLANNER_DEFAULTS.SHARD,
+                rcl: typeof (data.rcl) === 'number'
+                    ? Math.max(1, Math.min(8, data.rcl))
                     : BUILDING_PLANNER_DEFAULTS.RCL,
                 terrain,
                 sources,
@@ -332,39 +341,39 @@ export class BuildingPlanner extends React.Component {
                 structures,
                 selectedCells: {},
             });
-        } else if (json.shard && json.name) {
+        } else if (data.shard && data.name) {
+            console.log('Importing terrain from API and structures from JSON.');
+
             let world = 'mmo';
-            if (json.world && json.world === 'season') {
+            if (data.world && data.world === 'season') {
                 world = 'season';
             }
-            this.fetchFromAPI(`/api/game/room-terrain?shard=${json.shard}&room=${json.name}&encoded=1`, world, (terrainData) => {
+
+            this.fetchFromAPI(`/api/game/room-terrain?shard=${data.shard}&room=${data.name}&encoded=1`, world, (terrainData: any) => {
                 console.log('Imported terrain JSON:')
                 console.log(terrainData);
 
-                let encodedTerrain = terrainData.terrain[0].terrain;
-                let terrain: CellMap = {};
-                for (let y = 0; y < 50; y++) {
-                    terrain[y] = {};
-                    for (let x = 0; x < 50; x++) {
-                        terrain[y][x] = parseInt(encodedTerrain.charAt(y * 50 + x));
-                    }
-                }
+                const encodedTerrain = terrainData.terrain[0].terrain;
+                const terrain = decodeTerrain(encodedTerrain);
 
-                this.fetchFromAPI(`/api/game/room-objects?shard=${json.shard}&room=${json.name}`, world, (data) => {
+                this.fetchFromAPI(`/api/game/room-objects?shard=${data.shard}&room=${data.name}`, world, (roomObjectsData: any) => {
                     console.log('Imported structures JSON:')
-                    console.log(data);
+                    console.log(roomObjectsData);
 
                     const sources: XY[] = [];
                     const minerals: { mineralType: string, x: number; y: number }[] = [];
                     let structures: {[structure: string]: XY[]} = {};
 
                     let keepStructures = ['controller'];
-                    if (!json.buildings) {
+                    if (!data.buildings) {
                         keepStructures.push(...Object.keys(CONTROLLER_STRUCTURES));
                     } else {
-                        structures = json.buildings;
+                        structures = {};
+                        forIn(data.buildings, (structureName: StructureConstant, xys: XY[]) => {
+                            structures[structureName] = xys.map(({x, y}) => ({x, y}));
+                        });
                     }
-                    for (let o of data.objects) {
+                    for (let o of roomObjectsData.objects) {
                         if (o.type == 'source') {
                             sources.push({
                                 x: o.x,
@@ -372,16 +381,16 @@ export class BuildingPlanner extends React.Component {
                             });
                         } else if (o.type == 'mineral') {
                             minerals.push({
-                                mineralType: o.mineralType,
                                 x: o.x,
-                                y: o.y
+                                y: o.y,
+                                mineralType: o.mineralType
                             });
                         } else {
                             if (keepStructures.indexOf(o.type) > -1) {
                                 if (!structures[o.type]) {
                                     structures[o.type] = [];
                                 }
-                                structures[o.type].push({
+                                structures[o.type]!.push({
                                     x: o.x,
                                     y: o.y
                                 });
@@ -390,14 +399,14 @@ export class BuildingPlanner extends React.Component {
                     }
 
                     this.setStateAndRefresh({
-                        world: json.world,
-                        shard: json.shard,
-                        room: json.name,
+                        world: data.world,
+                        shard: data.shard,
+                        room: data.name,
                         terrain,
                         structures,
                         sources,
                         minerals,
-                        selectedCells: {},
+                        selectedCells: {}
                     });
                 });
             });
@@ -412,8 +421,8 @@ export class BuildingPlanner extends React.Component {
                     ...this.state.selectedCells[y]
                 }
             };
-            if (!selectedCells[y][x]) {
-                selectedCells[y][x] = 1;
+            if (!selectedCells[y]![x]) {
+                selectedCells[y]![x] = 1;
                 this.setStateAndRefresh({selectedCells});
             }
             return;
@@ -421,7 +430,7 @@ export class BuildingPlanner extends React.Component {
 
         const terrain = TERRAIN_CODES[this.state.brush];
         if (terrain !== undefined) {
-            const prevTerrain = this.state.terrain[y][x];
+            const prevTerrain = this.state.terrain[y]![x];
             if (prevTerrain === terrain) {
                 return;
             }
@@ -457,7 +466,9 @@ export class BuildingPlanner extends React.Component {
             return;
         }
 
-        let structures = this.state.structures;
+        let structures = {
+            ...this.state.structures
+        };
         let added = false;
 
         let allowed = false;
@@ -465,43 +476,43 @@ export class BuildingPlanner extends React.Component {
             allowed = true;
         }
 
-        if (allowed && CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
+        if (allowed && CONTROLLER_STRUCTURES[this.state.brush]![this.state.rcl]!) {
             if (!structures[this.state.brush]) {
                 structures[this.state.brush] = [];
             }
 
-            if (structures[this.state.brush].length < CONTROLLER_STRUCTURES[this.state.brush][this.state.rcl]) {
+            if (structures[this.state.brush]!.length < CONTROLLER_STRUCTURES[this.state.brush]![this.state.rcl]!) {
                 let foundAtPos = false;
 
                 // remove existing structures at this position except ramparts
                 if (this.state.brush != 'rampart') {
-                    for (let type in structures) {
-                        if (type == 'rampart') {
+                    for (let structureName in structures) {
+                        if (structureName == 'rampart') {
                             continue;
                         }
-                        if ((this.state.brush == 'container' && type == 'road') ||
-                            (this.state.brush == 'road' && type == 'container')) {
+                        if ((this.state.brush == 'container' && structureName == 'road') ||
+                            (this.state.brush == 'road' && structureName == 'container')) {
                             continue;
                         }
 
-                        foundAtPos = structures[type].filter(pos => {
+                        foundAtPos = structures[structureName]!.filter(pos => {
                             return pos.x === x && pos.y === y;
                         }).length > 0;
 
                         if (foundAtPos) {
-                            this.removeStructure(x, y, type);
+                            this.removeStructure(x, y, structureName);
                         }
                     }
                 }
 
-                if (structures[this.state.brush].length > 0) {
-                    foundAtPos = structures[this.state.brush].filter(pos => {
+                if (structures[this.state.brush]!.length > 0) {
+                    foundAtPos = structures[this.state.brush]!.filter(pos => {
                         return pos.x === x && pos.y === y;
                     }).length > 0;
                 }
 
                 if (!foundAtPos) {
-                    structures[this.state.brush].push({
+                    structures[this.state.brush]!.push({
                         x: x,
                         y: y
                     });
@@ -524,8 +535,8 @@ export class BuildingPlanner extends React.Component {
                     ...this.state.selectedCells[y]
                 }
             };
-            if (selectedCells[y][x]) {
-                delete selectedCells[y][x];
+            if (selectedCells[y]![x]) {
+                delete selectedCells[y]![x];
                 this.setStateAndRefresh({selectedCells});
             }
         } else {
@@ -533,9 +544,9 @@ export class BuildingPlanner extends React.Component {
                 ...this.state.structures
             };
 
-            for (let structure in this.state.structures) {
-                structures[structure] = structures[structure].filter(({x: xx, y: yy}) => x !== xx || y !== yy);
-            }
+            forIn(this.state.structures, (structureName, xys) => {
+                structures[structureName] = xys.filter(({x: xx, y: yy}) => x !== xx || y !== yy);
+            });
 
             const sources = this.state.sources.filter(({x: xx, y: yy}) => x !== xx || y !== yy);
 
@@ -549,7 +560,7 @@ export class BuildingPlanner extends React.Component {
         let structures = this.state.structures;
 
         if (structure && structures[structure]) {
-            structures[structure] = structures[structure].filter(pos => {
+            structures[structure] = structures[structure]!.filter(pos => {
                 return !(pos.x === x && pos.y === y);
             });
 
@@ -616,10 +627,10 @@ export class BuildingPlanner extends React.Component {
 
     getStructure(x: number, y: number): string | null {
         let structure = null;
-        Object.keys(this.state.structures).forEach((structureName) => {
+        forIn(this.state.structures, (structureName, xys) => {
             if (structureName != 'road' && structureName != 'rampart') {
-                this.state.structures[structureName].forEach((pos) => {
-                    if (pos.x === x && pos.y === y) {
+                xys.forEach((xy) => {
+                    if (xy.x === x && xy.y === y) {
                         structure = structureName;
                     }
                 });
@@ -666,7 +677,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     isSelected(x: number, y: number): boolean {
-        return this.state.selectedCells[y] !== undefined && !!this.state.selectedCells[y][x];
+        return this.state.selectedCells[y] !== undefined && !!this.state.selectedCells[y]![x];
     }
 
     getSelectedBrush() {
@@ -712,18 +723,30 @@ export class BuildingPlanner extends React.Component {
                 value: key,
                 label: this.getResourceBrushLabel(key)
             };
+            if (this.getResourceDisabled(key)) {
+                props.isDisabled = true;
+            }
             options.push(props);
         });
         return options;
     }
 
-    getStructureDisabled(key: string) {
-        const total = CONTROLLER_STRUCTURES[key][this.state.rcl];
+    getStructureDisabled(structureName: string) {
+        const structureTotals = CONTROLLER_STRUCTURES[structureName];
+        const total = structureTotals === undefined ? 1 : structureTotals[this.state.rcl]!;
         if (total === 0) {
             return true;
         }
-        const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
+        const placed = this.state.structures[structureName] ? this.state.structures[structureName]!.length : 0;
         return placed >= total;
+    }
+
+    getResourceDisabled(resourceName: string) {
+        if (resourceName === 'source') {
+            return false;
+        } else {
+            return this.state.minerals.length !== 0;
+        }
     }
 
     getTerrainBrushLabel(key: string) {
@@ -741,28 +764,31 @@ export class BuildingPlanner extends React.Component {
 
     getResourceBrushLabel(key: string) {
         const resource = RESOURCES[key];
+        let total = undefined;
         let placed;
         if (resource === "source") {
             placed = this.state.sources.length;
         } else {
+            total = 1;
             placed = this.state.minerals.filter(({mineralType}) => mineralType === key).length;
         }
         return (
             <div>
                 <img src={`assets/resources/${key}.png`} alt={resource}/>{' '}
                 {resource}
-                <span className="right">{placed}</span>
+                <span className="right">{placed}{total === undefined ? '' : `/${total}`}</span>
             </div>
         );
     }
 
-    getStructureBrushLabel(key: string) {
-        const structure = STRUCTURES[key];
-        const placed = this.state.structures[key] ? this.state.structures[key].length : 0;
-        const total = CONTROLLER_STRUCTURES[key][this.state.rcl];
+    getStructureBrushLabel(structureName: string) {
+        const structure = STRUCTURES[structureName];
+        const placed = this.state.structures[structureName] ? this.state.structures[structureName]!.length : 0;
+        const structureTotals = CONTROLLER_STRUCTURES[structureName];
+        const total = structureTotals === undefined ? 1 : [this.state.rcl];
         return (
             <div>
-                <img src={`assets/structures/${key}.png`} alt={structure}/>{' '}
+                <img src={`assets/structures/${structureName}.png`} alt={structure}/>{' '}
                 {structure}
                 <span className="right">{placed}/{total}</span>
             </div>
@@ -788,7 +814,7 @@ export class BuildingPlanner extends React.Component {
     setRCL(rcl: number) {
         this.setStateAndRefresh({rcl: rcl});
 
-        if (CONTROLLER_STRUCTURES[this.state.brush][rcl] === 0) {
+        if (CONTROLLER_STRUCTURES[this.state.brush]![rcl] === 0) {
             this.setStateAndRefresh({brush: null});
         }
     }
@@ -843,7 +869,7 @@ export class BuildingPlanner extends React.Component {
             towerDamage[y] = {};
             for (let x = 0; x < 50; x++) {
                 // Show nothing on walls that do not have tunnels
-                if (state.terrain[y][x] & TERRAIN_MASK_WALL) {
+                if (state.terrain[y]![x] === TERRAIN_MASK_WALL) {
                     if (state.structures['road']) {
                         if (!state.structures['road'].some(({x: xx, y: yy}) => xx === x && yy === y)) {
                             continue;
@@ -853,10 +879,10 @@ export class BuildingPlanner extends React.Component {
                     }
                 }
 
-                towerDamage[y][x] = 0;
+                towerDamage[y]![x] = 0;
 
                 for (const {x: tx, y: ty} of towerPos) {
-                    towerDamage[y][x] += towerDPS(Math.max(Math.abs(tx - x), Math.abs(ty - y)));
+                    towerDamage[y]![x] += towerDPS(Math.max(Math.abs(tx - x), Math.abs(ty - y)));
                 }
             }
         }
@@ -868,7 +894,7 @@ export class BuildingPlanner extends React.Component {
         const result = XYSet();
         for (let y = 0; y < ROOM_SIZE; y++) {
             for (let x = 0; x < ROOM_SIZE; x++) {
-                if (state.terrain[y] && state.terrain[y][x] === TERRAIN_MASK_WALL) {
+                if (state.terrain[y] && state.terrain[y]![x] === TERRAIN_MASK_WALL) {
                     result.add({x, y});
                 }
             }
@@ -887,7 +913,7 @@ export class BuildingPlanner extends React.Component {
         const selectedCells: XY[] = [];
         for (let y = 0; y < ROOM_SIZE; y++) {
             for (let x = 0; x < ROOM_SIZE; x++) {
-                if (state.selectedCells[y] && state.selectedCells[y][x]) {
+                if (state.selectedCells[y] && state.selectedCells[y]![x]) {
                     selectedCells.push({x, y});
                 }
             }
@@ -902,7 +928,7 @@ export class BuildingPlanner extends React.Component {
             for (let x = 0; x < ROOM_SIZE; x++) {
                 if (ff.get(x, y) !== OBSTACLE_COST && ff.get(x, y) !== UNREACHABLE_COST) {
                     result[y] = result[y] ?? {};
-                    result[y][x] = ff.get(x, y);
+                    result[y]![x] = ff.get(x, y);
                 }
             }
         }
@@ -916,7 +942,7 @@ export class BuildingPlanner extends React.Component {
         for (let y = 0; y < ROOM_SIZE; y++) {
             result[y] = {};
             for (let x = 0; x < ROOM_SIZE; x++) {
-                result[y][x] = dt.get(x, y);
+                result[y]![x] = dt.get(x, y);
             }
         }
         return result;
@@ -960,7 +986,7 @@ export class BuildingPlanner extends React.Component {
     }
 
     copyShareLink(includeRoomFeatures: boolean) {
-        const jsonString = JSON.stringify(this.exportJson(includeRoomFeatures));
+        const jsonString = JSON.stringify(this.exportBlueprint(includeRoomFeatures));
         const compressedData = LZString.compressToEncodedURIComponent(jsonString);
         const link = `${location.origin}${location.pathname}?share=${compressedData}${location.hash}`
         navigator.clipboard.writeText(link).then(() => {
@@ -987,10 +1013,10 @@ export class BuildingPlanner extends React.Component {
     }
 
     getCellText(x: number, y: number): string {
-        if (this.state.analysisMode === NO_ANALYSIS || this.state.analysisResult[y] === undefined || this.state.analysisResult[y][x] === undefined) {
+        if (this.state.analysisMode === NO_ANALYSIS || this.state.analysisResult[y] === undefined || this.state.analysisResult[y]![x] === undefined) {
             return '';
         } else {
-            return this.state.analysisResult[y][x].toString();
+            return this.state.analysisResult[y]![x]!.toString();
         }
     }
 
@@ -1056,6 +1082,7 @@ export class BuildingPlanner extends React.Component {
                                 />
                                 <ModalSettings
                                     planner={this}
+                                    settings={this.state.settings}
                                     modal={false}
                                 />
                                 <div>
@@ -1144,7 +1171,7 @@ export class BuildingPlanner extends React.Component {
                                     x={x}
                                     y={y}
                                     planner={this}
-                                    terrain={this.state.terrain[y][x]}
+                                    terrain={this.state.terrain[y]![x]!}
                                     structure={this.getStructure(x, y)}
                                     road={this.getRoadProps(x, y)}
                                     rampart={this.isRampart(x, y)}
@@ -1159,7 +1186,7 @@ export class BuildingPlanner extends React.Component {
                         })}
                     </div>
                 </div>
-                {this.state.toastMessage && <div className="fixed-top p-3" style={{zIndex: 2000}}>
+                {this.state.toastMessage && <div className="fixed-top p-3" style={{zIndex: 2000, pointerEvents: 'none'}}>
                     <Toast className="p-2 bg-light">
                         <ToastBody>
                             {this.state.toastMessage}

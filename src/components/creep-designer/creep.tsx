@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export const Creep = ({body}: {body: {[part: string]: number}}) => (
+export const Creep = ({body}: {body: Record<BodyPartConstant, number>}) => (
     <svg width="200" height="200">
         {/* TOUGH */}
         <circle cx={100} cy={100} r={65} fill="#525252" opacity={body.tough > 0 ? body.tough / 50 : 0 } />

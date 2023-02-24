@@ -1,9 +1,9 @@
 import * as React from 'react';
-import {SCREEPS_WORLDS} from './constants';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
 import Select, {OptionTypeBase} from 'react-select';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons';
+import {SCREEPS_WORLDS} from '../../screeps/constants';
 
 export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProps> {
     state: Readonly<{
@@ -71,7 +71,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
 
         if (field === 'world') {
             // Changing world select option will select the first shard drop-down option
-            const firstOption = this.props.worlds[value].shards[0];
+            const firstOption = this.props.worlds[value]!.shards[0];
             this.setState({
                 shard: {
                     value: firstOption,
@@ -154,7 +154,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
             importedData.buildings = {};
         }
 
-        this.props.planner.importJson(importedData);
+        this.props.planner.importBlueprint(importedData);
     }
 
     getSelectedWorld() {

@@ -1,6 +1,5 @@
-import type { XY } from '../coordinates/XY';
 import { ROOM_SIZE } from '../screeps/constants';
-import {assert} from '../screeps/utils';
+import {assert} from '../js-utils';
 
 export interface ReadableMatrix {
   get: (x: number, y: number) => number;

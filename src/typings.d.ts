@@ -1,6 +1,37 @@
+/**
+ * The import/export format for blueprint-planner.
+ */
+interface EncodedBlueprint {
+    name?: string;
+    shard?: string;
+    rcl?: number;
+    buildings: EncodedGameObjects;
+    terrain?: {
+        wall?: XY[],
+        swamp?: XY[]
+    };
+    controller?: XY;
+    sources?: XY[];
+    mineral?: {
+        x: number,
+        y: number,
+        mineralType: MineralConstant
+    };
+    annotations?: Record<string, XY[]>;
+}
+
+type EncodedGameObjects = Partial<{
+    [key in StructureConstant]: XY[]
+}>;
+
 interface XY {
     x: number;
     y: number;
+}
+
+interface Rect {
+    topLeft: XY;
+    bottomRight: XY;
 }
 
 interface CellMap {
@@ -10,28 +41,11 @@ interface CellMap {
 }
 
 interface BuildingPlannerProps extends React.Component {
-    state: {
-        room: string;
-        world: string;
-        shard: string;
-        terrain: CellMap;
-        x: number;
-        y: number;
-        worlds: { [worldName: string]: { shards: string[] } };
-        brush: string;
-        rcl: number;
-        structures: { [structure: string]: { x: number; y: number; }[] };
-        sources: { x: number; y: number; }[];
-        minerals: { mineralType: string, x: number; y: number }[];
-        settings: BuildingPlannerSettings;
-        scale: number;
-    };
-
     resetState(): void;
 
-    importJson(json: any): any;
+    importBlueprint(json: any): any;
 
-    exportJson(includeRoomFeatures: boolean): any;
+    exportBlueprint(includeRoomFeatures: boolean): EncodedBlueprint;
 
     copyShareLink(includeRoomFeatures: boolean): void;
 
@@ -49,13 +63,15 @@ interface ModalProps {
     modal: boolean;
 }
 
-interface ModalImportRoomFormProps {
-    planner: BuildingPlannerProps;
+interface ModalImportRoomFormProps extends ModalProps {
     room: string;
     world: string;
     shard: string;
     worlds: { [worldName: string]: { shards: string[] } };
-    modal: boolean;
+}
+
+interface ModalSettingsProps extends ModalProps {
+    settings: BuildingPlannerSettings;
 }
 
 interface FieldValidation {

@@ -3,7 +3,7 @@ import {Row, Col, Label, Input, Modal, ModalHeader, ModalBody} from 'reactstrap'
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCog} from '@fortawesome/free-solid-svg-icons';
 
-export class ModalSettings extends React.Component<ModalProps> {
+export class ModalSettings extends React.Component<ModalSettingsProps> {
     state: Readonly<{
         modal: boolean;
     }>;
@@ -26,7 +26,7 @@ export class ModalSettings extends React.Component<ModalProps> {
         this.props.planner.setState({[field]: value});
 
         this.props.planner.setSettings({
-            ...this.props.planner.state.settings,
+            ...this.props.settings,
             [field]: value
         });
     }
@@ -43,13 +43,13 @@ export class ModalSettings extends React.Component<ModalProps> {
                         <Row>
                             <Col xs={6}>
                                 <Label>
-                                    <Input type="checkbox" name="showStatsOverlay" checked={this.props.planner.state.settings.showStatsOverlay} onChange={(e) => this.handleValueChange(e)} />
+                                    <Input type="checkbox" name="showStatsOverlay" checked={this.props.settings.showStatsOverlay} onChange={(e) => this.handleValueChange(e)} />
                                     Display Stats Overlay
                                 </Label>
                             </Col>
                             <Col xs={6}>
                                 <Label>
-                                    <Input type="checkbox" name="allowBorderStructure" checked={this.props.planner.state.settings.allowBorderStructure} onChange={(e) => this.handleValueChange(e)} />
+                                    <Input type="checkbox" name="allowBorderStructure" checked={this.props.settings.allowBorderStructure} onChange={(e) => this.handleValueChange(e)} />
                                     Allow Border Structures
                                 </Label>
                             </Col>
@@ -59,7 +59,7 @@ export class ModalSettings extends React.Component<ModalProps> {
                                 <Label for="cellTextFontSize">
                                     Cell Text Font Size
                                 </Label>
-                                <Input type="number" name="cellTextFontSize" id="cellTextFontSize" value={this.props.planner.state.settings.cellTextFontSize} onChange={(e) => this.handleValueChange(e)} />
+                                <Input type="number" name="cellTextFontSize" id="cellTextFontSize" value={this.props.settings.cellTextFontSize} onChange={(e) => this.handleValueChange(e)} />
                             </Col>
                         </Row>
                     </ModalBody>

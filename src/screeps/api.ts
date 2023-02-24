@@ -1,5 +1,6 @@
 /**
- * Proxy server URL
+ * Proxy server URL.
+ * It should be replaced with another one if it goes down.
  */
 export const PROXY_SERVER_URL = 'https://screeps.xilexio.eu.org'
 

@@ -1,3 +1,12 @@
+// Screeps-related constants that are not part of the official Screeps in-game API.
+
+import {TERRAIN_MASK_SWAMP, TERRAIN_MASK_WALL} from './game-constants';
+
+export const SCREEPS_WORLDS: {[key: string]: string} = {
+    mmo: 'MMO',
+    season: 'Season',
+};
+
 export const RCL_ENERGY: {[level: number]: number} = {
     1: 300,
     2: 550,
@@ -10,17 +19,28 @@ export const RCL_ENERGY: {[level: number]: number} = {
 };
 
 export const BODYPART_NAMES: {[part: string]: string} = {
-    tough: "Tough",
-    move: "Move",
-    work: "Work",
-    carry: "Carry",
-    attack: "Attack",
-    ranged_attack: "Ranged Attack",
-    heal: "Heal",
-    claim: "Claim"
+    tough: 'Tough',
+    move: 'Move',
+    work: 'Work',
+    carry: 'Carry',
+    attack: 'Attack',
+    ranged_attack: 'Ranged Attack',
+    heal: 'Heal',
+    claim: 'Claim'
 };
 
-export const BOOSTS: {[part: string]: {[resource: string]: {[method: string]: number}}} = {
+export const BODYPARTS: Record<BodyPartConstant, string> = {
+    tough: 'TOUGH',
+    move: 'MOVE',
+    work: 'WORK',
+    carry: 'CARRY',
+    attack: 'ATTACK',
+    ranged_attack: 'RANGED_ATTACK',
+    heal: 'HEAL',
+    claim: 'CLAIM'
+};
+
+export const BOOSTS: Partial<Record<BodyPartConstant, {[resource: string]: {[method: string]: number}}>> = {
     work: {
         UO: {
             harvest: 3
@@ -137,9 +157,9 @@ export const BOOSTS: {[part: string]: {[resource: string]: {[method: string]: nu
 };
 
 export const TERRAIN_NAMES: {[terrain: string]: string} = {
-    plain: "Plain",
-    wall: "Wall",
-    swamp: "Swamp"
+    plain: 'Plain',
+    wall: 'Wall',
+    swamp: 'Swamp'
 };
 
 export const TERRAIN_CODES: {[terrain: string]: number} = {
@@ -149,34 +169,34 @@ export const TERRAIN_CODES: {[terrain: string]: number} = {
 };
 
 export const RESOURCES: {[name: string]: string} = {
-    source: "Source",
-    H: "Mineral H",
-    O: "Mineral O",
-    U: "Mineral U",
-    K: "Mineral K",
-    L: "Mineral L",
-    Z: "Mineral Z",
-    X: "Mineral X"
+    source: 'Source',
+    H: 'Mineral H',
+    O: 'Mineral O',
+    U: 'Mineral U',
+    K: 'Mineral K',
+    L: 'Mineral L',
+    Z: 'Mineral Z',
+    X: 'Mineral X'
 }
 
 export const STRUCTURES: {[structure: string]: string} = {
-    spawn: "Spawn",
-    container: "Container",
-    extension: "Extension",
-    tower: "Tower",
-    storage: "Storage",
-    link: "Link",
-    terminal: "Terminal",
-    extractor: "Extractor",
-    lab: "Lab",
-    factory: "Factory",
-    observer: "Observer",
-    powerSpawn: "Power Spawn",
-    nuker: "Nuker",
-    rampart: "Rampart",
-    constructedWall: "Wall",
-    road: "Road",
-    controller: "Controller",
+    spawn: 'Spawn',
+    container: 'Container',
+    extension: 'Extension',
+    tower: 'Tower',
+    storage: 'Storage',
+    link: 'Link',
+    terminal: 'Terminal',
+    extractor: 'Extractor',
+    lab: 'Lab',
+    factory: 'Factory',
+    observer: 'Observer',
+    powerSpawn: 'Power Spawn',
+    nuker: 'Nuker',
+    rampart: 'Rampart',
+    constructedWall: 'Wall',
+    road: 'Road',
+    controller: 'Controller',
 };
 
 export const OBSTACLE_COST = 255;

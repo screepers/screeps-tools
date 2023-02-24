@@ -5,8 +5,6 @@
         "removeComments": true,
         "noEmitOnError": true,
         "noResolve": false,
-        "experimentalDecorators": true,
-        "strict": true,
         "noUnusedParameters": false,
         "noUnusedLocals": true,
         "sourceMap": true,
@@ -14,7 +12,13 @@
         "outDir": "lib_ts",
         "allowUnusedLabels": true,
         "allowJs": true,
-        "jsx": "react"
+        "jsx": "react",
+        "strict": true,
+        "experimentalDecorators": true,
+        "noImplicitReturns": true,
+        "allowSyntheticDefaultImports": true,
+        "allowUnreachableCode": false,
+        "noUncheckedIndexedAccess": true
     },
     "compileOnSave": false,
     "include": [

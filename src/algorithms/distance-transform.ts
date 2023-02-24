@@ -1,6 +1,5 @@
-import {XY} from '../coordinates/XY';
-import {KeyedSet} from '../data-structures/KeyedSet';
-import {Matrix, RWMatrix} from '../data-structures/Matrix';
+import {KeyedSet} from '../data-structures/keyed-set';
+import {Matrix, RWMatrix} from '../data-structures/matrix';
 import {ROOM_SIZE} from '../screeps/constants';
 
 export function obstacles2baseDistanceTransformMatrix(obstacles: KeyedSet<XY>, minExitDist?: number,

@@ -1,29 +1,31 @@
+// Constants that are present in the official Screeps in-game API.
+
 export const TOWER_FALLOFF = 0.75;
 export const TOWER_FALLOFF_RANGE = 20;
 export const TOWER_OPTIMAL_RANGE = 5;
 export const TOWER_POWER_ATTACK = 600;
 
-export const STRUCTURE_EXTENSION = "extension";
-export const STRUCTURE_RAMPART = "rampart";
-export const STRUCTURE_ROAD = "road";
-export const STRUCTURE_SPAWN = "spawn";
-export const STRUCTURE_LINK = "link";
-export const STRUCTURE_WALL = "constructedWall";
-export const STRUCTURE_KEEPER_LAIR = "keeperLair";
-export const STRUCTURE_CONTROLLER = "controller";
-export const STRUCTURE_STORAGE = "storage";
-export const STRUCTURE_TOWER = "tower";
-export const STRUCTURE_OBSERVER = "observer";
-export const STRUCTURE_POWER_BANK = "powerBank";
-export const STRUCTURE_POWER_SPAWN = "powerSpawn";
-export const STRUCTURE_EXTRACTOR = "extractor";
-export const STRUCTURE_LAB = "lab";
-export const STRUCTURE_TERMINAL = "terminal";
-export const STRUCTURE_CONTAINER = "container";
-export const STRUCTURE_NUKER = "nuker";
-export const STRUCTURE_FACTORY = "factory";
-export const STRUCTURE_INVADER_CORE = "invaderCore";
-export const STRUCTURE_PORTAL = "portal";
+export const STRUCTURE_EXTENSION = 'extension';
+export const STRUCTURE_RAMPART = 'rampart';
+export const STRUCTURE_ROAD = 'road';
+export const STRUCTURE_SPAWN = 'spawn';
+export const STRUCTURE_LINK = 'link';
+export const STRUCTURE_WALL = 'constructedWall';
+export const STRUCTURE_KEEPER_LAIR = 'keeperLair';
+export const STRUCTURE_CONTROLLER = 'controller';
+export const STRUCTURE_STORAGE = 'storage';
+export const STRUCTURE_TOWER = 'tower';
+export const STRUCTURE_OBSERVER = 'observer';
+export const STRUCTURE_POWER_BANK = 'powerBank';
+export const STRUCTURE_POWER_SPAWN = 'powerSpawn';
+export const STRUCTURE_EXTRACTOR = 'extractor';
+export const STRUCTURE_LAB = 'lab';
+export const STRUCTURE_TERMINAL = 'terminal';
+export const STRUCTURE_CONTAINER = 'container';
+export const STRUCTURE_NUKER = 'nuker';
+export const STRUCTURE_FACTORY = 'factory';
+export const STRUCTURE_INVADER_CORE = 'invaderCore';
+export const STRUCTURE_PORTAL = 'portal';
 
 export const TERRAIN_MASK_WALL = 1;
 export const TERRAIN_MASK_SWAMP = 2;
@@ -35,7 +37,7 @@ export const LAB_BOOST_ENERGY: number = 20;
 export const LAB_BOOST_MINERAL: number = 30;
 export const SPAWN_ENERGY_CAPACITY: number = 300;
 
-export const BODYPART_COST: {[part: string]: number} = {
+export const BODYPART_COST: Record<BodyPartConstant, number> = {
     move: 50,
     work: 100,
     attack: 80,
@@ -44,17 +46,6 @@ export const BODYPART_COST: {[part: string]: number} = {
     ranged_attack: 150,
     tough: 10,
     claim: 600
-};
-
-export const BODYPARTS: {[part: string]: string} = {
-    tough: "TOUGH",
-    move: "MOVE",
-    work: "WORK",
-    carry: "CARRY",
-    attack: "ATTACK",
-    ranged_attack: "RANGED_ATTACK",
-    heal: "HEAL",
-    claim: "CLAIM"
 };
 
 export const EXTENSION_ENERGY_CAPACITY: {[level: number]: number} = {
@@ -86,5 +77,4 @@ export const CONTROLLER_STRUCTURES: {[structure: string]: {[level: number]: numb
     container: { 0: 5, 1: 5, 2: 5, 3: 5, 4: 5, 5: 5, 6: 5, 7: 5, 8: 5 },
     nuker: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 1 },
     factory: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 1, 8: 1 },
-    controller: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
 };
