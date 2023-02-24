@@ -1012,14 +1012,6 @@ export class BuildingPlanner extends React.Component {
         });
     }
 
-    getCellText(x: number, y: number): string {
-        if (this.state.analysisMode === NO_ANALYSIS || this.state.analysisResult[y] === undefined || this.state.analysisResult[y]![x] === undefined) {
-            return '';
-        } else {
-            return this.state.analysisResult[y]![x]!.toString();
-        }
-    }
-
     onWheel(e: any) {
         if (e.shiftKey) {
             const decrease = (e.deltaY > 0);
@@ -1028,9 +1020,52 @@ export class BuildingPlanner extends React.Component {
         }
     }
 
+    getCellRawValue(x: number, y: number): number | undefined {
+        if (this.state.analysisMode === NO_ANALYSIS || this.state.analysisResult[y] === undefined || this.state.analysisResult[y]![x] === undefined) {
+            return undefined;
+        } else {
+            return this.state.analysisResult[y]![x]!;
+        }
+    }
+
+    getCellValue(x: number, y: number, minValue: number, maxValue: number): number | undefined {
+        const value = this.getCellRawValue(x, y);
+        if (value === undefined) {
+            return undefined;
+        } else {
+            return maxValue !== minValue ? (value - minValue) / (maxValue - minValue) : 0.5;
+        }
+    }
+
+    getCellText(x: number, y: number): string {
+        const value = this.getCellRawValue(x, y);
+        if (value === undefined) {
+            return '';
+        } else {
+            return value.toString();
+        }
+    }
+
     render() {
         const scaleStr = this.state.scale.toFixed(1);
         const marginLeft = Math.max(0, (window.innerWidth - 800 * this.state.scale) / 2).toFixed(1);
+
+        let minValue = Infinity;
+        let maxValue = 0;
+        for (let y = 0; y < ROOM_SIZE; ++y) {
+            for (let x = 0; x < ROOM_SIZE; ++x) {
+                const v = this.getCellRawValue(x, y);
+                if (v !== undefined) {
+                    if (v < minValue) {
+                        minValue = v;
+                    }
+                    if (v > maxValue) {
+                        maxValue = v;
+                    }
+                }
+            }
+        }
+
         return (
             <div className="building-planner">
                 <Navbar fluid className="controls" sticky="top">
@@ -1179,6 +1214,7 @@ export class BuildingPlanner extends React.Component {
                                     mineral={this.getMineral(x, y)}
                                     selected={this.isSelected(x, y)}
                                     key={'mc-' + x + '-' + y}
+                                    value={this.getCellValue(x, y, minValue, maxValue)}
                                     text={this.getCellText(x, y)}
                                     textSize={this.state.settings.cellTextFontSize}
                                 />

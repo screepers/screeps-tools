@@ -101,6 +101,7 @@ interface MapCellProps {
     source: boolean;
     mineral: string | null;
     selected: boolean;
+    value?: number;
     text: string;
     textSize: number;
 }

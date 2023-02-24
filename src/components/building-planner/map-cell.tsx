@@ -20,6 +20,7 @@ export class MapCell extends React.Component<MapCellProps> {
         source: boolean;
         mineral: string | null;
         selected: boolean;
+        value?: number;
         text: string;
         textSize: number;
     }>;
@@ -45,6 +46,7 @@ export class MapCell extends React.Component<MapCellProps> {
             source: this.props.source,
             mineral: this.props.mineral,
             selected: this.props.selected,
+            value: this.props.value,
             text: this.props.text,
             textSize: this.props.textSize,
         };
@@ -58,6 +60,7 @@ export class MapCell extends React.Component<MapCellProps> {
             source: newProps.source,
             mineral: newProps.mineral,
             selected: newProps.selected,
+            value: newProps.value,
             text: newProps.text,
             textSize: newProps.textSize,
         });
@@ -149,7 +152,15 @@ export class MapCell extends React.Component<MapCellProps> {
             </svg>);
         }
 
-        content.push(<div className="cell-overlay" style={{fontSize: this.state.textSize}}>{this.state.text}</div>);
+        const overlayStyle: Record<string, string | number> = {
+            fontSize: this.state.textSize
+        };
+        if (this.state.value !== undefined) {
+            const hue = 240 * this.state.value;
+            overlayStyle.backgroundColor = `hsla(${Math.round(hue)}, 100%, 60%, 0.07)`;
+        }
+
+        content.push(<div className="cell-overlay" style={overlayStyle}>{this.state.text ?? ''}</div>);
 
         return (content.length ? content : ' ');
     }
