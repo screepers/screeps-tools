@@ -1,3 +1,6 @@
+import {ROOM_SIZE} from '../screeps/constants';
+import {TERRAIN_MASK_SWAMP, TERRAIN_MASK_WALL} from '../screeps/game-constants';
+
 export function decodeTerrain(encodedTerrain: string): CellMap {
     let terrain: CellMap = {};
     for (let y = 0; y < 50; y++) {
@@ -9,13 +12,14 @@ export function decodeTerrain(encodedTerrain: string): CellMap {
     return terrain;
 }
 
-export function encodeTerrain(terrain: CellMap): string {
-    let encodedTerrain = '';
-    for (let y = 0; y < 50; y++) {
-        for (let x = 0; x < 50; x++) {
-            const cellTerrainValue = terrain[y] !== undefined && terrain[y]![x] !== undefined ? terrain[y]![x]! : 0;
-            encodedTerrain = encodedTerrain + cellTerrainValue.toString();
-        }
+export function reencodeTerrain(terrain: EncodedBlueprint['terrain']): string {
+    const result = new Array(ROOM_SIZE * ROOM_SIZE);
+    result.fill(0);
+    for (const {x, y} of terrain?.wall ?? []) {
+        result[y * ROOM_SIZE + x] = TERRAIN_MASK_WALL.toString();
     }
-    return encodedTerrain;
+    for (const {x, y} of terrain?.swamp ?? []) {
+        result[y * ROOM_SIZE + x] = TERRAIN_MASK_SWAMP.toString();
+    }
+    return result.join('');
 }

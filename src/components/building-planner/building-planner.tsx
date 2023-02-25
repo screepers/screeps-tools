@@ -25,6 +25,7 @@ import {cDistanceTransform, obstacles2baseDistanceTransformMatrix} from '../../a
 import {CONTROLLER_STRUCTURES, TERRAIN_MASK_SWAMP, TERRAIN_MASK_WALL} from '../../screeps/game-constants';
 import {forIn} from '../../js-utils';
 import {decodeTerrain} from '../../coordinates/terrain';
+import {ModalSim} from './modal-sim';
 
 const NO_ANALYSIS = 0;
 const TOWER_DAMAGE_ANALYSIS = 1;
@@ -448,16 +449,16 @@ export class BuildingPlanner extends React.Component {
         }
 
         if (RESOURCES[this.state.brush] !== undefined) {
-            if (this.state.brush === "source") {
+            if (this.state.brush === 'source') {
                 if (!this.hasSource(x, y)) {
-                    this.removeResource(x, y);
+                    this.clearCell(x, y);
                     this.setStateAndRefresh({
                         sources: [...this.state.sources, {x, y}]
                     });
                 }
             } else {
-                if (this.getMineral(x, y) !== this.state.brush) {
-                    this.removeResource(x, y);
+                if (this.state.minerals.length === 0 && this.getMineral(x, y) !== this.state.brush) {
+                    this.clearCell(x, y);
                     this.setStateAndRefresh({
                         minerals: [...this.state.minerals, {mineralType: this.state.brush, x, y}]
                     });
@@ -469,62 +470,42 @@ export class BuildingPlanner extends React.Component {
         let structures = {
             ...this.state.structures
         };
-        let added = false;
 
-        let allowed = false;
-        if (this.state.settings.allowBorderStructure || (x > 0 && x < 49 && y > 0 && y < 49)) {
-            allowed = true;
-        }
-
-        if (allowed && CONTROLLER_STRUCTURES[this.state.brush]![this.state.rcl]!) {
+        const numberOfStructures = structures[this.state.brush]?.length ?? 0;
+        const structureLimits = (CONTROLLER_STRUCTURES[this.state.brush] ?? [])[this.state.rcl] ?? 1;
+        if ((this.state.settings.allowBorderStructure || (x > 0 && x < 49 && y > 0 && y < 49)) && numberOfStructures < structureLimits) {
             if (!structures[this.state.brush]) {
                 structures[this.state.brush] = [];
+            } else {
+                if (structures[this.state.brush]!.some((pos) => pos.x === x && pos.y === y)) {
+                    // It's already there - skipping.
+                    return;
+                }
             }
 
-            if (structures[this.state.brush]!.length < CONTROLLER_STRUCTURES[this.state.brush]![this.state.rcl]!) {
-                let foundAtPos = false;
+            // Remove existing structures at this position except rampart or road+container.
+            if (this.state.brush != 'rampart') {
+                for (let structureName in structures) {
+                    if (structureName === 'rampart') {
+                        continue;
+                    }
+                    if ((this.state.brush === 'container' && structureName === 'road') ||
+                        (this.state.brush === 'road' && structureName === 'container')) {
+                        continue;
+                    }
 
-                // remove existing structures at this position except ramparts
-                if (this.state.brush != 'rampart') {
-                    for (let structureName in structures) {
-                        if (structureName == 'rampart') {
-                            continue;
-                        }
-                        if ((this.state.brush == 'container' && structureName == 'road') ||
-                            (this.state.brush == 'road' && structureName == 'container')) {
-                            continue;
-                        }
-
-                        foundAtPos = structures[structureName]!.filter(pos => {
-                            return pos.x === x && pos.y === y;
-                        }).length > 0;
-
-                        if (foundAtPos) {
-                            this.removeStructure(x, y, structureName);
-                        }
+                    if (structures[structureName]!.some(pos => pos.x === x && pos.y === y)) {
+                        structures[structureName] = structures[structureName]!.filter((pos) => pos.x !== x || pos.y !== y);
                     }
                 }
-
-                if (structures[this.state.brush]!.length > 0) {
-                    foundAtPos = structures[this.state.brush]!.filter(pos => {
-                        return pos.x === x && pos.y === y;
-                    }).length > 0;
-                }
-
-                if (!foundAtPos) {
-                    structures[this.state.brush]!.push({
-                        x: x,
-                        y: y
-                    });
-                    added = true;
-                }
             }
-        }
 
-        if (added) {
+            structures[this.state.brush]!.push({
+                x: x,
+                y: y
+            });
             this.setStateAndRefresh({structures: structures});
         }
-        return added;
     }
 
     clearCell(x: number, y: number) {
@@ -553,33 +534,6 @@ export class BuildingPlanner extends React.Component {
             const minerals = this.state.minerals.filter(({x: xx, y: yy}) => x !== xx || y !== yy);
 
             this.setStateAndRefresh({structures, sources, minerals})
-        }
-    }
-
-    removeStructure(x: number, y: number, structure: string | null) {
-        let structures = this.state.structures;
-
-        if (structure && structures[structure]) {
-            structures[structure] = structures[structure]!.filter(pos => {
-                return !(pos.x === x && pos.y === y);
-            });
-
-            this.setStateAndRefresh({structures});
-        }
-    }
-
-    // Should be removed and usages replaced with further modified clearCell with filter parameters
-    removeResource(x: number, y: number) {
-        const withoutXYSource = this.state.sources.filter(({x: sourceX, y: sourceY}) =>
-            x !== sourceX || y !== sourceY);
-        if (withoutXYSource.length !== this.state.sources.length) {
-            this.setStateAndRefresh({sources: withoutXYSource});
-        }
-
-        const withoutXYMineral = this.state.minerals.filter(({x: mineralX, y: mineralY}) =>
-            x !== mineralX || y !== mineralY);
-        if (withoutXYMineral.length !== this.state.minerals.length) {
-            this.setStateAndRefresh({minerals: withoutXYMineral});
         }
     }
 
@@ -731,24 +685,6 @@ export class BuildingPlanner extends React.Component {
         return options;
     }
 
-    getStructureDisabled(structureName: string) {
-        const structureTotals = CONTROLLER_STRUCTURES[structureName];
-        const total = structureTotals === undefined ? 1 : structureTotals[this.state.rcl]!;
-        if (total === 0) {
-            return true;
-        }
-        const placed = this.state.structures[structureName] ? this.state.structures[structureName]!.length : 0;
-        return placed >= total;
-    }
-
-    getResourceDisabled(resourceName: string) {
-        if (resourceName === 'source') {
-            return false;
-        } else {
-            return this.state.minerals.length !== 0;
-        }
-    }
-
     getTerrainBrushLabel(key: string) {
         const terrainName = TERRAIN_NAMES[key];
         const placed = Object.values(this.state.terrain).reduce((acc, terrainRow) =>
@@ -762,11 +698,37 @@ export class BuildingPlanner extends React.Component {
         );
     }
 
+    getStructureBrushLabel(structureName: string) {
+        const structure = STRUCTURES[structureName];
+        const placed = (this.state.structures[structureName] ?? []).length;
+        let total = undefined;
+        if (structureName !== 'rampart' && structureName !== 'constructedWall' && structureName !== 'road') {
+            total = (CONTROLLER_STRUCTURES[structureName] ?? [])[this.state.rcl] ?? 1;
+        }
+        return (
+            <div>
+                <img src={`assets/structures/${structureName}.png`} alt={structure}/>{' '}
+                {structure}
+                <span className="right">{placed}{total !== undefined ? `/${total}` : ''}</span>
+            </div>
+        );
+    }
+
+    getStructureDisabled(structureName: string) {
+        const structureLimits = CONTROLLER_STRUCTURES[structureName];
+        const total = structureLimits === undefined ? 1 : structureLimits[this.state.rcl]!;
+        if (total === 0) {
+            return true;
+        }
+        const placed = this.state.structures[structureName] ? this.state.structures[structureName]!.length : 0;
+        return placed >= total;
+    }
+
     getResourceBrushLabel(key: string) {
         const resource = RESOURCES[key];
         let total = undefined;
         let placed;
-        if (resource === "source") {
+        if (key === 'source') {
             placed = this.state.sources.length;
         } else {
             total = 1;
@@ -781,18 +743,12 @@ export class BuildingPlanner extends React.Component {
         );
     }
 
-    getStructureBrushLabel(structureName: string) {
-        const structure = STRUCTURES[structureName];
-        const placed = this.state.structures[structureName] ? this.state.structures[structureName]!.length : 0;
-        const structureTotals = CONTROLLER_STRUCTURES[structureName];
-        const total = structureTotals === undefined ? 1 : [this.state.rcl];
-        return (
-            <div>
-                <img src={`assets/structures/${structureName}.png`} alt={structure}/>{' '}
-                {structure}
-                <span className="right">{placed}/{total}</span>
-            </div>
-        );
+    getResourceDisabled(resourceName: string) {
+        if (resourceName === 'source') {
+            return false;
+        } else {
+            return this.state.minerals.length !== 0;
+        }
     }
 
     getRCLOptions() {
@@ -1181,12 +1137,16 @@ export class BuildingPlanner extends React.Component {
                                 </div>
                                 <div>
                                     <button className="btn btn-secondary" onClick={() => this.setAnalysisMode(DISTANCE_TRANSFORM_ANALYSIS)}
-                                            title="Distance transform in Chebyshev metric">
+                                            title="Distance transform with diagonal movement">
                                         <span style={{color: this.state.analysisMode === DISTANCE_TRANSFORM_ANALYSIS ? 'green' : 'inherit'}}>
                                             DT
                                         </span>
                                     </button>
                                 </div>
+                                <ModalSim
+                                    planner={this}
+                                    modal={false}
+                                />
                             </Col>
                         </Row>}
                     </Container>
