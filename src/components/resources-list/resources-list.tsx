@@ -81,7 +81,7 @@ export class ResourcesList extends React.Component {
                     </li>
                     <li>
                         <strong><a href="https://github.com/JonathanSafer/screeps">Piky (Yoner's bot)</a></strong> -
-                        a mature bot that is optimized for low-CPU situations, not being actively developed anymore.
+                        a mature bot that is optimized for low-CPU situations, still being maintained.
                     </li>
                     <li>
                         <strong><a href="https://github.com/ScreepsQuorum/screeps-quorum">Quorum</a></strong> -
