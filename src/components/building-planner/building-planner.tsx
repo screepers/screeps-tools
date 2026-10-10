@@ -163,7 +163,9 @@ export class BuildingPlanner extends React.Component<{}, BuildingPlannerState> i
         fetch(url).then((response) => {
             response.json().then((data: any) => {
                 if (data.error) {
-                    this.showToast(`Logic error returned from API at ${url}: ${data.error}.`)
+                    const message = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+                    this.showToast(message);
+                    console.error(`API error at ${url}:`, data.error);
                 } else {
                     handler(data)
                 }
@@ -264,8 +266,9 @@ export class BuildingPlanner extends React.Component<{}, BuildingPlannerState> i
         console.log(json);
 
         const data = json as EncodedBlueprint & { world?: string };
+        const roomName = typeof data.name === 'string' && /^[WE]\d{1,2}[NS]\d{1,2}$/.test(data.name);
 
-        if (data.terrain || data.controller || data.sources || data.mineral || !data.shard || !data.name) {
+        if (data.terrain || data.controller || data.sources || data.mineral || !data.shard || !roomName) {
             console.log('Importing room from JSON alone.');
 
             const terrain: CellMap = {};
@@ -307,9 +310,18 @@ export class BuildingPlanner extends React.Component<{}, BuildingPlannerState> i
                 [structure: string]: XY[]
             } = {};
 
+            if (!data.buildings || typeof data.buildings !== 'object') {
+                throw new Error('Missing "buildings" object');
+            }
+
             forIn(data.buildings, (structureName, xys) => {
+                const building = xys as XY[] | { pos?: XY[] };
+                const positions = Array.isArray(building) ? building : building.pos;
+                if (!positions) {
+                    throw new Error(`Building "${structureName}" must be a list of {x, y} positions or an object with a "pos" list`);
+                }
                 const structureData = [];
-                for (const {x, y} of xys) {
+                for (const {x, y} of positions) {
                     structureData.push({x, y});
                 }
                 structures[structureName] = structureData;

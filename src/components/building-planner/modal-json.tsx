@@ -1,13 +1,47 @@
 import * as React from 'react';
-import {Col, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row} from 'reactstrap';
+import {Col, FormFeedback, Input, Label, Modal, ModalBody, ModalFooter, ModalHeader, Row} from 'reactstrap';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faFileCode} from '@fortawesome/free-solid-svg-icons';
+
+// Removing module.exports = and the semicolon in case it was copied from JS.
+function jsonTextForParse(raw: string): string {
+    const trimmed = raw.trim();
+    const assignment = /^module\.exports\s*=\s*/.exec(trimmed);
+    if (assignment) {
+        let text = trimmed.slice(assignment[0].length).trim();
+        if (text.endsWith(';')) {
+            text = text.slice(0, -1).trim();
+        }
+        return text;
+    }
+    if (trimmed.endsWith(';')) {
+        return raw.replace(/;\s*$/, '');
+    }
+    return raw;
+}
+
+function describeParseError(text: string, error: SyntaxError): string {
+    if (/line \d+ column \d+/.test(error.message)) {
+        return error.message;
+    }
+    const position = /position (\d+)/.exec(error.message);
+    const index = position ? Number(position[1]) : (error.message.startsWith('Unexpected end of JSON input') ? text.length : null);
+    if (index === null || Number.isNaN(index)) {
+        return error.message;
+    }
+    const line = text.slice(0, index).split('\n').length;
+    const lineStart = text.lastIndexOf('\n', Math.max(0, index - 1)) + 1;
+    const column = index - lineStart + 1;
+    return `${error.message} (line ${line}, column ${column})`;
+}
 
 export class ModalJson extends React.Component<ModalProps> {
     state: Readonly<{
         modal: boolean;
         format: boolean;
         roomFeatures: boolean;
+        draft: string | null;
+        error: string | null;
     }>;
 
     constructor(props: any) {
@@ -16,6 +50,8 @@ export class ModalJson extends React.Component<ModalProps> {
             modal: false,
             format: true,
             roomFeatures: false,
+            draft: null,
+            error: null,
         };
     }
 
@@ -27,16 +63,37 @@ export class ModalJson extends React.Component<ModalProps> {
             : JSON.stringify(data);
     }
 
-    importBlueprint(e: any) {
-        // Removing module.exports = and the semicolon in case it was copied from JS.
-        const rx = /^(module\.exports *= *)?(\{.*}) *;?$/gm;
-        const json = rx.exec(e.target.value.replaceAll('\n', ' ').trim());
-        const parsed = JSON.parse(json![2]!);
-        this.props.planner.importBlueprint(parsed);
+    onJsonChange(e: any) {
+        const value = e.target.value as string;
+        const text = jsonTextForParse(value);
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(text);
+        } catch (error) {
+            const message = error instanceof SyntaxError ? describeParseError(text, error) : 'Invalid JSON';
+            this.setState({draft: value, error: message});
+            return;
+        }
+        if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+            this.setState({draft: value, error: 'Blueprint JSON must be an object'});
+            return;
+        }
+        try {
+            this.props.planner.importBlueprint(parsed);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Could not import this blueprint';
+            this.setState({draft: value, error: message});
+            return;
+        }
+        this.setState({draft: null, error: null});
     }
 
     toggleModal() {
-        this.setState({modal: !this.state.modal});
+        this.setState({
+            modal: !this.state.modal,
+            draft: null,
+            error: null,
+        });
     }
 
     toggleRoomFeatures(e: any) {
@@ -66,9 +123,12 @@ export class ModalJson extends React.Component<ModalProps> {
                         </Row>
                         <Row>
                             <Col xs={12}>
-                                <Input type="textarea" wrap="soft" value={this.state.modal ? this.displayJson() : ''}
+                                <Input type="textarea" wrap="soft"
+                                       value={this.state.modal ? (this.state.draft ?? this.displayJson()) : ''}
                                        id="json-data"
-                                       onChange={(e) => this.importBlueprint(e)}/>
+                                       invalid={this.state.error != null}
+                                       onChange={(e) => this.onJsonChange(e)}/>
+                                {this.state.error && <FormFeedback className="d-block">{this.state.error}</FormFeedback>}
                             </Col>
                         </Row>
                         <Row>
