@@ -75,17 +75,7 @@ To deploy screeps-tools to GitHub Pages using `gh-pages`, run `npm run deploy`.
 The URL of the proxy server is currently hardcoded in
 `src/components/common/constants.ts` in constant `PROXY_SERVER_URL`.
 
-To deploy your own screeps.com API proxy server in Apache2, you can use
-this configuration:
-```
-ProxyRequests off
-ProxyPreserveHost off
-SSLProxyEngine on
-ProxyPass /api/ https://screeps.com/api/
-ProxyPassReverse /api/ https://screeps.com/api/
-ProxyPass /season/api/ https://screeps.com/season/api/
-ProxyPassReverse /season/api/ https://screeps.com/season/api/
-```
+There's a docker compose file that will set up a working proxy server. You'll only need to change `PROXY_SERVER_URL` to "http://localhost:5556".
 
 ### Note from the maintainer
 

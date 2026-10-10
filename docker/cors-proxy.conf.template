@@ -1,0 +1,86 @@
+{{- $defaultHeaders := "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cache-Control, X-Auth-Token" -}}
+{{- $defaultMethods := "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD" -}}
+{{- $allowedHeaders := $defaultHeaders -}}
+{{- if getenv "ALLOWED_HEADERS" -}}
+{{- $allowedHeaders = printf "%s, %s" $defaultHeaders (getenv "ALLOWED_HEADERS") -}}
+{{- end -}}
+{{- $allowedMethods := $defaultMethods -}}
+{{- if getenv "ALLOWED_METHODS" -}}
+{{- $allowedMethods = getenv "ALLOWED_METHODS" -}}
+{{- end -}}
+{{- $domains := getenv "ALLOWED_DOMAINS" | strings.Split "," -}}
+{{- $scheme := getenv "UPSTREAM_SCHEME" | default "https" -}}
+
+# CORS origin validation map
+# Maps Origin header to validated origin (empty string = invalid)
+map $http_origin $cors_origin {
+    default "";
+{{- range $domains }}
+{{- $domain := . | strings.TrimSpace }}
+{{- if strings.HasPrefix $domain "*." }}
+{{- $baseDomain := $domain | strings.TrimPrefix "*." }}
+{{- $escapedBase := $baseDomain | strings.ReplaceAll "." "\\." }}
+    # Wildcard: {{ $domain }}
+    "~^https?://([a-zA-Z0-9-]+\.)*{{ $escapedBase }}(:\d+)?$" $http_origin;
+{{- else }}
+{{- $escapedDomain := $domain | strings.ReplaceAll "." "\\." }}
+    # Exact: {{ $domain }}
+    "~^https?://{{ $escapedDomain }}(:\d+)?$" $http_origin;
+{{- end }}
+{{- end }}
+}
+
+# Block flag: 1 = block request, 0 = allow
+map $cors_origin $cors_block {
+    "" 1;
+    default 0;
+}
+
+server {
+    listen 80;
+    server_name _;
+
+    # Health endpoint - bypasses CORS validation
+    location = /cors/health {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 "OK";
+    }
+
+    location / {
+        # Block requests with missing or invalid Origin
+        if ($cors_block = 1) {
+            return 403 "CORS origin not allowed";
+        }
+
+        # Handle preflight OPTIONS requests
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' $cors_origin always;
+            add_header 'Access-Control-Allow-Methods' '{{ $allowedMethods }}' always;
+            add_header 'Access-Control-Allow-Headers' '{{ $allowedHeaders }}' always;
+            add_header 'Access-Control-Allow-Credentials' 'true' always;
+            add_header 'Access-Control-Max-Age' 86400 always;
+            add_header 'Content-Type' 'text/plain; charset=utf-8';
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+
+        # The image template hardcodes proxy_pass http:// and Host $host.
+        # screeps.com:443 speaks TLS and selects its vhost from Host, so both have to be the upstream.
+        proxy_pass {{ $scheme }}://{{ getenv "UPSTREAM_HOST" }}:{{ getenv "UPSTREAM_PORT" }};
+        proxy_ssl_server_name on;
+        proxy_ssl_name {{ getenv "UPSTREAM_HOST" }};
+        proxy_http_version 1.1;
+        proxy_set_header Host {{ getenv "UPSTREAM_HOST" }};
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Add CORS headers to response
+        add_header 'Access-Control-Allow-Origin' $cors_origin always;
+        add_header 'Access-Control-Allow-Methods' '{{ $allowedMethods }}' always;
+        add_header 'Access-Control-Allow-Headers' '{{ $allowedHeaders }}' always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+        add_header 'Access-Control-Expose-Headers' 'Content-Length, Content-Range' always;
+    }
+}

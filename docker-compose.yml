@@ -1,0 +1,19 @@
+# CORS proxy for the public Screeps HTTP API.
+services:
+  cors-proxy:
+    image: s4l3h1/nginx-cors-gate:1.0.1
+    ports:
+      - "5556:80"
+    environment:
+      # be aware that this will allow local access to the proxy
+      ALLOWED_DOMAINS: screepers.github.io,localhost,127.0.0.1
+      UPSTREAM_SCHEME: https
+      UPSTREAM_HOST: screeps.com
+      UPSTREAM_PORT: "443"
+    volumes:
+      - ./docker/cors-proxy.conf.template:/etc/nginx/templates/default.conf.template:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/cors/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
