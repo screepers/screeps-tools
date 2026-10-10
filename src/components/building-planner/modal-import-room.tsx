@@ -50,9 +50,13 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         this.setState({[e.target.name]: value});
     }
 
+    normalizeRoom(room: string): string {
+        return room.toUpperCase();
+    }
+
     handleTextBlur(e: any, validationFunc: Function) {
         const field: 'room' | 'world' | 'shard' = e.target.name;
-        const value = e.target.value;
+        const value = field === 'room' ? this.normalizeRoom(e.target.value) : e.target.value;
 
         if (!this.state[field].validateOnChange && !this.state.submitCalled) {
             this.setState({
@@ -66,9 +70,13 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
     }
 
     handleTextChange(field: 'room' | 'world' | 'shard', value: string, validationFunc: Function) {
+        if (field === 'room') {
+            value = this.normalizeRoom(value);
+        }
         this.setState({
             [field]: {
                 value: value,
+                validateOnChange: this.state[field].validateOnChange,
                 valid: (this.state[field].validateOnChange ? validationFunc(value) : true)
             }
         });
@@ -87,10 +95,11 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
 
     validateRoom(room: string): boolean {
         if (typeof room !== 'string') return false;
-        if (room.length < 4) return false;
+        const normalized = room.toUpperCase();
+        if (normalized.length < 4) return false;
 
         const regexRoom = new RegExp('^([WE]{1})([0-9]{1,2})([NS]{1})([0-9]{1,2})$');
-        return room.match(regexRoom) !== null;
+        return normalized.match(regexRoom) !== null;
     }
 
     validateWorld(world: string): boolean {
@@ -109,9 +118,8 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
     
     handleSubmit(e: any) {
         e.preventDefault();
-        this.toggleModal();
 
-        const name = this.state.room.value;
+        const name = this.normalizeRoom(this.state.room.value);
         const world = this.state.world.value;
         const shard = this.state.shard.value;
         const includeStructures = this.state.showStructures;
@@ -147,6 +155,8 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                 return;
             }
         }
+
+        this.toggleModal();
 
         const importedData: any = {
             world,
