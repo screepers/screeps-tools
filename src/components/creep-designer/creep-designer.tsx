@@ -270,7 +270,7 @@ export class CreepDesigner extends React.Component{
     }
 
     boostOptions(part: BodyPartConstant) {
-        let options: React.ReactFragment[] = [];
+        let options: React.ReactElement[] = [];
         const partBoosts = BOOSTS[part];
         if (partBoosts !== undefined) {
             options.push(<option value="">-</option>);
@@ -577,7 +577,7 @@ export class CreepDesigner extends React.Component{
     }
 
     labelCreepHealth(useUnitMultiplier: boolean = false) {
-        let label: React.ReactFragment[] = [];
+        let label: React.ReactElement[] = [];
 
         let creepHP = Math.floor(this.getCreepHP(useUnitMultiplier));
         label.push(<span>{this.formatNumber(creepHP, 2)}</span>);

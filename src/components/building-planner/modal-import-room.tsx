@@ -1,6 +1,11 @@
 import * as React from 'react';
 import {Row, Col, Input, Label, FormFeedback, Modal, ModalHeader, ModalBody, ModalFooter} from 'reactstrap';
-import Select, {OptionTypeBase} from 'react-select';
+import Select from 'react-select';
+
+type SelectOption = {
+    value: string;
+    label: string;
+};
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faDownload} from '@fortawesome/free-solid-svg-icons';
 import {SCREEPS_WORLDS} from '../../screeps/constants';
@@ -43,7 +48,6 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
     handleCheckboxChange(e: any) {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
         this.setState({[e.target.name]: value});
-        this.props.planner.setState({[e.target.name]: value});
     }
 
     handleTextBlur(e: any, validationFunc: Function) {
@@ -162,20 +166,20 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         if (!world) {
             return null;
         }
-        const selected: OptionTypeBase = {
+        const selected: SelectOption = {
             value: world,
-            label: SCREEPS_WORLDS[world]
+            label: SCREEPS_WORLDS[world] ?? world
         };
         return selected;
     }
 
     getWorldOptions() {
-        const options: OptionTypeBase[] = [];
+        const options: SelectOption[] = [];
         
         Object.keys(this.props.worlds).map(world => {
-            let props: OptionTypeBase = {
+            let props: SelectOption = {
                 value: world,
-                label: SCREEPS_WORLDS[world]
+                label: SCREEPS_WORLDS[world] ?? world
             };
             options.push(props);
         });
@@ -187,7 +191,7 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         if (!shard) {
             return null;
         }
-        const selected: OptionTypeBase = {
+        const selected: SelectOption = {
             value: shard,
             label: shard
         };
@@ -199,10 +203,10 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
         if (!world) {
             return [];
         }
-        const options: OptionTypeBase[] = [];
+        const options: SelectOption[] = [];
         
         world.shards.map(shard => {
-            let props: OptionTypeBase = {
+            let props: SelectOption = {
                 value: shard,
                 label: shard
             };
@@ -232,11 +236,10 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                                         <div className="loading">Loading</div>
                                     }
                                     {Object.keys(this.props.worlds).length > 0 &&
-                                        <Select
-                                            defaultValue={this.props.world}
+                                        <Select<SelectOption>
                                             value={this.getSelectedWorld()}
                                             options={this.getWorldOptions()}
-                                            onChange={(selected) => this.handleTextChange('world', selected.value, this.validateWorld)}
+                                            onChange={(selected) => selected && this.handleTextChange('world', selected.value, this.validateWorld)}
                                             className="select-world"
                                             classNamePrefix="select"
                                         />
@@ -249,11 +252,10 @@ export class ModalImportRoomForm extends React.Component<ModalImportRoomFormProp
                                         <div className="loading">Loading</div>
                                     }
                                     {this.state.world.valid &&
-                                        <Select
-                                            defaultValue={this.props.shard}
+                                        <Select<SelectOption>
                                             value={this.getSelectedShard()}
                                             options={this.getShardOptions()}
-                                            onChange={(selected) => this.handleTextChange('shard', selected.value, this.validateShard)}
+                                            onChange={(selected) => selected && this.handleTextChange('shard', selected.value, this.validateShard)}
                                             className="select-shard"
                                             classNamePrefix="select"
                                         />

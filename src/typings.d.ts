@@ -1,3 +1,6 @@
+declare module '*.css';
+declare module '*.less';
+
 /**
  * The import/export format for blueprint-planner.
  */
@@ -40,7 +43,31 @@ interface CellMap {
     }
 }
 
-interface BuildingPlannerProps extends React.Component {
+interface BuildingPlannerState {
+    room: string;
+    world: string;
+    shard: string;
+    terrain: CellMap;
+    brush: string;
+    rcl: number;
+    structures: { [structure: string]: XY[] };
+    sources: XY[];
+    minerals: { x: number; y: number; mineralType: MineralConstant }[];
+    settings: BuildingPlannerSettings;
+    scale: number;
+    showExtraTools: boolean;
+    selectingCells: boolean;
+    selectedCells: CellMap;
+    toastMessage: string;
+    x: number;
+    y: number;
+    worlds: { [worldName: string]: { shards: string[] } };
+    analysisMode: number;
+    analysisResult: CellMap;
+}
+
+interface BuildingPlannerProps extends React.Component<{}, BuildingPlannerState> {
+
     resetState(): void;
 
     importBlueprint(json: any): any;

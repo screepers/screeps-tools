@@ -23,7 +23,6 @@ export class ModalSettings extends React.Component<ModalSettingsProps> {
         const field: 'showStatsOverlay' | 'allowBorderStructure' | 'cellTextFontSize' = e.target.name;
         const value = e.target.type === 'checkbox' ? e.target.checked : (e.target.type === 'number' ? parseInt(e.target.value) : e.target.value);
         this.setState({[field]: value});
-        this.props.planner.setState({[field]: value});
 
         this.props.planner.setSettings({
             ...this.props.settings,

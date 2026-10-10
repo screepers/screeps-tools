@@ -13,7 +13,13 @@ import {ModalReset} from './modal-reset';
 import {ModalSettings} from './modal-settings';
 import {ModalImportRoomForm} from './modal-import-room';
 import {Col, Container, Navbar, Row, Toast, ToastBody} from 'reactstrap';
-import Select, {OptionTypeBase} from 'react-select';
+import Select, {Theme} from 'react-select';
+
+type SelectOption = {
+    value: string | number;
+    label: React.ReactNode;
+    isDisabled?: boolean;
+};
 import {towerDPS} from '../../screeps/towers';
 import {apiURL} from '../../screeps/api';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -47,31 +53,8 @@ const SCALE_MIN: number = 1.0;
 const SCALE_MAX: number = 4.0;
 const SCALE_STEP: number = 0.1;
 
-export class BuildingPlanner extends React.Component implements BuildingPlannerProps {
-    state: Readonly<{
-        room: string;
-        world: string;
-        shard: string;
-        terrain: CellMap;
-        brush: string;
-        rcl: number;
-        structures: { [structure: string]: XY[] };
-        sources: XY[];
-        minerals: { x: number; y: number, mineralType: MineralConstant }[];
-        settings: BuildingPlannerSettings;
-        scale: number;
-        showExtraTools: boolean;
-        selectingCells: boolean;
-        selectedCells: CellMap;
-        toastMessage: string;
-        x: number;
-        y: number;
-        worlds: { [worldName: string]: { shards: string[] } };
-        analysisMode: number;
-        analysisResult: CellMap;
-    }>;
-
-    constructor(props: any) {
+export class BuildingPlanner extends React.Component<{}, BuildingPlannerState> implements BuildingPlannerProps {
+    constructor(props: {}) {
         super(props);
         this.state = this.getInitialState();
         this.setStateAndRefresh(this.state, true, true);
@@ -146,6 +129,9 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
                 Object.assign(state.settings, parsedState.settings);
                 delete parsedState.settings;
                 if (!reset) {
+                    for (const key of NOT_SAVED_STATE_KEYS) {
+                        delete parsedState[key];
+                    }
                     Object.assign(state, parsedState);
                 }
             } catch (e) {
@@ -201,14 +187,14 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
                 data.shards.forEach((shard: { name: string }) => {
                     shards.push(shard.name);
                 });
-                this.setState({
+                this.setState((prevState) => ({
                     worlds: {
-                        ...this.state.worlds,
+                        ...prevState.worlds,
                         [world]: {
                             shards: shards
                         }
                     }
-                });
+                }));
             });
         }
     }
@@ -646,7 +632,7 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
         } else {
             label = this.getResourceBrushLabel(this.state.brush);
         }
-        const selected: OptionTypeBase = {
+        const selected: SelectOption = {
             value: this.state.brush,
             label
         };
@@ -654,9 +640,9 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
     }
 
     getBrushes() {
-        const options: OptionTypeBase[] = [];
+        const options: SelectOption[] = [];
         Object.keys(STRUCTURES).map(key => {
-            let props: OptionTypeBase = {
+            let props: SelectOption = {
                 value: key,
                 label: this.getStructureBrushLabel(key)
             };
@@ -666,14 +652,14 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
             options.push(props);
         });
         Object.keys(TERRAIN_NAMES).map(key => {
-            let props: OptionTypeBase = {
+            let props: SelectOption = {
                 value: key,
                 label: this.getTerrainBrushLabel(key)
             };
             options.push(props);
         });
         Object.keys(RESOURCES).map(key => {
-            let props: OptionTypeBase = {
+            let props: SelectOption = {
                 value: key,
                 label: this.getResourceBrushLabel(key)
             };
@@ -752,7 +738,7 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
     }
 
     getRCLOptions() {
-        const options: OptionTypeBase[] = [];
+        const options: SelectOption[] = [];
         const roomLevels = Array.from(Array(8), (_, x) => ++x);
         roomLevels.map(key => {
             options.push({
@@ -775,14 +761,14 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
         }
     }
 
-    getSelectedRCL(): OptionTypeBase {
+    getSelectedRCL(): SelectOption {
         return {
             value: this.state.rcl,
             label: `RCL ${this.state.rcl}`
         };
     }
 
-    getSelectTheme(theme: any) {
+    getSelectTheme(theme: Theme) {
         return {
             ...theme,
             colors: {
@@ -838,7 +824,7 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
                 towerDamage[y]![x] = 0;
 
                 for (const {x: tx, y: ty} of towerPos) {
-                    towerDamage[y]![x] += towerDPS(Math.max(Math.abs(tx - x), Math.abs(ty - y)));
+                    towerDamage[y]![x] = towerDamage[y]![x]! + towerDPS(Math.max(Math.abs(tx - x), Math.abs(ty - y)));
                 }
             }
         }
@@ -1024,26 +1010,24 @@ export class BuildingPlanner extends React.Component implements BuildingPlannerP
 
         return (
             <div className="building-planner">
-                <Navbar fluid className="controls" sticky="top">
+                <Navbar className="controls" sticky="top">
                     <Container>
                         <Row className="justify-content-center">
                             <Col xs={{size: 'auto', order: 2}} sm={{order: 2}} md={{order: 1}}>
-                                <Select
-                                    defaultValue={this.state.brush}
+                                <Select<SelectOption>
                                     value={this.getSelectedBrush()}
                                     options={this.getBrushes()}
                                     theme={theme => this.getSelectTheme(theme)}
-                                    onChange={(selected) => this.setBrush(selected.value)}
+                                    onChange={(selected) => selected && this.setBrush(String(selected.value))}
                                     className="select-structure"
                                     classNamePrefix="select"
                                     maxMenuHeight={window.innerHeight - 115}
                                 />
-                                <Select
-                                    defaultValue={this.state.brush}
+                                <Select<SelectOption>
                                     value={this.getSelectedRCL()}
                                     options={this.getRCLOptions()}
                                     theme={theme => this.getSelectTheme(theme)}
-                                    onChange={(selected) => this.setRCL(selected.value)}
+                                    onChange={(selected) => selected && this.setRCL(Number(selected.value))}
                                     className="select-rcl"
                                     classNamePrefix="select"
                                     maxMenuHeight={window.innerHeight - 115}

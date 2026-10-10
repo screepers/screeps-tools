@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
-        "module": "CommonJS",
-        "target": "es6",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "target": "es2017",
         "removeComments": true,
         "noEmitOnError": true,
         "noResolve": false,
         "noUnusedParameters": false,
         "noUnusedLocals": true,
         "sourceMap": true,
-        "baseUrl": "src",
+        "rootDir": "src",
         "outDir": "lib_ts",
         "allowUnusedLabels": true,
         "allowJs": true,
@@ -18,7 +19,9 @@
         "noImplicitReturns": true,
         "allowSyntheticDefaultImports": true,
         "allowUnreachableCode": false,
-        "noUncheckedIndexedAccess": true
+        "noUncheckedIndexedAccess": true,
+        "skipLibCheck": true,
+        "types": ["*"]
     },
     "compileOnSave": false,
     "include": [
