@@ -88,7 +88,7 @@ export class BuildingPlanner extends React.Component<{}, BuildingPlannerState> i
             }
         }
 
-        const state = {
+        const state: BuildingPlannerState = {
             room: BUILDING_PLANNER_DEFAULTS.ROOM,
             world: BUILDING_PLANNER_DEFAULTS.WORLD,
             shard: BUILDING_PLANNER_DEFAULTS.SHARD,
@@ -101,7 +101,7 @@ export class BuildingPlanner extends React.Component<{}, BuildingPlannerState> i
             settings: {
                 showStatsOverlay: true,
                 allowBorderStructure: false,
-                cellTextFontSize: 6,
+                cellTextFontSize: 5,
             },
             scale: 1.5,
             showExtraTools: false,
