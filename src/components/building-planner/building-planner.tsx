@@ -47,7 +47,7 @@ const SCALE_MIN: number = 1.0;
 const SCALE_MAX: number = 4.0;
 const SCALE_STEP: number = 0.1;
 
-export class BuildingPlanner extends React.Component {
+export class BuildingPlanner extends React.Component implements BuildingPlannerProps {
     state: Readonly<{
         room: string;
         world: string;
