@@ -83,6 +83,10 @@ textarea.form-control#sim-script {
 .import-room .format-json input {
   margin-bottom: 0;
 }
+.import-room .invalid-feedback {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
